@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import "basic.proto";
+import "user.proto";
+
+option go_package = "github.com/escalopa/gofly/pb";
+
+package pb;
+
+message SignupRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SignupResponse {
+  BasicResponse response = 1;
+}
+
+message SigninRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SigninResponse {
+  optional Token accessToken = 1;
+  BasicResponse response = 2;
+}
+
+message Token {
+  string token = 1;
+}
+
+message VerifyResponse {
+  optional User user = 1;
+  BasicResponse response = 2;
+}
+
+service TokenService {
+  rpc Verify(Token) returns (BasicResponse);
+}
+
+service AuthService {
+  rpc Signup(SignupRequest) returns (BasicResponse);
+  rpc Signin(SigninRequest) returns (SigninResponse);
+  rpc Activate(UserID) returns (BasicResponse);
+}

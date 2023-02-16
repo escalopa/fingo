@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/escalopa/gofly/pb";
+
+message BasicResponse {
+  string status = 1;
+  string message = 2;
+  optional string error = 3;
+}

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+option go_package = "github.com/escalopa/gofly/pb";
+
+package pb;
+
+message UserID {
+  string id = 1;
+}
+
+message User {
+  UserID id = 1;
+}
