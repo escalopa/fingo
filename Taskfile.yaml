@@ -1,0 +1,17 @@
+version: "3"
+
+tasks:
+  pb:
+    cmds:
+      - rm -rf pb/*
+      - protoc  --proto_path=proto --go_out=pb --go_opt=paths=source_relative
+        --go-grpc_out=pb --go-grpc_opt=paths=source_relative
+        proto/*.proto
+    silent: true
+    desc: "Generate gRPC code for auth service"
+
+  evans:
+    cmds:
+      - evans --host localhost {{.CLI_ARGS}} -r repl
+    silent: true
+    desc: "Connect to a grpc server, NOTE: you need to pass the port as a CLI arg in the form of `--port=50051`"
