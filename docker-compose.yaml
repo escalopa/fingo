@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  auth:
+    container_name: "auth"
+    restart: unless-stopped
+    volumes:
+      - .:/go/src/github.com/escalopa/goauth/
+    environment:
+      - GRPC_PORT=${GRPC_PORT}
+      - TOKEN_SECRET=${TOKEN_SECRET}
+      - TOKEN_ACCESS_DURATION=${TOKEN_ACCESS_DURATION}
+      - CACHE_URL=${CACHE_URL}
+    ports:
+      - "${GRPC_PORT}:${GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: ./_deployments/Dockerfile.auth
+      target: development
+
+  cache:
+    image: redis:alpine
+    container_name: "cache"
+    restart: unless-stopped
+    volumes:
+      - ./storage/cache:/data
+    ports:
+      - "6379:6379"
