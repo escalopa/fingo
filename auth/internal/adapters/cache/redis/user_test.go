@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/escalopa/gofly/auth/internal/core"
 	"github.com/lordvidex/errs"
@@ -50,28 +49,14 @@ func TestSaveUser(t *testing.T) {
 				Password:   gofakeit.Password(true, true, true, true, true, 32),
 				IsVerified: false,
 			},
-			err: errs.B().Msg("already_exists: user already exists").Err(),
+			err: errs.B().Code(errs.AlreadyExists).Msg("user already exists").Err(),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := ur.Save(tc.user)
-			fmt.Println(err)
-			if err != nil && tc.err == nil || err == nil && tc.err != nil {
-				t.Errorf("errors are not the same actual:%s, excpected:%s", err, tc.err)
-			}
-			if err != nil && tc.err != nil {
-				if er1, ok := err.(*errs.Error); ok {
-					if er2, ok := tc.err.(*errs.Error); ok {
-						require.False(t, reflect.DeepEqual(er1.Msg, er2.Msg), "errors are not equal actual:%s, expected:%s", err, tc.err)
-					} else {
-						t.Errorf("err2 is not of type *errs.Err: actual:%T, excpected:%T", err, tc.err)
-					}
-				} else {
-					t.Errorf("err1 is not of type *errs.Err: actual:%T, excpected:%T", err, tc.err)
-				}
-			}
+			compareErrors(t, err, tc.err)
 		})
 	}
 }

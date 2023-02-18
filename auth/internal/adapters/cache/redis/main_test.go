@@ -69,14 +69,10 @@ func compareErrors(t *testing.T, e1, e2 error) {
 		t.Errorf("e1ors are not the same actual:%s, excpected:%s", e1, e2)
 	}
 	if e1 != nil && e2 != nil {
-		if er1, ok := e1.(*errs.Error); ok {
-			if er2, ok := e2.(*errs.Error); ok {
-				require.False(t, reflect.DeepEqual(er1.Msg, er2.Msg), "e1ors are not equal actual:%s, expected:%s", e1, e2)
-			} else {
-				t.Errorf("e2 is not of type *e1s.Err: actual:%T, excpected:%T", e1, e2)
-			}
-		} else {
-			t.Errorf("e1 is not of type *e1s.Err: actual:%T, excpected:%T", e1, e2)
-		}
+		er1, ok1 := e1.(*errs.Error)
+		require.True(t, ok1, "er1 is not of type *errs.Error")
+		er2, ok2 := e2.(*errs.Error)
+		require.True(t, ok2, "er2 is not of type *errs.Error")
+		require.True(t, reflect.DeepEqual(er1, er2), "er1 & er2 are not the same, expected:%s, actual:%s", er2, er1)
 	}
 }
