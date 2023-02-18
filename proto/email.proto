@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+import "basic.proto";
+
+option go_package = "github.com/escalopa/gofly/pb";
+
+package pb;
+
+message VerifyEmailRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message VerifyEmailResponse {
+  BasicResponse response = 1;
+}
+
+message VerifyCodeRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message VerifyCodeResponse {
+  BasicResponse response = 1;
+}
+
+service EmailService {
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc VerifyCode(VerifyCodeRequest) returns (VerifyCodeResponse);
+}

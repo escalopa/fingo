@@ -8,8 +8,9 @@ option go_package = "github.com/escalopa/gofly/pb";
 package pb;
 
 message SignupRequest {
-  string email = 1;
-  string password = 2;
+  string username = 1;
+  string email = 2;
+  string password = 3;
 }
 
 message SignupResponse {
@@ -22,25 +23,29 @@ message SigninRequest {
 }
 
 message SigninResponse {
-  optional Token accessToken = 1;
+  optional string accessToken = 1;
   BasicResponse response = 2;
 }
 
-message Token {
+message VerifyUserRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message VerifyUserResponse {
+  BasicResponse response = 1;
+}
+
+message VerifyTokenRequest {
   string token = 1;
 }
 
-message VerifyResponse {
-  optional User user = 1;
-  BasicResponse response = 2;
-}
-
 service TokenService {
-  rpc Verify(Token) returns (BasicResponse);
+  rpc Verify(VerifyTokenRequest) returns (User);
 }
 
 service AuthService {
-  rpc Signup(SignupRequest) returns (BasicResponse);
+  rpc Signup(SignupRequest) returns (SignupResponse);
   rpc Signin(SigninRequest) returns (SigninResponse);
-  rpc Activate(UserID) returns (BasicResponse);
+  rpc Verify(VerifyUserRequest) returns (VerifyUserResponse);
 }
