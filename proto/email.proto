@@ -6,12 +6,12 @@ option go_package = "github.com/escalopa/gofly/pb";
 
 package pb;
 
-message VerifyEmailRequest {
+message SendCodeRequest {
   string email = 1;
   string code = 2;
 }
 
-message VerifyEmailResponse {
+message SendCodeResponse {
   BasicResponse response = 1;
 }
 
@@ -25,6 +25,6 @@ message VerifyCodeResponse {
 }
 
 service EmailService {
-  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc SendCode(SendCodeRequest) returns (SendCodeResponse);
   rpc VerifyCode(VerifyCodeRequest) returns (VerifyCodeResponse);
 }
