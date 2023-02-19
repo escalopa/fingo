@@ -85,3 +85,8 @@ graph TD
     C --> G[Message Queue]
     G --> | Web Sockets | A
 ```
+
+## Upcoming Features 📌
+
+### Milestones 1.0 🏁
+1. [x] Don't send email if email is already verified or a message already less than 2 minutes ago
