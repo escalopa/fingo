@@ -3,9 +3,17 @@ package main
 import (
 	"context"
 	"github.com/escalopa/goconfig"
+	"github.com/escalopa/gofly/contact/internal/adapter/codegen"
 	"github.com/escalopa/gofly/contact/internal/adapter/email/mycourier"
+	mygrpc "github.com/escalopa/gofly/contact/internal/adapter/mygrpc"
 	"github.com/escalopa/gofly/contact/internal/adapter/redis"
+	"github.com/escalopa/gofly/contact/internal/application"
+	"github.com/escalopa/gofly/pb"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
+	"net"
+	"strconv"
 	"time"
 )
 
@@ -39,30 +47,7 @@ func main() {
 			log.Println(err, "Failed to close code repo")
 		}
 	}(cr)
-
-	// Create an email sender
-	//from := c.Get("EMAIL_FROM")
-	//host := c.Get("EMAIL_HOST")
-	//port, err := strconv.Atoi(c.Get("EMAIL_PORT"))
-	//if err != nil {
-	//	log.Fatal(err, "Failed to parse email port")
-	//}
-	//es, err := mysmtp.New(
-	//	smtp.WithExpiration(exp),
-	//	smtp.WithHost(host),
-	//	smtp.WithPort(port),
-	//	smtp.WithFrom(from),
-	//)
-	//if err != nil {
-	//	log.Fatal(err, "Failed to create email sender")
-	//}
-	// Close email sender on exit
-	//defer func(es *smtp.Sender) {
-	//	err := es.Close()
-	//	if err != nil {
-	//		log.Println(err, "Failed to close email sender")
-	//	}
-	//}(es)
+	log.Println("Connected to code repo")
 
 	// Create a courier sender
 	cs, err := mycourier.New(c.Get("COURIER_TOKEN"),
@@ -72,6 +57,46 @@ func main() {
 	if err != nil {
 		log.Fatal(err, "Failed to create courier sender")
 	}
+	log.Println("Connected to courier sender")
 
-	_, _ = cs, cr
+	// Create a code generator
+	codeLen, err := strconv.Atoi(c.Get("CODE_LENGTH"))
+	if err != nil {
+		log.Fatal(err, "Failed to parse code length")
+	}
+	cg := codegen.New(codeLen)
+
+	// Create use cases
+	mti, err := time.ParseDuration(c.Get("MIN_SEND_INTERVAL"))
+	if err != nil {
+		log.Fatal(err, "Failed to parse min send interval")
+	}
+	uc := application.NewUseCases(
+		application.WithCodeRepository(cr),
+		application.WithCodeGenerator(cg),
+		application.WithEmailSender(cs),
+		application.WithMinTimeInterval(mti),
+	)
+
+	StartGRPCServer(c, uc)
+}
+
+func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
+	// Create a new gRPC server
+	grpcH := mygrpc.New(uc)
+	grpcS := grpc.NewServer()
+	pb.RegisterEmailServiceServer(grpcS, grpcH)
+	reflection.Register(grpcS)
+
+	// Start the server
+	port := c.Get("EMAIL_GRPC_PORT")
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Starting gRPC server on port", port)
+	err = grpcS.Serve(lis)
+	if err != nil {
+		return
+	}
 }
