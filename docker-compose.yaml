@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/go/src/github.com/escalopa/goauth/
     environment:
-      - GRPC_PORT=${GRPC_PORT}
+      - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
       - TOKEN_SECRET=${TOKEN_SECRET}
       - TOKEN_ACCESS_DURATION=${TOKEN_ACCESS_DURATION}
       - CACHE_URL=${CACHE_URL}

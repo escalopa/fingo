@@ -79,7 +79,7 @@ func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
 	reflection.Register(grpcS)
 
 	// Start the server
-	port := c.Get("GRPC_PORT")
+	port := c.Get("AUTH_GRPC_PORT")
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)
