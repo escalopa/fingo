@@ -18,6 +18,23 @@ services:
       dockerfile: ./_deployments/Dockerfile.auth
       target: development
 
+  contact:
+    container_name: "contact"
+    restart: unless-stopped
+    volumes:
+      - .:/go/src/github.com/escalopa/contact/
+    environment:
+      - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
+      - MIN_SEND_INTERVAL=${MIN_SEND_INTERVAL}
+      - COURIER_TOKEN=${COURIER_TOKEN}
+      - COURIER_VERIFICATION_TEMPLATE_ID=${COURIER_VERIFICATION_TEMPLATE_ID}
+    ports:
+      - "${EMAIL_GRPC_PORT}:${EMAIL_GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: _deployments/Dockerfile.contact
+      target: development
+
   cache:
     image: redis:alpine
     container_name: "cache"
@@ -26,3 +43,4 @@ services:
       - ./storage/cache:/data
     ports:
       - "6379:6379"
+

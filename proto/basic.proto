@@ -7,5 +7,4 @@ package pb;
 message BasicResponse {
   uint32 status = 1;
   string message = 2;
-  optional string error = 3;
 }
