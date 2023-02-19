@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
+	"github.com/escalopa/gofly/contact/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"
 	"time"
@@ -44,8 +46,8 @@ func WithExpiration(exp time.Duration) func(*CodeRepository) {
 
 // Save saves the code in the redis database for the given `user id`
 // The code is set to expire after `exp` seconds
-func (cr *CodeRepository) Save(code string, userID string) error {
-	err := cr.r.Set(cr.c, code, userID, cr.exp).Err()
+func (cr *CodeRepository) Save(email string, vc core.VerificationCode) error {
+	err := cr.r.Set(cr.c, email, vc, cr.exp).Err()
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("failed to save code").Err()
 	}
@@ -53,17 +55,22 @@ func (cr *CodeRepository) Save(code string, userID string) error {
 }
 
 // Get returns the user id associated with the given code if it exists
-func (cr *CodeRepository) Get(code string) (string, error) {
-	value, err := cr.r.Get(cr.c, code).Result()
+func (cr *CodeRepository) Get(email string) (core.VerificationCode, error) {
+	value, err := cr.r.Get(cr.c, email).Result()
 	if err != nil {
-		// if the code does not exist, return a not found error
+		// if the email does not exist, return a not found error
 		if err == redis.Nil {
-			return "", errs.B(err).Code(errs.NotFound).Msg("code not found").Err()
+			return core.VerificationCode{}, errs.B(err).Code(errs.NotFound).Msg("email not found").Err()
 		}
 		// otherwise, return an internal error
-		return "", errs.B(err).Code(errs.Internal).Msg("failed to get code").Err()
+		return core.VerificationCode{}, errs.B(err).Code(errs.Internal).Msg("failed to get email").Err()
 	}
-	return value, nil
+	var vc core.VerificationCode
+	err = json.Unmarshal([]byte(value), &vc)
+	if err != nil {
+		return core.VerificationCode{}, errs.B(err).Code(errs.Internal).Msg("failed to unmarshal code").Err()
+	}
+	return vc, nil
 }
 
 func (cr *CodeRepository) Close() error {

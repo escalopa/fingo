@@ -2,11 +2,13 @@ package redis
 
 import (
 	"fmt"
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/lordvidex/errs"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/escalopa/gofly/contact/internal/core"
+	"github.com/lordvidex/errs"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCodeRepository(t *testing.T) {
@@ -28,7 +30,11 @@ func TestCodeRepository(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Save code
-			err := cr.Save(tc.code, tc.userID)
+			vc := core.VerificationCode{
+				Code:   tc.code,
+				SentAt: time.Now(),
+			}
+			err := cr.Save(tc.userID, vc)
 			require.NoError(t, err, fmt.Sprintf("error saving code: %v", err))
 			// Get code
 			userID, err := cr.Get(tc.code)
@@ -37,7 +43,7 @@ func TestCodeRepository(t *testing.T) {
 			// Wait for code to expire
 			time.Sleep(exp)
 			// Get code again (should return redis.Nil) since it has expired
-			_, err = cr.Get(tc.code)
+			_, err = cr.Get(tc.userID)
 			if err != nil {
 				if er, ok := err.(*errs.Error); ok {
 					require.Equal(t, errs.NotFound, er.Code)
