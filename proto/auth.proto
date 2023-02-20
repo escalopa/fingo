@@ -40,12 +40,14 @@ message VerifyTokenRequest {
   string token = 1;
 }
 
-service TokenService {
-  rpc Verify(VerifyTokenRequest) returns (User);
+message VerifyTokenResponse {
+  User user = 1;
+  BasicResponse response = 2;
 }
 
 service AuthService {
   rpc Signup(SignupRequest) returns (SignupResponse);
   rpc Signin(SigninRequest) returns (SigninResponse);
-  rpc Verify(VerifyUserRequest) returns (VerifyUserResponse);
+  rpc VerifyUser(VerifyUserRequest) returns (VerifyUserResponse);
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
 }

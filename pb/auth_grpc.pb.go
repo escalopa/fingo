@@ -18,99 +18,14 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// TokenServiceClient is the client API for TokenService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TokenServiceClient interface {
-	Verify(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*User, error)
-}
-
-type tokenServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewTokenServiceClient(cc grpc.ClientConnInterface) TokenServiceClient {
-	return &tokenServiceClient{cc}
-}
-
-func (c *tokenServiceClient) Verify(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
-	err := c.cc.Invoke(ctx, "/pb.TokenService/Verify", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// TokenServiceServer is the server API for TokenService service.
-// All implementations must embed UnimplementedTokenServiceServer
-// for forward compatibility
-type TokenServiceServer interface {
-	Verify(context.Context, *VerifyTokenRequest) (*User, error)
-	mustEmbedUnimplementedTokenServiceServer()
-}
-
-// UnimplementedTokenServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedTokenServiceServer struct {
-}
-
-func (UnimplementedTokenServiceServer) Verify(context.Context, *VerifyTokenRequest) (*User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Verify not implemented")
-}
-func (UnimplementedTokenServiceServer) mustEmbedUnimplementedTokenServiceServer() {}
-
-// UnsafeTokenServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TokenServiceServer will
-// result in compilation errors.
-type UnsafeTokenServiceServer interface {
-	mustEmbedUnimplementedTokenServiceServer()
-}
-
-func RegisterTokenServiceServer(s grpc.ServiceRegistrar, srv TokenServiceServer) {
-	s.RegisterService(&TokenService_ServiceDesc, srv)
-}
-
-func _TokenService_Verify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TokenServiceServer).Verify(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TokenService/Verify",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TokenServiceServer).Verify(ctx, req.(*VerifyTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// TokenService_ServiceDesc is the grpc.ServiceDesc for TokenService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var TokenService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.TokenService",
-	HandlerType: (*TokenServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Verify",
-			Handler:    _TokenService_Verify_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "auth.proto",
-}
-
 // AuthServiceClient is the client API for AuthService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
 	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
 	Signin(ctx context.Context, in *SigninRequest, opts ...grpc.CallOption) (*SigninResponse, error)
-	Verify(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerifyUserResponse, error)
+	VerifyUser(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerifyUserResponse, error)
+	VerifyToken(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*VerifyTokenResponse, error)
 }
 
 type authServiceClient struct {
@@ -139,9 +54,18 @@ func (c *authServiceClient) Signin(ctx context.Context, in *SigninRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) Verify(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerifyUserResponse, error) {
+func (c *authServiceClient) VerifyUser(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerifyUserResponse, error) {
 	out := new(VerifyUserResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/Verify", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/VerifyUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) VerifyToken(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*VerifyTokenResponse, error) {
+	out := new(VerifyTokenResponse)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/VerifyToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +78,8 @@ func (c *authServiceClient) Verify(ctx context.Context, in *VerifyUserRequest, o
 type AuthServiceServer interface {
 	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
 	Signin(context.Context, *SigninRequest) (*SigninResponse, error)
-	Verify(context.Context, *VerifyUserRequest) (*VerifyUserResponse, error)
+	VerifyUser(context.Context, *VerifyUserRequest) (*VerifyUserResponse, error)
+	VerifyToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -168,8 +93,11 @@ func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*
 func (UnimplementedAuthServiceServer) Signin(context.Context, *SigninRequest) (*SigninResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Signin not implemented")
 }
-func (UnimplementedAuthServiceServer) Verify(context.Context, *VerifyUserRequest) (*VerifyUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Verify not implemented")
+func (UnimplementedAuthServiceServer) VerifyUser(context.Context, *VerifyUserRequest) (*VerifyUserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyUser not implemented")
+}
+func (UnimplementedAuthServiceServer) VerifyToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyToken not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -220,20 +148,38 @@ func _AuthService_Signin_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_Verify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _AuthService_VerifyUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServiceServer).Verify(ctx, in)
+		return srv.(AuthServiceServer).VerifyUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AuthService/Verify",
+		FullMethod: "/pb.AuthService/VerifyUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).Verify(ctx, req.(*VerifyUserRequest))
+		return srv.(AuthServiceServer).VerifyUser(ctx, req.(*VerifyUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_VerifyToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).VerifyToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AuthService/VerifyToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).VerifyToken(ctx, req.(*VerifyTokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -254,8 +200,12 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuthService_Signin_Handler,
 		},
 		{
-			MethodName: "Verify",
-			Handler:    _AuthService_Verify_Handler,
+			MethodName: "VerifyUser",
+			Handler:    _AuthService_VerifyUser_Handler,
+		},
+		{
+			MethodName: "VerifyToken",
+			Handler:    _AuthService_VerifyToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
