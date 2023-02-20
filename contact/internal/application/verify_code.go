@@ -1,6 +1,9 @@
 package application
 
-import "github.com/lordvidex/errs"
+import (
+	"context"
+	"github.com/lordvidex/errs"
+)
 
 type VerifyCodeCommandParam struct {
 	Email string
@@ -10,7 +13,7 @@ type VerifyCodeCommandParam struct {
 // VerifyCodeCommand is the interface for the VerifyCodeCommand
 // It is used to verify a code sent to an email
 type VerifyCodeCommand interface {
-	Execute(param VerifyCodeCommandParam) error
+	Execute(ctx context.Context, param VerifyCodeCommandParam) error
 }
 
 // VerifyCodeCommandImpl is the implementation of VerifyCodeCommand
@@ -28,13 +31,13 @@ func NewVerifyCodeCommand(cr CodeRepository, cg CodeGenerator) VerifyCodeCommand
 }
 
 // Execute executes the command & verifies the code
-func (c *VerifyCodeCommandImpl) Execute(param VerifyCodeCommandParam) error {
+func (c *VerifyCodeCommandImpl) Execute(ctx context.Context, param VerifyCodeCommandParam) error {
 	// verify code that it does not contain any special characters & is not empty
 	if !c.cg.VerifyCode(param.Code) {
 		return errs.B().Msg("invalid code").Err()
 	}
 	// get the email associated with the code
-	vc, err := c.cr.Get(param.Email)
+	vc, err := c.cr.Get(ctx, param.Email)
 	if err != nil {
 		// if the code does not exist, return a not found error
 		errr, ok := err.(*errs.Error)

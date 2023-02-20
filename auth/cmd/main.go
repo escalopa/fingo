@@ -13,7 +13,6 @@ import (
 	myValidator "github.com/escalopa/gofly/auth/internal/adapters/validator"
 	"github.com/escalopa/gofly/auth/internal/application"
 	"github.com/escalopa/gofly/pb"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -35,8 +34,8 @@ func main() {
 	}
 
 	// Create db connection and repository
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
 	cache, err := redis.New(c.Get("CACHE_URL"))
 	if err != nil {
 		log.Fatal(err)
@@ -45,7 +44,6 @@ func main() {
 
 	// Create a new user repository
 	ur := redis.NewUserRepository(cache,
-		redis.WithUserContext(ctx),
 		redis.WithTimeout(5*time.Second),
 	)
 
@@ -72,14 +70,12 @@ func main() {
 func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
 	// Create a new gRPC server
 	grpcAH := mygrpc.NewAuthHandler(uc)
-	grpcTH := mygrpc.NewTokenHandler(uc)
 	grpcS := grpc.NewServer()
 	pb.RegisterAuthServiceServer(grpcS, grpcAH)
-	pb.RegisterTokenServiceServer(grpcS, grpcTH)
 	reflection.Register(grpcS)
 
 	// Start the server
-	port := c.Get("AUTH_GRPC_PORT")
+	port := c.Get("AUTH_GRPC_PORT ")
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)

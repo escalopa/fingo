@@ -15,7 +15,7 @@ type VerifyUserParam struct {
 }
 
 type VerifyUserCommand interface {
-	Execute(params VerifyUserParam) error
+	Execute(ctx context.Context, params VerifyUserParam) error
 }
 
 type VerifyUserCommandImpl struct {
@@ -24,11 +24,11 @@ type VerifyUserCommandImpl struct {
 	esc pb.EmailServiceClient
 }
 
-func (vu *VerifyUserCommandImpl) Execute(params VerifyUserParam) error {
+func (vu *VerifyUserCommandImpl) Execute(ctx context.Context, params VerifyUserParam) error {
 	if err := vu.v.Validate(params); err != nil {
 		return err
 	}
-	user, err := vu.ur.Get(params.Email)
+	user, err := vu.ur.Get(ctx, params.Email)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (vu *VerifyUserCommandImpl) Execute(params VerifyUserParam) error {
 		return errs.B().Code(errs.InvalidArgument).Msg("user is already verified").Err()
 	}
 	// VerifyToken code with email service
-	_, err = vu.esc.VerifyCode(context.Background(), &pb.VerifyCodeRequest{
+	_, err = vu.esc.VerifyCode(ctx, &pb.VerifyCodeRequest{
 		Email: user.Email,
 		Code:  params.Code,
 	})
@@ -48,7 +48,7 @@ func (vu *VerifyUserCommandImpl) Execute(params VerifyUserParam) error {
 		return errs.B(err).Code(errs.Internal).Msg("failed to verify code").Err()
 	}
 	user.IsVerified = true
-	return vu.ur.Update(user)
+	return vu.ur.Update(ctx, user)
 }
 
 func NewVerifyUserCommand(v Validator, ur UserRepository, esc pb.EmailServiceClient) VerifyUserCommand {

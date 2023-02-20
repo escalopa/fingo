@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"github.com/lordvidex/errs"
 )
 
@@ -12,7 +13,7 @@ type SigninParams struct {
 }
 
 type SigninCommand interface {
-	Execute(params SigninParams) (string, error)
+	Execute(ctx context.Context, params SigninParams) (string, error)
 }
 
 type SigninCommandImpl struct {
@@ -22,12 +23,12 @@ type SigninCommandImpl struct {
 	tg TokenGenerator
 }
 
-func (s *SigninCommandImpl) Execute(params SigninParams) (string, error) {
+func (s *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (string, error) {
 	if err := s.v.Validate(params); err != nil {
 		return "", err
 	}
 	// Get user from cache
-	user, err := s.ur.Get(params.Email)
+	user, err := s.ur.Get(ctx, params.Email)
 	if err != nil {
 		return "", err
 	}

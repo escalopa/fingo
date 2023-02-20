@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"github.com/escalopa/goconfig"
 	"github.com/escalopa/gofly/contact/internal/adapter/codegen"
 	"github.com/escalopa/gofly/contact/internal/adapter/email/mycourier"
@@ -21,8 +20,8 @@ func main() {
 	c := goconfig.New()
 
 	// Create db connection
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	//ctx, cancel := context.WithCancel(context.Background())
+	//defer cancel()
 	cache, err := redis.New(c.Get("CACHE_URL"))
 	if err != nil {
 		log.Fatal(err)
@@ -37,7 +36,6 @@ func main() {
 
 	// Create a code repo
 	cr := redis.NewCodeRepository(cache,
-		redis.WithCodeContext(ctx),
 		redis.WithExpiration(exp),
 	)
 	// Close code repo on exit

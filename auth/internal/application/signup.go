@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	ac "github.com/escalopa/gofly/auth/internal/core"
 )
 
@@ -12,7 +13,7 @@ type SignupParams struct {
 }
 
 type SignupCommand interface {
-	Execute(params SignupParams) error
+	Execute(ctx context.Context, params SignupParams) error
 }
 
 type SignupCommandImpl struct {
@@ -21,7 +22,7 @@ type SignupCommandImpl struct {
 	ur UserRepository
 }
 
-func (l *SignupCommandImpl) Execute(params SignupParams) error {
+func (l *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
 	if err := l.v.Validate(params); err != nil {
 		return err
 	}
@@ -37,7 +38,7 @@ func (l *SignupCommandImpl) Execute(params SignupParams) error {
 		IsVerified: false,
 	}
 	// Save user to cache
-	err = l.ur.Save(user)
+	err = l.ur.Save(ctx, user)
 	if err != nil {
 		return err
 	}

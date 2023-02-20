@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"time"
 
 	"github.com/escalopa/gofly/contact/internal/core"
@@ -14,7 +15,7 @@ type SendCodeCommandParam struct {
 
 // SendCodeCommand is the command to send a verification code to a user
 type SendCodeCommand interface {
-	Execute(param SendCodeCommandParam) error
+	Execute(ctx context.Context, param SendCodeCommandParam) error
 }
 
 // SendCodeCommandImpl is the implementation of SendCodeCommand
@@ -35,10 +36,10 @@ func NewSendCodeCommand(mti time.Duration, cr CodeRepository, cg CodeGenerator, 
 	}
 }
 
-// Execute executes the command
-func (c *SendCodeCommandImpl) Execute(param SendCodeCommandParam) error {
+// Execute ctx context.Context, executes the command
+func (c *SendCodeCommandImpl) Execute(ctx context.Context, param SendCodeCommandParam) error {
 	// check if a message has been sent to the user in the last `c.mti`
-	if vc, err := c.cr.Get(param.Email); err == nil {
+	if vc, err := c.cr.Get(ctx, param.Email); err == nil {
 		if time.Now().Sub(vc.SentAt) < c.mti {
 			return errs.B().Msgf("please wait %d minute(s) before sending another code",
 				time.Now().Sub(vc.SentAt).Minutes()).Err()
@@ -54,11 +55,11 @@ func (c *SendCodeCommandImpl) Execute(param SendCodeCommandParam) error {
 		Code:   code,
 		SentAt: time.Now(),
 	}
-	if err = c.cr.Save(code, vc); err != nil {
+	if err = c.cr.Save(ctx, code, vc); err != nil {
 		return errs.B(err).Msg("could not save code").Err()
 	}
 	// send the code to the user via email
-	err = c.es.SendVerificationCode(param.Email, vc)
+	err = c.es.SendVerificationCode(ctx, param.Email, vc)
 	if err != nil {
 		return errs.B(err).Msg("could not send email").Err()
 	}

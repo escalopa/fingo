@@ -1,13 +1,14 @@
 package application
 
 import (
+	"context"
 	ac "github.com/escalopa/gofly/auth/internal/core"
 )
 
 type UserRepository interface {
-	Save(user ac.User) error
-	Get(email string) (ac.User, error)
-	Update(user ac.User) error
+	Save(ctx context.Context, user ac.User) error
+	Get(ctx context.Context, email string) (ac.User, error)
+	Update(ctx context.Context, user ac.User) error
 }
 
 type PasswordHasher interface {

@@ -1,15 +1,18 @@
 package application
 
-import "github.com/escalopa/gofly/contact/internal/core"
+import (
+	"context"
+	"github.com/escalopa/gofly/contact/internal/core"
+)
 
 type CodeRepository interface {
-	Save(email string, vc core.VerificationCode) error
-	Get(email string) (core.VerificationCode, error)
+	Save(ctx context.Context, email string, vc core.VerificationCode) error
+	Get(ctx context.Context, email string) (core.VerificationCode, error)
 	Close() error
 }
 
 type EmailSender interface {
-	SendVerificationCode(email string, vc core.VerificationCode) error
+	SendVerificationCode(ctx context.Context, email string, vc core.VerificationCode) error
 	Close() error
 }
 

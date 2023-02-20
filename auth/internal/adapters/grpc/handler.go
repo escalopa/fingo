@@ -19,8 +19,8 @@ func NewAuthHandler(uc *application.UseCases) *AuthHandler {
 	return &AuthHandler{uc: uc}
 }
 
-func (h *AuthHandler) Signup(_ context.Context, req *pb.SignupRequest) (*pb.SignupResponse, error) {
-	err := h.uc.Signup.Execute(application.SignupParams{
+func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*pb.SignupResponse, error) {
+	err := h.uc.Signup.Execute(ctx, application.SignupParams{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -32,8 +32,8 @@ func (h *AuthHandler) Signup(_ context.Context, req *pb.SignupRequest) (*pb.Sign
 	}, nil
 }
 
-func (h *AuthHandler) Signin(_ context.Context, req *pb.SigninRequest) (*pb.SigninResponse, error) {
-	token, err := h.uc.Signin.Execute(application.SigninParams{
+func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.SigninResponse, error) {
+	token, err := h.uc.Signin.Execute(ctx, application.SigninParams{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -46,8 +46,8 @@ func (h *AuthHandler) Signin(_ context.Context, req *pb.SigninRequest) (*pb.Sign
 	}, nil
 }
 
-func (h *AuthHandler) Verify(_ context.Context, req *pb.VerifyUserRequest) (*pb.VerifyUserResponse, error) {
-	err := h.uc.VerifyUser.Execute(application.VerifyUserParam{Email: req.Email, Code: req.Code})
+func (h *AuthHandler) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest) (*pb.VerifyUserResponse, error) {
+	err := h.uc.VerifyUser.Execute(ctx, application.VerifyUserParam{Email: req.Email, Code: req.Code})
 	if err != nil {
 		return nil, err
 	}
@@ -56,26 +56,16 @@ func (h *AuthHandler) Verify(_ context.Context, req *pb.VerifyUserRequest) (*pb.
 	}, nil
 }
 
-// ------------------------------------------ //
-// -------------- TokenHandler -------------- //
-// ------------------------------------------ //
-
-type TokenHandler struct {
-	uc *application.UseCases
-	pb.UnimplementedTokenServiceServer
-}
-
-func NewTokenHandler(uc *application.UseCases) *TokenHandler {
-	return &TokenHandler{uc: uc}
-}
-
-func (h *TokenHandler) Verify(_ context.Context, req *pb.VerifyTokenRequest) (*pb.User, error) {
+func (h *AuthHandler) VerifyToken(ctx context.Context, req *pb.VerifyTokenRequest) (*pb.VerifyTokenResponse, error) {
 	token := req.Token
-	user, err := h.uc.VerifyToken.Execute(application.VerifyTokenParams{Token: token})
+	user, err := h.uc.VerifyToken.Execute(ctx, application.VerifyTokenParams{Token: token})
 	if err != nil {
 		return nil, err
 	}
-	return &pb.User{Id: user.ID, Email: user.Email}, nil
+	return &pb.VerifyTokenResponse{
+		Response: &pb.BasicResponse{Status: 200, Message: "Token verification successful"},
+		User:     &pb.User{Email: user.Email, Id: user.ID},
+	}, nil
 }
 
 func toStrPtr(s string) *string {

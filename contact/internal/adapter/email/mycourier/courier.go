@@ -46,9 +46,9 @@ func WithVerificationTemplate(templateCode string) func(*Sender) {
 	}
 }
 
-func (c *Sender) SendVerificationCode(email string, vc core.VerificationCode) error {
+func (c *Sender) SendVerificationCode(ctx context.Context, email string, vc core.VerificationCode) error {
 	requestID, err := c.c.SendMessage(
-		context.Background(),
+		ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{
 				"to": map[string]string{

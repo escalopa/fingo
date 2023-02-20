@@ -13,7 +13,7 @@ import (
 
 func TestCodeRepository(t *testing.T) {
 	exp := 3 * time.Second
-	cr := NewCodeRepository(testRedis, WithCodeContext(testContext), WithExpiration(exp))
+	cr := NewCodeRepository(testRedis, WithExpiration(exp))
 
 	testCases := []struct {
 		name   string
@@ -34,16 +34,16 @@ func TestCodeRepository(t *testing.T) {
 				Code:   tc.code,
 				SentAt: time.Now(),
 			}
-			err := cr.Save(tc.userID, vc)
+			err := cr.Save(testContext, tc.userID, vc)
 			require.NoError(t, err, fmt.Sprintf("error saving code: %v", err))
 			// Get code
-			userID, err := cr.Get(tc.code)
+			userID, err := cr.Get(testContext, tc.code)
 			require.NoError(t, err, fmt.Sprintf("error getting code: %v", err))
 			require.NoError(t, err, fmt.Sprintf("expected userID %s, got %s", tc.userID, userID))
 			// Wait for code to expire
 			time.Sleep(exp)
 			// Get code again (should return redis.Nil) since it has expired
-			_, err = cr.Get(tc.userID)
+			_, err = cr.Get(testContext, tc.userID)
 			if err != nil {
 				if er, ok := err.(*errs.Error); ok {
 					require.Equal(t, errs.NotFound, er.Code)

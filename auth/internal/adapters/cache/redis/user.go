@@ -12,7 +12,6 @@ import (
 
 type UserRepository struct {
 	r *redis.Client
-	c context.Context
 }
 
 func NewUserRepository(client *redis.Client, opts ...func(*UserRepository)) *UserRepository {
@@ -23,22 +22,16 @@ func NewUserRepository(client *redis.Client, opts ...func(*UserRepository)) *Use
 	return ur
 }
 
-func WithUserContext(ctx context.Context) func(*UserRepository) {
-	return func(ur *UserRepository) {
-		ur.c = ctx
-	}
-}
-
 func WithTimeout(timeout time.Duration) func(*UserRepository) {
 	return func(ur *UserRepository) {
 		ur.r = ur.r.WithTimeout(timeout)
 	}
 }
 
-func (ur *UserRepository) Save(u ac.User) error {
+func (ur *UserRepository) Save(ctx context.Context, u ac.User) error {
 	var err error
 	// Check if user already exists
-	_, err = ur.Get(u.Email)
+	_, err = ur.Get(ctx, u.Email)
 	if err == nil {
 		return errs.B().Code(errs.AlreadyExists).Msg("user already exists").Err()
 	}
@@ -48,16 +41,16 @@ func (ur *UserRepository) Save(u ac.User) error {
 		return err
 	}
 	// Save user to cache
-	err = ur.r.Set(ur.c, u.Email, u, 0).Err()
+	err = ur.r.Set(ctx, u.Email, u, 0).Err()
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("error saving user").Err()
 	}
 	return nil
 }
 
-func (ur *UserRepository) Get(id string) (ac.User, error) {
+func (ur *UserRepository) Get(ctx context.Context, id string) (ac.User, error) {
 	var u ac.User
-	err := ur.r.Get(ur.c, id).Scan(&u)
+	err := ur.r.Get(ctx, id).Scan(&u)
 	if err != nil {
 		if err == redis.Nil {
 			return u, errs.B(err).Code(errs.NotFound).Msg("user not found").Err()
@@ -67,8 +60,8 @@ func (ur *UserRepository) Get(id string) (ac.User, error) {
 	return u, nil
 }
 
-func (ur *UserRepository) Update(u ac.User) error {
-	err := ur.r.Set(ur.c, u.Email, u, 0).Err()
+func (ur *UserRepository) Update(ctx context.Context, u ac.User) error {
+	err := ur.r.Set(ctx, u.Email, u, 0).Err()
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("error updating user").Err()
 	}

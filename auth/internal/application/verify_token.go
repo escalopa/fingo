@@ -1,6 +1,7 @@
 package application
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/escalopa/gofly/auth/internal/core"
@@ -12,7 +13,7 @@ type VerifyTokenParams struct {
 }
 
 type VerifyTokenCommand interface {
-	Execute(params VerifyTokenParams) (core.User, error)
+	Execute(ctx context.Context, params VerifyTokenParams) (core.User, error)
 }
 
 type VerifyTokenCommandImpl struct {
@@ -20,7 +21,7 @@ type VerifyTokenCommandImpl struct {
 	tg TokenGenerator
 }
 
-func (v *VerifyTokenCommandImpl) Execute(params VerifyTokenParams) (core.User, error) {
+func (v *VerifyTokenCommandImpl) Execute(ctx context.Context, params VerifyTokenParams) (core.User, error) {
 	if err := v.v.Validate(params); err != nil {
 		return core.User{}, err
 	}

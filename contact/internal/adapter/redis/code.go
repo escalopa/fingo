@@ -11,7 +11,6 @@ import (
 
 type CodeRepository struct {
 	r   *redis.Client
-	c   context.Context
 	exp time.Duration
 }
 
@@ -20,20 +19,12 @@ type CodeRepository struct {
 func NewCodeRepository(client *redis.Client, opts ...func(*CodeRepository)) *CodeRepository {
 	cr := &CodeRepository{
 		r:   client,
-		c:   context.Background(),
 		exp: 5 * time.Minute,
 	}
 	for _, opt := range opts {
 		opt(cr)
 	}
 	return cr
-}
-
-// WithCodeContext sets the context for the code repository
-func WithCodeContext(ctx context.Context) func(*CodeRepository) {
-	return func(cr *CodeRepository) {
-		cr.c = ctx
-	}
 }
 
 // WithExpiration sets the expiration time for the code
@@ -46,8 +37,8 @@ func WithExpiration(exp time.Duration) func(*CodeRepository) {
 
 // Save saves the code in the redis database for the given `user id`
 // The code is set to expire after `exp` seconds
-func (cr *CodeRepository) Save(email string, vc core.VerificationCode) error {
-	err := cr.r.Set(cr.c, email, vc, cr.exp).Err()
+func (cr *CodeRepository) Save(ctx context.Context, email string, vc core.VerificationCode) error {
+	err := cr.r.Set(ctx, email, vc, cr.exp).Err()
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("failed to save code").Err()
 	}
@@ -55,8 +46,8 @@ func (cr *CodeRepository) Save(email string, vc core.VerificationCode) error {
 }
 
 // Get returns the user id associated with the given code if it exists
-func (cr *CodeRepository) Get(email string) (core.VerificationCode, error) {
-	value, err := cr.r.Get(cr.c, email).Result()
+func (cr *CodeRepository) Get(ctx context.Context, email string) (core.VerificationCode, error) {
+	value, err := cr.r.Get(ctx, email).Result()
 	if err != nil {
 		// if the email does not exist, return a not found error
 		if err == redis.Nil {
