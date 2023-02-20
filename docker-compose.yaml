@@ -7,16 +7,20 @@ services:
     volumes:
       - .:/go/src/github.com/escalopa/goauth/
     environment:
+      - CACHE_URL=${CACHE_URL}
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
       - TOKEN_SECRET=${TOKEN_SECRET}
       - TOKEN_ACCESS_DURATION=${TOKEN_ACCESS_DURATION}
-      - CACHE_URL=${CACHE_URL}
+      - EMAIL_GRPC_URL=${EMAIL_GRPC_URL}
     ports:
-      - "${GRPC_PORT}:${GRPC_PORT}"
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     build:
       context: .
       dockerfile: ./_deployments/Dockerfile.auth
       target: development
+    depends_on:
+      - cache
+      - email
 
   email:
     container_name: "email"
@@ -24,7 +28,10 @@ services:
     volumes:
       - .:/go/src/github.com/escalopa/contact/
     environment:
+      - CACHE_URL=${CACHE_URL}
       - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
+      - CODE_LENGTH=${CODE_LENGTH}
+      - CODE_EXPIRATION=${CODE_EXPIRATION}
       - MIN_SEND_INTERVAL=${MIN_SEND_INTERVAL}
       - COURIER_TOKEN=${COURIER_TOKEN}
       - COURIER_VERIFICATION_TEMPLATE_ID=${COURIER_VERIFICATION_TEMPLATE_ID}
@@ -34,6 +41,8 @@ services:
       context: .
       dockerfile: _deployments/Dockerfile.contact
       target: development
+    depends_on:
+        - cache
 
   cache:
     image: redis:alpine
@@ -43,4 +52,5 @@ services:
       - ./storage/cache:/data
     ports:
       - "6379:6379"
-
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]

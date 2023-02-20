@@ -33,6 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err, "Failed to parse code expiration")
 	}
+	log.Println("Using code-expiration:", exp)
 
 	// Create a code repo
 	cr := redis.NewCodeRepository(cache,
@@ -45,7 +46,7 @@ func main() {
 			log.Println(err, "Failed to close code repo")
 		}
 	}(cr)
-	log.Println("Connected to code repo")
+	log.Println("Connected to code-repo")
 
 	// Create a courier sender
 	cs, err := mycourier.New(c.Get("COURIER_TOKEN"),
@@ -55,13 +56,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err, "Failed to create courier sender")
 	}
-	log.Println("Connected to courier sender")
+	log.Println("Connected to courier-sender")
 
 	// Create a code generator
 	codeLen, err := strconv.Atoi(c.Get("CODE_LENGTH"))
 	if err != nil {
 		log.Fatal(err, "Failed to parse code length")
 	}
+	if codeLen < 1 {
+		log.Fatal("Code length must be greater than 0")
+	}
+	log.Println("Using Code-length:", codeLen)
 	cg := codegen.New(codeLen)
 
 	// Create use cases
@@ -69,6 +74,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err, "Failed to parse min send interval")
 	}
+	log.Println("Using min-send-interval:", mti)
+
 	uc := application.NewUseCases(
 		application.WithCodeRepository(cr),
 		application.WithCodeGenerator(cg),

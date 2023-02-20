@@ -1,6 +1,7 @@
 package main
 
 import (
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"time"
@@ -46,13 +47,15 @@ func main() {
 	ur := redis.NewUserRepository(cache,
 		redis.WithTimeout(5*time.Second),
 	)
+	log.Println("Connected to user-repository")
 
 	// Connect to email service with gRPC
-	conn, err := grpc.Dial(c.Get("EMAIL_GRPC_URL"))
+	conn, err := grpc.Dial(c.Get("EMAIL_GRPC_URL"), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
 	esc := pb.NewEmailServiceClient(conn)
+	log.Println("Connected to email-service")
 
 	// Create a new use case
 	uc := application.NewUseCases(
@@ -75,7 +78,7 @@ func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
 	reflection.Register(grpcS)
 
 	// Start the server
-	port := c.Get("AUTH_GRPC_PORT ")
+	port := c.Get("AUTH_GRPC_PORT")
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		panic(err)
