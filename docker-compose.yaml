@@ -18,8 +18,8 @@ services:
       dockerfile: ./_deployments/Dockerfile.auth
       target: development
 
-  contact:
-    container_name: "contact"
+  email:
+    container_name: "email"
     restart: unless-stopped
     volumes:
       - .:/go/src/github.com/escalopa/contact/
