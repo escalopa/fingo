@@ -1,0 +1,16 @@
+version: 1
+packages:
+  - name: "db"
+    engine: "postgresql"
+    package: "mysqlc"
+    path: "./adapter/db/postgres/sqlc"
+    schema: "./adapter/db/postgres/migration/"
+    queries: "./adapter/cache/postgres/query/"
+    emit_db_tags: true
+    emit_json_tags: true
+    emit_interface: true
+    emit_prepared_queries : false
+    emit_exact_table_names: false
+    emit_empty_slices: true
+    emit_enum_valid_method: true
+    emit_all_enum_values: true

@@ -1,16 +1,17 @@
 package main
 
 import (
+	mypostgres "github.com/escalopa/gochat/auth/internal/adapters/db/postgres"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"time"
 
-	"github.com/escalopa/gochat/auth/internal/adapters/cache/redis"
+	"github.com/escalopa/gochat/auth/internal/adapters/db/redis"
 	mygrpc "github.com/escalopa/gochat/auth/internal/adapters/grpc"
 	"github.com/escalopa/gochat/auth/internal/adapters/hasher"
 	"github.com/escalopa/gochat/auth/internal/adapters/token"
-	myValidator "github.com/escalopa/gochat/auth/internal/adapters/validator"
+	myvalidator "github.com/escalopa/gochat/auth/internal/adapters/validator"
 	"github.com/escalopa/gochat/auth/internal/application"
 	"github.com/escalopa/gochat/pb"
 	"github.com/escalopa/goconfig"
@@ -22,37 +23,50 @@ func main() {
 	c := goconfig.New()
 
 	ph := hasher.NewBcryptHasher()
-	v := myValidator.NewValidator()
+	v := myvalidator.NewValidator()
 
 	// Create a new token generator
-	atd, err := time.ParseDuration(c.Get("TOKEN_ACCESS_DURATION"))
+	atd, err := time.ParseDuration(c.Get("AUTH_TOKEN_ACCESS_DURATION"))
 	if err != nil {
 		log.Fatal(err, "Invalid access token duration")
 	}
-	tg, err := token.NewPaseto(c.Get("TOKEN_SECRET"), atd)
+	log.Println("Successfully parsed access token duration")
+	tg, err := token.NewPaseto(c.Get("AUTH_TOKEN_SECRET"), atd)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Successfully create token generator")
 
-	// Create db connection and repository
-	//ctx, cancel := context.WithCancel(context.Background())
-	//defer cancel()
+	// Create postgres conn
+	pgConn, err := mypostgres.New(c.Get("AUTH_DATABASE_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Successfully connected to postgres")
+
+	// Migrate database
+	err = mypostgres.Migrate(pgConn, c.Get("AUTH_DATABASE_MIGRATION_PATH"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Successfully migrated postgres db")
+
+	// Create cache connection
 	cache, err := redis.New(c.Get("AUTH_CACHE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Connected to cache")
+	log.Println("Successfully connected to cache")
 
 	// Create a new user repository
 	ur := redis.NewUserRepository(cache,
 		redis.WithTimeout(5*time.Second),
 	)
-	log.Println("Connected to user-repository")
+	log.Println("Successfully connected to user-repository")
 
 	// Connect to email service with gRPC
-	conn, err := grpc.Dial(c.Get("EMAIL_GRPC_URL"),
+	conn, err := grpc.Dial(c.Get("AUTH_EMAIL_GRPC_URL"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithTimeout(1*time.Minute),
 	)
 	if err != nil {
 		log.Fatal(err)
