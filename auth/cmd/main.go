@@ -37,7 +37,7 @@ func main() {
 	// Create db connection and repository
 	//ctx, cancel := context.WithCancel(context.Background())
 	//defer cancel()
-	cache, err := redis.New(c.Get("CACHE_URL"))
+	cache, err := redis.New(c.Get("AUTH_CACHE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +50,10 @@ func main() {
 	log.Println("Connected to user-repository")
 
 	// Connect to email service with gRPC
-	conn, err := grpc.Dial(c.Get("EMAIL_GRPC_URL"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(c.Get("EMAIL_GRPC_URL"),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithTimeout(1*time.Minute),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

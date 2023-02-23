@@ -46,12 +46,22 @@ func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.Si
 	}, nil
 }
 
-func (h *AuthHandler) VerifyUser(ctx context.Context, req *pb.VerifyUserRequest) (*pb.VerifyUserResponse, error) {
-	err := h.uc.VerifyUser.Execute(ctx, application.VerifyUserParam{Email: req.Email, Code: req.Code})
+func (h *AuthHandler) SendUserCode(ctx context.Context, req *pb.SendUserCodeRequest) (*pb.SendUserCodeResponse, error) {
+	err := h.uc.SendUserCode.Execute(ctx, application.SendUserCodeParam{Email: req.Email})
 	if err != nil {
 		return nil, err
 	}
-	return &pb.VerifyUserResponse{
+	return &pb.SendUserCodeResponse{
+		Response: &pb.BasicResponse{Status: 200, Message: "Verification successful"},
+	}, nil
+}
+
+func (h *AuthHandler) VerifyUserCode(ctx context.Context, req *pb.VerifyUserCodeRequest) (*pb.VerifyUserCodeResponse, error) {
+	err := h.uc.VerifyUserCode.Execute(ctx, application.VerifyUserCodeParam{Email: req.Email, Code: req.Code})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.VerifyUserCodeResponse{
 		Response: &pb.BasicResponse{Status: 200, Message: "Verification successful"},
 	}, nil
 }

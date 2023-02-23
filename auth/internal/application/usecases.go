@@ -20,10 +20,11 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 	}
 	u.Query = Query{}
 	u.Command = Command{
-		Signin:      NewSigninCommand(u.v, u.h, u.tg, u.ur),
-		Signup:      NewSignupCommand(u.v, u.h, u.ur),
-		VerifyToken: NewVerifyTokenCommand(u.v, u.tg),
-		VerifyUser:  NewVerifyUserCommand(u.v, u.ur, u.esc),
+		Signin:         NewSigninCommand(u.v, u.h, u.tg, u.ur),
+		Signup:         NewSignupCommand(u.v, u.h, u.ur),
+		VerifyToken:    NewVerifyTokenCommand(u.v, u.tg),
+		SendUserCode:   NewSendUserCodeCommand(u.v, u.ur, u.esc),
+		VerifyUserCode: NewVerifyUserCodeCommand(u.v, u.ur, u.esc),
 	}
 	return u
 }
@@ -61,8 +62,9 @@ func WithValidator(v Validator) func(*UseCases) {
 type Query struct{}
 
 type Command struct {
-	Signin      SigninCommand
-	Signup      SignupCommand
-	VerifyToken VerifyTokenCommand
-	VerifyUser  VerifyUserCommand
+	Signin         SigninCommand
+	Signup         SignupCommand
+	VerifyToken    VerifyTokenCommand
+	SendUserCode   SendUserCodeCommand
+	VerifyUserCode VerifyUserCodeCommand
 }

@@ -11,7 +11,6 @@ import (
 
 type SendUserCodeParam struct {
 	Email string `validate:"required,email"`
-	Code  string `validate:"required,numeric"`
 }
 
 type SendUserCodeCommand interface {
@@ -32,23 +31,22 @@ func (vu *SendUserCodeCommandImpl) Execute(ctx context.Context, params SendUserC
 	if err != nil {
 		return err
 	}
+	// Check if the user is already verified
 	if user.IsVerified {
 		return errs.B().Code(errs.InvalidArgument).Msg("user is already verified").Err()
 	}
 	// VerifyToken code with email service
-	_, err = vu.esc.VerifyCode(ctx, &pb.VerifyCodeRequest{
+	_, err = vu.esc.SendCode(ctx, &pb.SendCodeRequest{
 		Email: params.Email,
-		Code:  params.Code,
 	})
 	// Handle error
 	if err != nil {
-		if errsError, ok := err.(*errs.Error); ok {
-			return errs.B(errsError).Code(errsError.Code).Msg("failed to verify code").Err()
+		if er, ok := err.(*errs.Error); ok {
+			return errs.B(er).Code(er.Code).Msg("failed to send code").Err()
 		}
-		return errs.B(err).Code(errs.Internal).Msg("failed to verify code").Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to send code").Err()
 	}
-	user.IsVerified = true
-	return vu.ur.Update(ctx, user)
+	return nil
 }
 
 func NewSendUserCodeCommand(v Validator, ur UserRepository, esc pb.EmailServiceClient) SendUserCodeCommand {
