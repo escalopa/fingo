@@ -9,22 +9,22 @@ import (
 
 // ---------------------- Verify User ---------------------- //
 
-type VerifyUserParam struct {
+type SendUserCodeParam struct {
 	Email string `validate:"required,email"`
 	Code  string `validate:"required,numeric"`
 }
 
-type VerifyUserCommand interface {
-	Execute(ctx context.Context, params VerifyUserParam) error
+type SendUserCodeCommand interface {
+	Execute(ctx context.Context, params SendUserCodeParam) error
 }
 
-type VerifyUserCommandImpl struct {
+type SendUserCodeCommandImpl struct {
 	v   Validator
 	ur  UserRepository
 	esc pb.EmailServiceClient
 }
 
-func (vu *VerifyUserCommandImpl) Execute(ctx context.Context, params VerifyUserParam) error {
+func (vu *SendUserCodeCommandImpl) Execute(ctx context.Context, params SendUserCodeParam) error {
 	if err := vu.v.Validate(params); err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (vu *VerifyUserCommandImpl) Execute(ctx context.Context, params VerifyUserP
 	}
 	// VerifyToken code with email service
 	_, err = vu.esc.VerifyCode(ctx, &pb.VerifyCodeRequest{
-		Email: user.Email,
+		Email: params.Email,
 		Code:  params.Code,
 	})
 	// Handle error
@@ -51,6 +51,6 @@ func (vu *VerifyUserCommandImpl) Execute(ctx context.Context, params VerifyUserP
 	return vu.ur.Update(ctx, user)
 }
 
-func NewVerifyUserCommand(v Validator, ur UserRepository, esc pb.EmailServiceClient) VerifyUserCommand {
-	return &VerifyUserCommandImpl{v: v, ur: ur, esc: esc}
+func NewSendUserCodeCommand(v Validator, ur UserRepository, esc pb.EmailServiceClient) SendUserCodeCommand {
+	return &SendUserCodeCommandImpl{v: v, ur: ur, esc: esc}
 }

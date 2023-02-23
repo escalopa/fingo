@@ -8,7 +8,6 @@ package pb;
 
 message SendCodeRequest {
   string email = 1;
-  string code = 2;
 }
 
 message SendCodeResponse {

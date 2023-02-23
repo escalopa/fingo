@@ -27,12 +27,21 @@ message SigninResponse {
   BasicResponse response = 2;
 }
 
-message VerifyUserRequest {
+message VerifyUserCodeRequest {
   string email = 1;
   string code = 2;
 }
 
-message VerifyUserResponse {
+message VerifyUserCodeResponse {
+  BasicResponse response = 1;
+}
+
+message SendUserCodeRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message SendUserCodeResponse {
   BasicResponse response = 1;
 }
 
@@ -48,6 +57,7 @@ message VerifyTokenResponse {
 service AuthService {
   rpc Signup(SignupRequest) returns (SignupResponse);
   rpc Signin(SigninRequest) returns (SigninResponse);
-  rpc VerifyUser(VerifyUserRequest) returns (VerifyUserResponse);
+  rpc SendUserCode(SendUserCodeRequest) returns (SendUserCodeResponse);
+  rpc VerifyUserCode(VerifyUserCodeRequest) returns (VerifyUserCodeResponse);
   rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
 }

@@ -24,7 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthServiceClient interface {
 	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
 	Signin(ctx context.Context, in *SigninRequest, opts ...grpc.CallOption) (*SigninResponse, error)
-	VerifyUser(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerifyUserResponse, error)
+	SendUserCode(ctx context.Context, in *SendUserCodeRequest, opts ...grpc.CallOption) (*SendUserCodeResponse, error)
+	VerifyUserCode(ctx context.Context, in *VerifyUserCodeRequest, opts ...grpc.CallOption) (*VerifyUserCodeResponse, error)
 	VerifyToken(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*VerifyTokenResponse, error)
 }
 
@@ -54,9 +55,18 @@ func (c *authServiceClient) Signin(ctx context.Context, in *SigninRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) VerifyUser(ctx context.Context, in *VerifyUserRequest, opts ...grpc.CallOption) (*VerifyUserResponse, error) {
-	out := new(VerifyUserResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/VerifyUser", in, out, opts...)
+func (c *authServiceClient) SendUserCode(ctx context.Context, in *SendUserCodeRequest, opts ...grpc.CallOption) (*SendUserCodeResponse, error) {
+	out := new(SendUserCodeResponse)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/SendUserCode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) VerifyUserCode(ctx context.Context, in *VerifyUserCodeRequest, opts ...grpc.CallOption) (*VerifyUserCodeResponse, error) {
+	out := new(VerifyUserCodeResponse)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/VerifyUserCode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +88,8 @@ func (c *authServiceClient) VerifyToken(ctx context.Context, in *VerifyTokenRequ
 type AuthServiceServer interface {
 	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
 	Signin(context.Context, *SigninRequest) (*SigninResponse, error)
-	VerifyUser(context.Context, *VerifyUserRequest) (*VerifyUserResponse, error)
+	SendUserCode(context.Context, *SendUserCodeRequest) (*SendUserCodeResponse, error)
+	VerifyUserCode(context.Context, *VerifyUserCodeRequest) (*VerifyUserCodeResponse, error)
 	VerifyToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
@@ -93,8 +104,11 @@ func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*
 func (UnimplementedAuthServiceServer) Signin(context.Context, *SigninRequest) (*SigninResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Signin not implemented")
 }
-func (UnimplementedAuthServiceServer) VerifyUser(context.Context, *VerifyUserRequest) (*VerifyUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyUser not implemented")
+func (UnimplementedAuthServiceServer) SendUserCode(context.Context, *SendUserCodeRequest) (*SendUserCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendUserCode not implemented")
+}
+func (UnimplementedAuthServiceServer) VerifyUserCode(context.Context, *VerifyUserCodeRequest) (*VerifyUserCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyUserCode not implemented")
 }
 func (UnimplementedAuthServiceServer) VerifyToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyToken not implemented")
@@ -148,20 +162,38 @@ func _AuthService_Signin_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_VerifyUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyUserRequest)
+func _AuthService_SendUserCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SendUserCodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AuthServiceServer).VerifyUser(ctx, in)
+		return srv.(AuthServiceServer).SendUserCode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AuthService/VerifyUser",
+		FullMethod: "/pb.AuthService/SendUserCode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).VerifyUser(ctx, req.(*VerifyUserRequest))
+		return srv.(AuthServiceServer).SendUserCode(ctx, req.(*SendUserCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_VerifyUserCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyUserCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).VerifyUserCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AuthService/VerifyUserCode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).VerifyUserCode(ctx, req.(*VerifyUserCodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,8 +232,12 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuthService_Signin_Handler,
 		},
 		{
-			MethodName: "VerifyUser",
-			Handler:    _AuthService_VerifyUser_Handler,
+			MethodName: "SendUserCode",
+			Handler:    _AuthService_SendUserCode_Handler,
+		},
+		{
+			MethodName: "VerifyUserCode",
+			Handler:    _AuthService_VerifyUserCode_Handler,
 		},
 		{
 			MethodName: "VerifyToken",
