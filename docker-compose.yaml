@@ -1,17 +1,19 @@
-version: '3.8'
+version: "3.8"
 
 services:
   auth:
     container_name: "auth"
     restart: unless-stopped
     volumes:
-      - .:/go/src/github.com/escalopa/auth/
+      - .:/go/src/github.com/escalopa/gochat/
     environment:
+      - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
+      - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
-      - TOKEN_SECRET=${TOKEN_SECRET}
-      - TOKEN_ACCESS_DURATION=${TOKEN_ACCESS_DURATION}
-      - EMAIL_GRPC_URL=${EMAIL_GRPC_URL}
+      - AUTH_TOKEN_SECRET=${AUTH_TOKEN_SECRET}
+      - AUTH_TOKEN_ACCESS_DURATION=${AUTH_TOKEN_ACCESS_DURATION}
+      - AUTH_EMAIL_GRPC_URL=${AUTH_EMAIL_GRPC_URL}
     ports:
       - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     build:
@@ -21,12 +23,13 @@ services:
     depends_on:
       - cache
       - email
+      - postgres
 
   email:
     container_name: "email"
     restart: unless-stopped
     volumes:
-      - .:/go/src/github.com/escalopa/contact/
+      - .:/go/src/github.com/escalopa/gochat/
     environment:
       - EMAIL_CACHE_URL=${EMAIL_CACHE_URL}
       - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
@@ -49,8 +52,27 @@ services:
     container_name: "cache"
     restart: unless-stopped
     volumes:
-      - ./storage/cache:/data
+      - cache:/data
     ports:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+
+  postgres:
+      user: "0"
+      image: postgres:12.8
+      container_name: "pg"
+      env_file:
+        - ./.db.env
+      ports:
+        - "5432:5432"
+      volumes:
+        - pg:/var/lib/postgresql/data
+      healthcheck:
+        test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+volumes:
+  cache:
+  pg:
