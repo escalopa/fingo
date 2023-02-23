@@ -8,7 +8,9 @@ require (
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
 	github.com/google/uuid v1.3.0
+	github.com/lib/pq v1.10.7
 	github.com/lordvidex/errs v1.1.0
+	github.com/mattes/migrate v3.0.1+incompatible
 	github.com/o1egl/paseto v1.0.0
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.18.0
