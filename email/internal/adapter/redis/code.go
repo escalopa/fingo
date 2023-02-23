@@ -3,7 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"github.com/escalopa/gochat/contact/internal/core"
+	"github.com/escalopa/gochat/email/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"
 	"time"

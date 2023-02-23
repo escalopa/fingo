@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/escalopa/gochat/contact/internal/adapter/codegen"
-	"github.com/escalopa/gochat/contact/internal/adapter/email/mycourier"
-	mygrpc "github.com/escalopa/gochat/contact/internal/adapter/mygrpc"
-	"github.com/escalopa/gochat/contact/internal/adapter/redis"
-	"github.com/escalopa/gochat/contact/internal/application"
+	"github.com/escalopa/gochat/email/internal/adapter/codegen"
+	"github.com/escalopa/gochat/email/internal/adapter/email/mycourier"
+	mygrpc "github.com/escalopa/gochat/email/internal/adapter/mygrpc"
+	"github.com/escalopa/gochat/email/internal/adapter/redis"
+	"github.com/escalopa/gochat/email/internal/application"
 	"github.com/escalopa/gochat/pb"
 	"github.com/escalopa/goconfig"
 	"google.golang.org/grpc"

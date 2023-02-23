@@ -3,7 +3,7 @@ package mygrpc
 import (
 	"context"
 
-	"github.com/escalopa/gochat/contact/internal/application"
+	"github.com/escalopa/gochat/email/internal/application"
 	"github.com/escalopa/gochat/pb"
 )
 

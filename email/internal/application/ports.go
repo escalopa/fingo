@@ -2,7 +2,7 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/gochat/contact/internal/core"
+	"github.com/escalopa/gochat/email/internal/core"
 )
 
 type CodeRepository interface {

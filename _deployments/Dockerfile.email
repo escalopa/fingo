@@ -1,0 +1,21 @@
+FROM golang:1.19 AS development
+WORKDIR /go/src/github.com/escalopa/gochat/
+COPY ./email ./email
+COPY ./pkg ./pkg
+COPY ./pb ./pb
+COPY go.mod go.sum ./
+RUN go mod download
+RUN go install github.com/cespare/reflex@latest
+CMD reflex -sr '\.go$' go run ./email/cmd/main.go
+
+FROM golang:alpine AS builder
+WORKDIR /go/src/github.com/escalopa/gochat/
+COPY ./email ./email
+COPY ./pkg ./pkg
+COPY go.mod go.sum ./
+RUN go build -o /go/bin/email ./email/cmd
+
+FROM alpine:latest AS productiondocker
+RUN apk add --no-cache tzdata
+COPY --from=builder /go/bin/email /go/bin/email
+ENTRYPOINT ["/go/bin/email"]
