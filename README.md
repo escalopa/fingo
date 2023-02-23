@@ -88,5 +88,6 @@ graph TD
 
 ## Upcoming Features 📌
 
-### Milestones 1.0 🏁
+### Milestones 1 🏁
 1. [x] Don't send email if email is already verified or a message already less than 2 minutes ago
+2. [x] Start `Auth-Service` **ONLY** after `Email-Service` using docker
