@@ -11,7 +11,6 @@ import (
 
 type Sender struct {
 	c   *courier.Client
-	si  time.Duration
 	exp time.Duration
 	vtc string //verificationTemplateCode
 }

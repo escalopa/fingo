@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/google/uuid"
 	"time"
 
@@ -50,12 +51,16 @@ func (ur *UserRepository) Save(ctx context.Context, u ac.User) error {
 
 func (ur *UserRepository) Get(ctx context.Context, id string) (ac.User, error) {
 	var u ac.User
-	err := ur.r.Get(ctx, id).Scan(&u)
+	userStr, err := ur.r.Get(ctx, id).Result()
 	if err != nil {
 		if err == redis.Nil {
 			return u, errs.B(err).Code(errs.NotFound).Msg("user not found").Err()
 		}
 		return u, errs.B(err).Code(errs.Internal).Msg("error getting user").Err()
+	}
+	err = json.Unmarshal([]byte(userStr), &u)
+	if err != nil {
+		return ac.User{}, errs.B().Code(errs.Internal).Msg("failed to marshal user from cache").Err()
 	}
 	return u, nil
 }
