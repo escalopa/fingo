@@ -22,7 +22,7 @@ func main() {
 	// Create db connection
 	//ctx, cancel := context.WithCancel(context.Background())
 	//defer cancel()
-	cache, err := redis.New(c.Get("CACHE_URL"))
+	cache, err := redis.New(c.Get("EMAIL_CACHE_URL"))
 	if err != nil {
 		log.Fatal(err)
 	}

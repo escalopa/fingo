@@ -2,6 +2,7 @@ package mygrpc
 
 import (
 	"context"
+
 	"github.com/escalopa/gofly/contact/internal/application"
 	"github.com/escalopa/gofly/pb"
 )
@@ -15,7 +16,7 @@ func New(uc *application.UseCases) *Handler {
 	return &Handler{uc: uc}
 }
 
-func (h *Handler) VerifyEmail(ctx context.Context, req *pb.SendCodeRequest) (*pb.SendCodeResponse, error) {
+func (h *Handler) SendCode(ctx context.Context, req *pb.SendCodeRequest) (*pb.SendCodeResponse, error) {
 	err := h.uc.SendCode.Execute(ctx, application.SendCodeCommandParam{Email: req.Email})
 	if err != nil {
 		return nil, err
@@ -31,9 +32,7 @@ func (h *Handler) VerifyEmail(ctx context.Context, req *pb.SendCodeRequest) (*pb
 func (h *Handler) VerifyCode(ctx context.Context, req *pb.VerifyCodeRequest) (*pb.VerifyCodeResponse, error) {
 	err := h.uc.VerifyCode.Execute(ctx, application.VerifyCodeCommandParam{Email: req.Email, Code: req.Code})
 	if err != nil {
-		return &pb.VerifyCodeResponse{
-			Response: &pb.BasicResponse{Status: 400, Message: err.Error()},
-		}, err
+		return nil, err
 	}
 	return &pb.VerifyCodeResponse{
 		Response: &pb.BasicResponse{

@@ -42,7 +42,7 @@ func (c *SendCodeCommandImpl) Execute(ctx context.Context, param SendCodeCommand
 	if vc, err := c.cr.Get(ctx, param.Email); err == nil {
 		if time.Now().Sub(vc.SentAt) < c.mti {
 			return errs.B().Msgf("please wait %d minute(s) before sending another code",
-				time.Now().Sub(vc.SentAt).Minutes()).Err()
+				int(time.Now().Add(c.mti).Sub(vc.SentAt).Minutes())).Err()
 		}
 	}
 	// generate a new code
@@ -55,11 +55,11 @@ func (c *SendCodeCommandImpl) Execute(ctx context.Context, param SendCodeCommand
 		Code:   code,
 		SentAt: time.Now(),
 	}
-	if err = c.cr.Save(ctx, code, vc); err != nil {
+	if err = c.cr.Save(ctx, param.Email, vc); err != nil {
 		return errs.B(err).Msg("could not save code").Err()
 	}
 	// send the code to the user via email
-	err = c.es.SendVerificationCode(ctx, param.Email, vc)
+	err = c.es.SendVerificationCode(ctx, param.Email, code)
 	if err != nil {
 		return errs.B(err).Msg("could not send email").Err()
 	}

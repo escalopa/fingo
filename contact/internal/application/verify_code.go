@@ -40,16 +40,16 @@ func (c *VerifyCodeCommandImpl) Execute(ctx context.Context, param VerifyCodeCom
 	vc, err := c.cr.Get(ctx, param.Email)
 	if err != nil {
 		// if the code does not exist, return a not found error
-		errr, ok := err.(*errs.Error)
-		if ok && errr.Code == errs.NotFound {
-			return errs.B(errr).Msg("code has expired").Err()
+		er, ok := err.(*errs.Error)
+		if ok && er.Code == errs.NotFound {
+			return errs.B(er).Msg("code has expired").Err()
 		}
 		// otherwise, return the error
 		return err
 	}
 	// if the email does not match the email in the param, return an error
 	if vc.Code != param.Code {
-		return errs.B().Msgf("code & email mismatch, expected %s, got %s", param.Code, vc.Code).Err()
+		return errs.B().Msg("given code doesn't match the one stored in cache").Err()
 	}
 	return nil
 }

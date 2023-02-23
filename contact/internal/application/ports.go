@@ -12,7 +12,7 @@ type CodeRepository interface {
 }
 
 type EmailSender interface {
-	SendVerificationCode(ctx context.Context, email string, vc core.VerificationCode) error
+	SendVerificationCode(ctx context.Context, email string, code string) error
 	Close() error
 }
 
