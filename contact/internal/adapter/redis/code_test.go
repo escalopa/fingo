@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -16,14 +15,14 @@ func TestCodeRepository(t *testing.T) {
 	cr := NewCodeRepository(testRedis, WithExpiration(exp))
 
 	testCases := []struct {
-		name   string
-		code   string
-		userID string
+		name  string
+		code  string
+		email string
 	}{
 		{
-			name:   "Save and get code",
-			code:   gofakeit.RandomString([]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}),
-			userID: gofakeit.UUID(),
+			name:  "Save and get code",
+			code:  gofakeit.RandomString([]string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"}),
+			email: gofakeit.Email(),
 		},
 	}
 
@@ -34,16 +33,17 @@ func TestCodeRepository(t *testing.T) {
 				Code:   tc.code,
 				SentAt: time.Now(),
 			}
-			err := cr.Save(testContext, tc.userID, vc)
-			require.NoError(t, err, fmt.Sprintf("error saving code: %v", err))
+			err := cr.Save(testContext, tc.email, vc)
+			require.NoError(t, err, "error saving code from cache")
 			// Get code
-			userID, err := cr.Get(testContext, tc.code)
-			require.NoError(t, err, fmt.Sprintf("error getting code: %v", err))
-			require.NoError(t, err, fmt.Sprintf("expected userID %s, got %s", tc.userID, userID))
+			vcGet, err := cr.Get(testContext, tc.email)
+			require.NoError(t, err, "error getting code from cache")
+			require.Equalf(t, vc.Code, vcGet.Code,
+				"stored value doesn't match one set expected: %+v, got: %+v", vc.Code, vcGet.Code)
 			// Wait for code to expire
 			time.Sleep(exp)
 			// Get code again (should return redis.Nil) since it has expired
-			_, err = cr.Get(testContext, tc.userID)
+			_, err = cr.Get(testContext, tc.email)
 			if err != nil {
 				if er, ok := err.(*errs.Error); ok {
 					require.Equal(t, errs.NotFound, er.Code)

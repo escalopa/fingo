@@ -5,7 +5,7 @@ services:
     container_name: "auth"
     restart: unless-stopped
     volumes:
-      - .:/go/src/github.com/escalopa/goauth/
+      - .:/go/src/github.com/escalopa/auth/
     environment:
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}

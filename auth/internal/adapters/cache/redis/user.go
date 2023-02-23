@@ -78,5 +78,5 @@ func newUserID() (string, error) {
 	if err != nil {
 		return "", errs.B(err).Code(errs.Internal).Msg("error generating user id").Err()
 	}
-	return "user-" + id.String(), nil
+	return id.String(), nil
 }

@@ -113,8 +113,8 @@ func TestUpdateUser(t *testing.T) {
 			u1, err := ur.Get(testContext, tc.user.Email)
 			require.NoError(t, err)
 			// update user
-			tc.user.IsVerified = true
-			err = ur.Update(testContext, tc.user)
+			u1.IsVerified = true
+			err = ur.Update(testContext, u1)
 			require.NoError(t, err)
 			// get user
 			u2, err := ur.Get(testContext, tc.user.Email)
