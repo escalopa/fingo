@@ -38,7 +38,6 @@ message VerifyUserCodeResponse {
 
 message SendUserCodeRequest {
   string email = 1;
-  string code = 2;
 }
 
 message SendUserCodeResponse {
