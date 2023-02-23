@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/go/src/github.com/escalopa/goauth/
     environment:
-      - CACHE_URL=${CACHE_URL}
+      - AUTH_CACHE_URL=${AUTH_CACHE_URL}
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
       - TOKEN_SECRET=${TOKEN_SECRET}
       - TOKEN_ACCESS_DURATION=${TOKEN_ACCESS_DURATION}
@@ -28,7 +28,7 @@ services:
     volumes:
       - .:/go/src/github.com/escalopa/contact/
     environment:
-      - CACHE_URL=${CACHE_URL}
+      - EMAIL_CACHE_URL=${EMAIL_CACHE_URL}
       - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
       - CODE_LENGTH=${CODE_LENGTH}
       - CODE_EXPIRATION=${CODE_EXPIRATION}
