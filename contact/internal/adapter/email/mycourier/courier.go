@@ -2,10 +2,11 @@ package mycourier
 
 import (
 	"context"
-	"github.com/escalopa/gofly/contact/internal/core"
+	"strconv"
+	"time"
+
 	"github.com/lordvidex/errs"
 	"github.com/trycourier/courier-go/v2"
-	"time"
 )
 
 type Sender struct {
@@ -46,7 +47,7 @@ func WithVerificationTemplate(templateCode string) func(*Sender) {
 	}
 }
 
-func (c *Sender) SendVerificationCode(ctx context.Context, email string, vc core.VerificationCode) error {
+func (c *Sender) SendVerificationCode(ctx context.Context, email string, code string) error {
 	requestID, err := c.c.SendMessage(
 		ctx,
 		courier.SendMessageRequestBody{
@@ -56,8 +57,8 @@ func (c *Sender) SendVerificationCode(ctx context.Context, email string, vc core
 				},
 				"template": c.vtc,
 				"data": map[string]string{
-					"code": vc.Code,
-					"exp":  c.exp.String(),
+					"code":       code,
+					"expiration": strconv.Itoa(int(c.exp.Minutes())),
 				},
 			},
 		},
