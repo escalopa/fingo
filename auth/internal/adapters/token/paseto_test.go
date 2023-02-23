@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	ac "github.com/escalopa/gofly/auth/internal/core"
+	ac "github.com/escalopa/gochat/auth/internal/core"
 	"github.com/lordvidex/errs"
 	"github.com/stretchr/testify/require"
 )

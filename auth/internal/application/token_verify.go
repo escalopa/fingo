@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/escalopa/gofly/auth/internal/core"
+	"github.com/escalopa/gochat/auth/internal/core"
 	"github.com/lordvidex/errs"
 )
 

@@ -1,6 +1,6 @@
 package application
 
-import "github.com/escalopa/gofly/pb"
+import "github.com/escalopa/gochat/pb"
 
 type UseCases struct {
 	v   Validator

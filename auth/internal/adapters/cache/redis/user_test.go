@@ -2,7 +2,7 @@ package redis
 
 import (
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/escalopa/gofly/auth/internal/core"
+	"github.com/escalopa/gochat/auth/internal/core"
 	"github.com/lordvidex/errs"
 	"github.com/stretchr/testify/require"
 	"reflect"

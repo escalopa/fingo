@@ -2,8 +2,8 @@ package grpc
 
 import (
 	"context"
-	"github.com/escalopa/gofly/auth/internal/application"
-	"github.com/escalopa/gofly/pb"
+	"github.com/escalopa/gochat/auth/internal/application"
+	"github.com/escalopa/gochat/pb"
 )
 
 // ----------------------------------------- //

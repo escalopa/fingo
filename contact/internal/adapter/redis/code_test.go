@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/brianvoe/gofakeit/v6"
-	"github.com/escalopa/gofly/contact/internal/core"
+	"github.com/escalopa/gochat/contact/internal/core"
 	"github.com/lordvidex/errs"
 	"github.com/stretchr/testify/require"
 )

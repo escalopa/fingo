@@ -1,4 +1,4 @@
-module github.com/escalopa/gofly
+module github.com/escalopa/gochat
 
 go 1.19
 

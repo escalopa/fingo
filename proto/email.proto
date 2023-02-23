@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "basic.proto";
 
-option go_package = "github.com/escalopa/gofly/pb";
+option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
 

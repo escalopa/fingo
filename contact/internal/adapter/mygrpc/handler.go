@@ -3,8 +3,8 @@ package mygrpc
 import (
 	"context"
 
-	"github.com/escalopa/gofly/contact/internal/application"
-	"github.com/escalopa/gofly/pb"
+	"github.com/escalopa/gochat/contact/internal/application"
+	"github.com/escalopa/gochat/pb"
 )
 
 type Handler struct {

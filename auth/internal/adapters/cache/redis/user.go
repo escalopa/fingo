@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"time"
 
-	ac "github.com/escalopa/gofly/auth/internal/core"
+	ac "github.com/escalopa/gochat/auth/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"
 )

@@ -3,7 +3,7 @@ package application
 import (
 	"context"
 
-	"github.com/escalopa/gofly/pb"
+	"github.com/escalopa/gochat/pb"
 	"github.com/lordvidex/errs"
 )
 

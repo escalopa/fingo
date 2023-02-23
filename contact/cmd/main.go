@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/escalopa/gochat/contact/internal/adapter/codegen"
+	"github.com/escalopa/gochat/contact/internal/adapter/email/mycourier"
+	mygrpc "github.com/escalopa/gochat/contact/internal/adapter/mygrpc"
+	"github.com/escalopa/gochat/contact/internal/adapter/redis"
+	"github.com/escalopa/gochat/contact/internal/application"
+	"github.com/escalopa/gochat/pb"
 	"github.com/escalopa/goconfig"
-	"github.com/escalopa/gofly/contact/internal/adapter/codegen"
-	"github.com/escalopa/gofly/contact/internal/adapter/email/mycourier"
-	mygrpc "github.com/escalopa/gofly/contact/internal/adapter/mygrpc"
-	"github.com/escalopa/gofly/contact/internal/adapter/redis"
-	"github.com/escalopa/gofly/contact/internal/application"
-	"github.com/escalopa/gofly/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"
