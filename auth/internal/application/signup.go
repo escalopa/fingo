@@ -8,6 +8,8 @@ import (
 // ---------------------- Signup ---------------------- //
 
 type SignupParams struct {
+	Name     string `validate:"required,alpha"`
+	Username string `validate:"required,alphanum"`
 	Email    string `validate:"required,email"`
 	Password string `validate:"required,min=8"`
 }
@@ -33,6 +35,8 @@ func (l *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) er
 	}
 	// Create user
 	user := ac.User{
+		Name:       params.Name,
+		Username:   params.Username,
 		Email:      params.Email,
 		Password:   hashedPassword,
 		IsVerified: false,

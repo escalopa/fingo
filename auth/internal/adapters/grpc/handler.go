@@ -21,6 +21,8 @@ func NewAuthHandler(uc *application.UseCases) *AuthHandler {
 
 func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*pb.SignupResponse, error) {
 	err := h.uc.Signup.Execute(ctx, application.SignupParams{
+		Name:     req.Name,
+		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -28,7 +30,7 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*pb.Si
 		return nil, err
 	}
 	return &pb.SignupResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Signup successful"},
+		Response: &pb.BasicResponse{Status: 200, Message: "Signup successfully"},
 	}, nil
 }
 
@@ -41,7 +43,7 @@ func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.Si
 		return nil, err
 	}
 	return &pb.SigninResponse{
-		Response:    &pb.BasicResponse{Status: 200, Message: "Signin successful"},
+		Response:    &pb.BasicResponse{Status: 200, Message: "Signin successfully"},
 		AccessToken: toStrPtr(token),
 	}, nil
 }
@@ -52,7 +54,7 @@ func (h *AuthHandler) SendUserCode(ctx context.Context, req *pb.SendUserCodeRequ
 		return nil, err
 	}
 	return &pb.SendUserCodeResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Verification successful"},
+		Response: &pb.BasicResponse{Status: 200, Message: "Send code to user successfully"},
 	}, nil
 }
 
@@ -62,7 +64,7 @@ func (h *AuthHandler) VerifyUserCode(ctx context.Context, req *pb.VerifyUserCode
 		return nil, err
 	}
 	return &pb.VerifyUserCodeResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Verification successful"},
+		Response: &pb.BasicResponse{Status: 200, Message: "Verified user email successfully"},
 	}, nil
 }
 
