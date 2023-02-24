@@ -7,7 +7,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/escalopa/gochat/auth/internal/adapters/db/redis"
 	mygrpc "github.com/escalopa/gochat/auth/internal/adapters/grpc"
 	"github.com/escalopa/gochat/auth/internal/adapters/hasher"
 	"github.com/escalopa/gochat/auth/internal/adapters/token"
@@ -26,12 +25,16 @@ func main() {
 	v := myvalidator.NewValidator()
 
 	// Create a new token generator
-	atd, err := time.ParseDuration(c.Get("AUTH_TOKEN_ACCESS_DURATION"))
+	atd, err := time.ParseDuration(c.Get("AUTH_ACCESS_TOKEN_DURATION"))
 	if err != nil {
 		log.Fatal(err, "Invalid access token duration")
 	}
+	rtd, err := time.ParseDuration(c.Get("AUTH_REFRESH_TOKEN_DURATION"))
+	if err != nil {
+		log.Fatal(err, "Invalid refresh token duration")
+	}
 	log.Println("Successfully parsed access token duration")
-	tg, err := token.NewPaseto(c.Get("AUTH_TOKEN_SECRET"), atd)
+	tg, err := token.NewPaseto(c.Get("AUTH_TOKEN_SECRET"), atd, rtd)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,18 +54,18 @@ func main() {
 	}
 	log.Println("Successfully migrated postgres db")
 
-	// Create cache connection
-	cache, err := redis.New(c.Get("AUTH_CACHE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Successfully connected to cache")
+	// Create user repository
+	ur := mypostgres.NewUserRepository(pgConn)
+	log.Println("Successfully created user repository")
 
-	// Create a new user repository
-	ur := redis.NewUserRepository(cache,
-		redis.WithTimeout(5*time.Second),
-	)
-	log.Println("Successfully connected to user-repository")
+	// Create session repository
+	std, err := time.ParseDuration(c.Get("AUTH_USER_SESSION_DURATION"))
+	if err != nil {
+		log.Fatal(err, "Invalid user session duration")
+	}
+	log.Println("Successfully parsed user session duration")
+	sr := mypostgres.NewSessionRepository(pgConn, std)
+	log.Println("Successfully created session repository")
 
 	// Connect to email service with gRPC
 	conn, err := grpc.Dial(c.Get("AUTH_EMAIL_GRPC_URL"),
@@ -80,6 +83,7 @@ func main() {
 		application.WithPasswordHasher(ph),
 		application.WithTokenGenerator(tg),
 		application.WithUserRepository(ur),
+		application.WithSessionRepository(sr),
 		application.WithEmailService(esc),
 	)
 

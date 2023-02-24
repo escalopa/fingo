@@ -16,8 +16,8 @@ type SessionRepository struct {
 	std time.Duration // session time duration
 }
 
-func NewSessionRepository(conn *sql.DB) *SessionRepository {
-	return &SessionRepository{db: conn}
+func NewSessionRepository(conn *sql.DB, std time.Duration) *SessionRepository {
+	return &SessionRepository{db: conn, std: std}
 }
 
 func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateSessionParams) error {
