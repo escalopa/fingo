@@ -29,7 +29,7 @@ func main() {
 	log.Println("Connected to cache")
 
 	// Parse code expiration from config
-	exp, err := time.ParseDuration(c.Get("CODE_EXPIRATION"))
+	exp, err := time.ParseDuration(c.Get("EMAIL_USER_CODE_EXPIRATION"))
 	if err != nil {
 		log.Fatal(err, "Failed to parse code expiration")
 	}
@@ -49,9 +49,9 @@ func main() {
 	log.Println("Connected to code-repo")
 
 	// Create a courier sender
-	cs, err := mycourier.New(c.Get("COURIER_TOKEN"),
+	cs, err := mycourier.New(c.Get("EMAIL_COURIER_TOKEN"),
 		mycourier.WithExpiration(exp),
-		mycourier.WithVerificationTemplate(c.Get("COURIER_VERIFICATION_TEMPLATE_ID")),
+		mycourier.WithVerificationTemplate(c.Get("EMAIL_COURIER_VERIFICATION_TEMPLATE_ID")),
 	)
 	if err != nil {
 		log.Fatal(err, "Failed to create courier sender")
@@ -59,7 +59,7 @@ func main() {
 	log.Println("Connected to courier-sender")
 
 	// Create a code generator
-	codeLen, err := strconv.Atoi(c.Get("CODE_LENGTH"))
+	codeLen, err := strconv.Atoi(c.Get("EMAIL_USER_CODE_LENGTH"))
 	if err != nil {
 		log.Fatal(err, "Failed to parse code length")
 	}
@@ -70,7 +70,7 @@ func main() {
 	cg := codegen.New(codeLen)
 
 	// Create use cases
-	mti, err := time.ParseDuration(c.Get("MIN_SEND_INTERVAL"))
+	mti, err := time.ParseDuration(c.Get("EMAIL_MIN_SEND_INTERVAL"))
 	if err != nil {
 		log.Fatal(err, "Failed to parse min send interval")
 	}
