@@ -1,19 +1,20 @@
 package main
 
 import (
+	"log"
+	"net"
+	"strconv"
+	"time"
+
 	"github.com/escalopa/gochat/email/internal/adapter/codegen"
 	"github.com/escalopa/gochat/email/internal/adapter/email/mycourier"
-	mygrpc "github.com/escalopa/gochat/email/internal/adapter/mygrpc"
+	mygrpc "github.com/escalopa/gochat/email/internal/adapter/grpc"
 	"github.com/escalopa/gochat/email/internal/adapter/redis"
 	"github.com/escalopa/gochat/email/internal/application"
 	"github.com/escalopa/gochat/pb"
 	"github.com/escalopa/goconfig"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
-	"strconv"
-	"time"
 )
 
 func main() {
