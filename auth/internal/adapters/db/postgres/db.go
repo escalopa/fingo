@@ -2,6 +2,7 @@ package mypostgres
 
 import (
 	"database/sql"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/mattes/migrate"
@@ -40,4 +41,14 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 		log.Printf("Databse is up to date, No migration made")
 	}
 	return nil
+}
+
+func isNotFoundError(err error) bool {
+	er, ok := err.(*pq.Error)
+	return ok && er.Code == "20000"
+}
+
+func isUniqueViolationError(err error) bool {
+	er, ok := err.(*pq.Error)
+	return ok && er.Code == "23505"
 }

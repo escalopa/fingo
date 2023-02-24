@@ -64,8 +64,8 @@ func (q *Queries) ChangeUserEmail(ctx context.Context, arg ChangeUserEmailParams
 }
 
 const createUser = `-- name: CreateUser :exec
-INSERT INTO users (id, name, username, email, hashed_password, is_verified)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO users (id, name, username, email, hashed_password)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type CreateUserParams struct {
@@ -74,7 +74,6 @@ type CreateUserParams struct {
 	Username       string    `db:"username" json:"username"`
 	Email          string    `db:"email" json:"email"`
 	HashedPassword string    `db:"hashed_password" json:"hashed_password"`
-	IsVerified     bool      `db:"is_verified" json:"is_verified"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
@@ -84,7 +83,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 		arg.Username,
 		arg.Email,
 		arg.HashedPassword,
-		arg.IsVerified,
 	)
 	return err
 }

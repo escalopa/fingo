@@ -1,6 +1,6 @@
 -- name: CreateUser :exec
-INSERT INTO users (id, name, username, email, hashed_password, is_verified)
-VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO users (id, name, username, email, hashed_password)
+VALUES ($1, $2, $3, $4, $5);
 
 -- name: GetUserByID :one
 SELECT *
