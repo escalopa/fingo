@@ -1,14 +1,18 @@
 package core
 
 import (
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/google/uuid"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUser_Binary(t *testing.T) {
+	id, err := uuid.Parse(gofakeit.UUID())
+	require.NoError(t, err)
 	user := User{
-		ID:         gofakeit.UUID(),
+		ID:         id,
 		Email:      gofakeit.Email(),
 		Password:   gofakeit.Password(false, false, false, false, false, 10),
 		IsVerified: true,
