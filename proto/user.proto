@@ -1,10 +1,15 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
 
 message User {
   string id = 1;
-  string email = 2;
+  string username = 2;
+  string name = 3;
+  string email = 4;
+  google.protobuf.Timestamp created_at = 5;
 }

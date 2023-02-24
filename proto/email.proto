@@ -6,19 +6,19 @@ option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
 
+// SendCode
 message SendCodeRequest {
   string email = 1;
 }
-
 message SendCodeResponse {
   BasicResponse response = 1;
 }
 
+// VerifyCode
 message VerifyCodeRequest {
   string email = 1;
   string code = 2;
 }
-
 message VerifyCodeResponse {
   BasicResponse response = 1;
 }

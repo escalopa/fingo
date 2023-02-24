@@ -3,55 +3,70 @@ syntax = "proto3";
 import "basic.proto";
 import "user.proto";
 
+import "google/protobuf/timestamp.proto";
+
+
 option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
 
+// Signup
 message SignupRequest {
   string name = 1;
   string username = 2;
   string email = 3;
   string password = 4;
 }
-
 message SignupResponse {
   BasicResponse response = 1;
 }
 
+// Signin
 message SigninRequest {
   string email = 1;
   string password = 2;
+  map<string,string> metadata = 3; // Client-IP, User-Agent
 }
-
 message SigninResponse {
-  optional string accessToken = 1;
-  BasicResponse response = 2;
+  string accessToken = 1;
+  string refreshToken = 2;
+  google.protobuf.Timestamp access_token_exp_at = 3;
+  google.protobuf.Timestamp refresh_token_exp_at = 4;
+  BasicResponse response = 5;
 }
 
-message VerifyUserCodeRequest {
-  string email = 1;
-  string code = 2;
-}
-
-message VerifyUserCodeResponse {
-  BasicResponse response = 1;
-}
-
+// SendUserCode
 message SendUserCodeRequest {
   string email = 1;
 }
-
 message SendUserCodeResponse {
   BasicResponse response = 1;
 }
 
-message VerifyTokenRequest {
-  string token = 1;
+// VerifyUserCode
+message VerifyUserCodeRequest {
+  string email = 1;
+  string code = 2;
+}
+message VerifyUserCodeResponse {
+  BasicResponse response = 1;
 }
 
+// VerifyToken
+message VerifyTokenRequest {
+  string access_token = 1;
+}
 message VerifyTokenResponse {
   User user = 1;
   BasicResponse response = 2;
+}
+
+// RenewAccessToken
+message RenewAccessTokenRequest {
+  string refresh_token = 1;
+}
+message RenewAccessTokenResponse {
+  string new_access_token = 2;
 }
 
 service AuthService {
@@ -60,4 +75,5 @@ service AuthService {
   rpc SendUserCode(SendUserCodeRequest) returns (SendUserCodeResponse);
   rpc VerifyUserCode(VerifyUserCodeRequest) returns (VerifyUserCodeResponse);
   rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  rpc RenewAccessToken(RenewAccessTokenRequest) returns (RenewAccessTokenResponse);
 }
