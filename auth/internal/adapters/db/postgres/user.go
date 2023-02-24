@@ -66,6 +66,19 @@ func (ur *UserRepository) GetUserByUsername(ctx context.Context, username string
 	return fromDbUserToCore(user), nil
 }
 
+func (ur *UserRepository) SetUserIsVerified(ctx context.Context, arg core.SetUserIsVerifiedParams) error {
+	err := ur.q.SetUserIsVerified(ctx, db.SetUserIsVerifiedParams{
+		ID:         arg.ID,
+		IsVerified: arg.IsVerified,
+	})
+	if err != nil {
+		if isNotFoundError(err) {
+			return errs.B(err).Msgf("no user found with the given id, id: %s", arg.ID).Err()
+		}
+		return err
+	}
+	return nil
+}
 func (ur *UserRepository) ChangeUserEmail(ctx context.Context, arg core.ChangeUserEmailParams) error {
 	err := ur.q.ChangeUserEmail(ctx, db.ChangeUserEmailParams{
 		ID:    arg.ID,

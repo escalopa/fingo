@@ -165,11 +165,16 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 
 const setUserIsVerified = `-- name: SetUserIsVerified :exec
 UPDATE users
-SET is_verified = $1
+SET is_verified = $2
 WHERE id = $1
 `
 
-func (q *Queries) SetUserIsVerified(ctx context.Context, isVerified bool) error {
-	_, err := q.db.ExecContext(ctx, setUserIsVerified, isVerified)
+type SetUserIsVerifiedParams struct {
+	ID         uuid.UUID `db:"id" json:"id"`
+	IsVerified bool      `db:"is_verified" json:"is_verified"`
+}
+
+func (q *Queries) SetUserIsVerified(ctx context.Context, arg SetUserIsVerifiedParams) error {
+	_, err := q.db.ExecContext(ctx, setUserIsVerified, arg.ID, arg.IsVerified)
 	return err
 }

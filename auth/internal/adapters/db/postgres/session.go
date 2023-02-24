@@ -25,8 +25,8 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateS
 		ID:           arg.ID,
 		UserID:       arg.UserID,
 		RefreshToken: arg.RefreshToken,
-		UserAgent:    arg.UserAgent,
-		ClientIp:     arg.ClientIp,
+		UserAgent:    sql.NullString{String: arg.UserAgent},
+		ClientIp:     sql.NullString{String: arg.ClientIp},
 		ExpiresAt:    time.Now().Add(sr.std),
 	})
 	if err != nil {
@@ -39,7 +39,9 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateS
 }
 
 func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (core.Session, error) {
+	// Get a specific session by its id
 	session, err := sr.q.GetSessionByID(ctx, id)
+	// Handle error
 	if err != nil {
 		if isNotFoundError(err) {
 			errs.B(err).Msgf("no user sessions found with the given id, id: %s", id.String())
@@ -50,12 +52,15 @@ func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (
 }
 
 func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]core.Session, error) {
+	// Get all user sessions owned by a single user
 	sessions, err := sr.q.GetUserSessions(ctx, userID)
+	// Handle error
 	if err != nil {
 		if isNotFoundError(err) {
 			errs.B(err).Msgf("no user sessions found with the given userID, id: %s", userID.String())
 		}
 	}
+	// map from []db.Session to []core.Session
 	coreSessions := make([]core.Session, len(sessions))
 	for i, v := range sessions {
 		coreSessions[i] = fromDbSessionToCore(v)
@@ -64,13 +69,16 @@ func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UU
 }
 
 func (sr *SessionRepository) GetUserDevices(ctx context.Context, userID uuid.UUID) ([]core.UserDevice, error) {
+	// Get all user devices (Client-IP, User-Agent)
 	devices, err := sr.q.GetUserDevices(ctx, userID)
+	// Handel error
 	if err != nil {
 		if isNotFoundError(err) {
 			errs.B(err).Msgf("no user devices found with the given userID, userID: %s", userID.String())
 		}
 		return nil, errs.B(err).Msg("failed to get user devices").Err()
 	}
+	// map from []db.UserDevice to []core.UserDevice
 	coreDevices := make([]core.UserDevice, len(devices))
 	for i, v := range devices {
 		coreDevices[i] = fromDbDeviceToCore(v)
@@ -79,10 +87,12 @@ func (sr *SessionRepository) GetUserDevices(ctx context.Context, userID uuid.UUI
 }
 
 func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error {
+	// Update session value by setting IsBlocked value
 	err := sr.q.SetSessionIsBlocked(ctx, db.SetSessionIsBlockedParams{
 		ID:        arg.ID,
 		IsBlocked: arg.IsBlocked,
 	})
+	// Handle error
 	if err != nil {
 		if isNotFoundError(err) {
 			errs.B(err).Msgf("no session found with the given id, id: %s", arg.ID.String())
@@ -97,8 +107,8 @@ func fromDbSessionToCore(session db.Session) core.Session {
 		ID:           session.ID,
 		UserID:       session.UserID,
 		RefreshToken: session.RefreshToken,
-		UserAgent:    session.UserAgent,
-		ClientIp:     session.ClientIp,
+		UserAgent:    session.UserAgent.String,
+		ClientIp:     session.ClientIp.String,
 		IsBlocked:    session.IsBlocked,
 		ExpiresAt:    session.ExpiresAt,
 		CreatedAt:    session.CreatedAt,
@@ -107,7 +117,7 @@ func fromDbSessionToCore(session db.Session) core.Session {
 
 func fromDbDeviceToCore(row db.GetUserDevicesRow) core.UserDevice {
 	return core.UserDevice{
-		UserAgent: row.UserAgent,
-		ClientIP:  row.ClientIp,
+		UserAgent: row.UserAgent.String,
+		ClientIP:  row.ClientIp.String,
 	}
 }

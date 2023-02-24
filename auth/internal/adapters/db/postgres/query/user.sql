@@ -21,7 +21,7 @@ LIMIT 1;
 
 -- name: SetUserIsVerified :exec
 UPDATE users
-SET is_verified = $1
+SET is_verified = $2
 WHERE id = $1;
 
 -- name: ChangeUserEmail :exec

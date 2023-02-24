@@ -4,8 +4,8 @@ CREATE TABLE "sessions"
   "user_id"       uuid             NOT NULL,
   "refresh_token" varchar UNIQUE   NOT NULL,
   "is_blocked"    boolean          NOT NULL DEFAULT false,
-  "user_agent"    varchar          NOT NULL,
-  "client_ip"     varchar          NOT NULL,
+  "user_agent"    varchar          ,
+  "client_ip"     varchar          ,
   "expires_at"    timestamptz      NOT NULL,
   "created_at"    timestamptz      NOT NULL DEFAULT (now())
 );

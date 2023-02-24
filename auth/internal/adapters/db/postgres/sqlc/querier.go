@@ -24,7 +24,7 @@ type Querier interface {
 	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUserDevicesRow, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Session, error)
 	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error
-	SetUserIsVerified(ctx context.Context, isVerified bool) error
+	SetUserIsVerified(ctx context.Context, arg SetUserIsVerifiedParams) error
 }
 
 var _ Querier = (*Queries)(nil)
