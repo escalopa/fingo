@@ -2,7 +2,8 @@ package application
 
 import (
 	"context"
-	ac "github.com/escalopa/gochat/auth/internal/core"
+	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/google/uuid"
 )
 
 // ---------------------- Signup ---------------------- //
@@ -33,16 +34,14 @@ func (l *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) er
 	if err != nil {
 		return err
 	}
-	// Create user
-	user := ac.User{
-		Name:       params.Name,
-		Username:   params.Username,
-		Email:      params.Email,
-		Password:   hashedPassword,
-		IsVerified: false,
-	}
 	// Save user to cache
-	err = l.ur.Save(ctx, user)
+	err = l.ur.CreateUser(ctx, core.CreateUserParams{
+		ID:             uuid.New(),
+		Name:           params.Name,
+		Username:       params.Username,
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+	})
 	if err != nil {
 		return err
 	}

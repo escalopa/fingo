@@ -27,7 +27,7 @@ func (vu *SendUserCodeCommandImpl) Execute(ctx context.Context, params SendUserC
 	if err := vu.v.Validate(params); err != nil {
 		return err
 	}
-	user, err := vu.ur.Get(ctx, params.Email)
+	user, err := vu.ur.GetUserByEmail(ctx, params.Email)
 	if err != nil {
 		return err
 	}

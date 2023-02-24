@@ -7,6 +7,7 @@ type UseCases struct {
 	h   PasswordHasher
 	tg  TokenGenerator
 	ur  UserRepository
+	sr  SessionRepository
 	esc pb.EmailServiceClient
 
 	Query
@@ -20,12 +21,12 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 	}
 	u.Query = Query{}
 	u.Command = Command{
-		Signin:         NewSigninCommand(u.v, u.h, u.tg, u.ur),
+		Signin:         NewSigninCommand(u.v, u.h, u.tg, u.ur, u.sr),
 		Signup:         NewSignupCommand(u.v, u.h, u.ur),
 		SendUserCode:   NewSendUserCodeCommand(u.v, u.ur, u.esc),
 		VerifyUserCode: NewVerifyUserCodeCommand(u.v, u.ur, u.esc),
-		VerifyToken:    NewVerifyTokenCommand(u.v, u.tg),
-		RenewToken:     NewRenewTokenCommand(u.v, u.tg),
+		VerifyToken:    NewVerifyTokenCommand(u.v, u.tg, u.sr),
+		RenewToken:     NewRenewTokenCommand(u.v, u.tg, u.sr),
 	}
 	return u
 }
@@ -33,6 +34,12 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 func WithUserRepository(ur UserRepository) func(*UseCases) {
 	return func(u *UseCases) {
 		u.ur = ur
+	}
+}
+
+func WithSessionRepository(sr SessionRepository) func(*UseCases) {
+	return func(u *UseCases) {
+		u.sr = sr
 	}
 }
 

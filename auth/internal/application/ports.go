@@ -2,25 +2,41 @@ package application
 
 import (
 	"context"
-	ac "github.com/escalopa/gochat/auth/internal/core"
+	"github.com/escalopa/gochat/auth/internal/adapters/token"
+	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/google/uuid"
 )
 
 type UserRepository interface {
-	Save(ctx context.Context, user ac.User) error
-	Get(ctx context.Context, email string) (ac.User, error)
-	Update(ctx context.Context, user ac.User) error
+	CreateUser(ctx context.Context, arg core.CreateUserParams) error
+	GetUserByID(ctx context.Context, id uuid.UUID) (core.User, error)
+	GetUserByEmail(ctx context.Context, email string) (core.User, error)
+	GetUserByUsername(ctx context.Context, username string) (core.User, error)
+	SetUserIsVerified(ctx context.Context, arg core.SetUserIsVerifiedParams) error
+	ChangeUserEmail(ctx context.Context, arg core.ChangeUserEmailParams) error
+	ChangePassword(ctx context.Context, arg core.ChangePasswordParams) error
+	DeleteUserByID(ctx context.Context, id uuid.UUID) error
+}
+
+type SessionRepository interface {
+	CreateSession(ctx context.Context, arg core.CreateSessionParams) error
+	GetSessionByID(ctx context.Context, id uuid.UUID) (core.Session, error)
+	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]core.Session, error)
+	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]core.UserDevice, error)
+	SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error
 }
 
 type PasswordHasher interface {
-	Hash(password string) (string, error)
-	Compare(password, hash string) bool
+	Hash(password string) (hashedPassword string, err error)
+	Compare(password, hash string) (isSamePassword bool)
 }
 
 type TokenGenerator interface {
-	GenerateToken(user ac.User) (string, error)
-	VerifyToken(token string) (ac.User, error)
+	GenerateAccessToken(param token.GenerateTokenParam) (token string, err error)
+	GenerateRefreshToken(param token.GenerateTokenParam) (token string, err error)
+	VerifyToken(token string) (user core.User, sessionID uuid.UUID, err error)
 }
 
 type Validator interface {
-	Validate(s interface{}) error
+	Validate(s interface{}) (err error)
 }

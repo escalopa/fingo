@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"github.com/escalopa/gochat/auth/internal/core"
 
 	"github.com/escalopa/gochat/pb"
 	"github.com/lordvidex/errs"
@@ -28,7 +29,7 @@ func (vu *VerifyUserCodeCommandImpl) Execute(ctx context.Context, params VerifyU
 	if err := vu.v.Validate(params); err != nil {
 		return err
 	}
-	user, err := vu.ur.Get(ctx, params.Email)
+	user, err := vu.ur.GetUserByEmail(ctx, params.Email)
 	if err != nil {
 		return err
 	}
@@ -47,8 +48,15 @@ func (vu *VerifyUserCodeCommandImpl) Execute(ctx context.Context, params VerifyU
 		}
 		return errs.B(err).Code(errs.Internal).Msg("failed to verify code").Err()
 	}
-	user.IsVerified = true
-	return vu.ur.Update(ctx, user)
+	// Update user to be verified
+	err = vu.ur.SetUserIsVerified(ctx, core.SetUserIsVerifiedParams{
+		ID:         user.ID,
+		IsVerified: true,
+	})
+	if err != nil {
+		return err
+	}
+	return err
 }
 
 func NewVerifyUserCodeCommand(v Validator, ur UserRepository, esc pb.EmailServiceClient) VerifyUserCodeCommand {

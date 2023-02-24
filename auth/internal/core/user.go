@@ -32,6 +32,11 @@ type CreateUserParams struct {
 	HashedPassword string
 }
 
+type SetUserIsVerifiedParams struct {
+	ID         uuid.UUID
+	IsVerified bool
+}
+
 type ChangeUserEmailParams struct {
 	ID    uuid.UUID
 	Email string
