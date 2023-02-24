@@ -1,12 +1,14 @@
 package redis
 
 import (
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/escalopa/gochat/auth/internal/core"
-	"github.com/lordvidex/errs"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/google/uuid"
+	"github.com/lordvidex/errs"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSaveUser(t *testing.T) {
@@ -125,7 +127,7 @@ func TestUpdateUser(t *testing.T) {
 	}
 }
 
-func randomUserID(t *testing.T) string {
+func randomUserID(t *testing.T) uuid.UUID {
 	id, err := newUserID()
 	require.NoError(t, err)
 	return id

@@ -3,8 +3,9 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 
 	ac "github.com/escalopa/gochat/auth/internal/core"
 	"github.com/go-redis/redis/v9"
@@ -73,10 +74,10 @@ func (ur *UserRepository) Update(ctx context.Context, u ac.User) error {
 	return nil
 }
 
-func newUserID() (string, error) {
+func newUserID() (uuid.UUID, error) {
 	id, err := uuid.NewUUID()
 	if err != nil {
-		return "", errs.B(err).Code(errs.Internal).Msg("error generating user id").Err()
+		return uuid.UUID{}, errs.B(err).Code(errs.Internal).Msg("error generating user id").Err()
 	}
-	return id.String(), nil
+	return id, nil
 }
