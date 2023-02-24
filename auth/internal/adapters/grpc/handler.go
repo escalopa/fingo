@@ -3,7 +3,9 @@ package grpc
 import (
 	"context"
 	"github.com/escalopa/gochat/auth/internal/application"
+	"github.com/escalopa/gochat/auth/internal/core"
 	"github.com/escalopa/gochat/pb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ----------------------------------------- //
@@ -30,21 +32,20 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*pb.Si
 		return nil, err
 	}
 	return &pb.SignupResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Signup successfully"},
+		Response: &pb.BasicResponse{Status: 200, Message: "Successfully signed-up"},
 	}, nil
 }
 
 func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.SigninResponse, error) {
 	token, err := h.uc.Signin.Execute(ctx, application.SigninParams{
-		Email:    req.Email,
-		Password: req.Password,
+		Email: req.Email, Password: req.Password, MetaData: req.Metadata,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &pb.SigninResponse{
-		Response:    &pb.BasicResponse{Status: 200, Message: "Signin successfully"},
-		AccessToken: toStrPtr(token),
+		AccessToken: token,
+		Response:    &pb.BasicResponse{Status: 200, Message: "Successfully signed-in"},
 	}, nil
 }
 
@@ -54,7 +55,7 @@ func (h *AuthHandler) SendUserCode(ctx context.Context, req *pb.SendUserCodeRequ
 		return nil, err
 	}
 	return &pb.SendUserCodeResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Send code to user successfully"},
+		Response: &pb.BasicResponse{Status: 200, Message: "Successfully sent code to user email"},
 	}, nil
 }
 
@@ -64,22 +65,38 @@ func (h *AuthHandler) VerifyUserCode(ctx context.Context, req *pb.VerifyUserCode
 		return nil, err
 	}
 	return &pb.VerifyUserCodeResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Verified user email successfully"},
+		Response: &pb.BasicResponse{Status: 200, Message: "Successfully verified user email"},
 	}, nil
 }
 
 func (h *AuthHandler) VerifyToken(ctx context.Context, req *pb.VerifyTokenRequest) (*pb.VerifyTokenResponse, error) {
-	token := req.Token
-	user, err := h.uc.VerifyToken.Execute(ctx, application.VerifyTokenParams{Token: token})
+	user, err := h.uc.VerifyToken.Execute(ctx, application.VerifyTokenParams{AccessToken: req.AccessToken})
 	if err != nil {
 		return nil, err
 	}
 	return &pb.VerifyTokenResponse{
-		Response: &pb.BasicResponse{Status: 200, Message: "Token verification successful"},
-		User:     &pb.User{Email: user.Email, Id: user.ID},
+		User:     fromUserToPb(user),
+		Response: &pb.BasicResponse{Status: 200, Message: "Successfully verified access token"},
 	}, nil
 }
 
-func toStrPtr(s string) *string {
-	return &s
+func (h *AuthHandler) RenewToken(ctx context.Context, req *pb.RenewAccessTokenRequest) (*pb.RenewAccessTokenResponse, error) {
+	newAccessToken, err := h.uc.RenewToken.Execute(ctx, application.RenewTokenParams{RefreshToken: req.RefreshToken})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.RenewAccessTokenResponse{
+		NewAccessToken: newAccessToken,
+		Response:       &pb.BasicResponse{Status: 200, Message: "Successfully renewed access token"},
+	}, nil
+}
+
+func fromUserToPb(u core.User) *pb.User {
+	return &pb.User{
+		Id:        u.ID,
+		Username:  u.Username,
+		Name:      u.Name,
+		Email:     u.Email,
+		CreatedAt: timestamppb.New(u.CreatedAt),
+	}
 }

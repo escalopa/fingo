@@ -22,9 +22,10 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 	u.Command = Command{
 		Signin:         NewSigninCommand(u.v, u.h, u.tg, u.ur),
 		Signup:         NewSignupCommand(u.v, u.h, u.ur),
-		VerifyToken:    NewVerifyTokenCommand(u.v, u.tg),
 		SendUserCode:   NewSendUserCodeCommand(u.v, u.ur, u.esc),
 		VerifyUserCode: NewVerifyUserCodeCommand(u.v, u.ur, u.esc),
+		VerifyToken:    NewVerifyTokenCommand(u.v, u.tg),
+		RenewToken:     NewRenewTokenCommand(u.v, u.tg),
 	}
 	return u
 }
@@ -64,7 +65,8 @@ type Query struct{}
 type Command struct {
 	Signin         SigninCommand
 	Signup         SignupCommand
-	VerifyToken    VerifyTokenCommand
 	SendUserCode   SendUserCodeCommand
 	VerifyUserCode VerifyUserCodeCommand
+	VerifyToken    VerifyTokenCommand
+	RenewToken     RenewTokenCommand
 }

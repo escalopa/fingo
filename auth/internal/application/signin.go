@@ -8,8 +8,9 @@ import (
 // ---------------------- Signin ---------------------- //
 
 type SigninParams struct {
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,min=8"`
+	Email    string            `validate:"required,email"`
+	Password string            `validate:"required,min=8"`
+	MetaData map[string]string `validate:"required"`
 }
 
 type SigninCommand interface {

@@ -9,7 +9,7 @@ import (
 )
 
 type VerifyTokenParams struct {
-	Token string `validate:"required"`
+	AccessToken string `validate:"required"`
 }
 
 type VerifyTokenCommand interface {
@@ -25,7 +25,7 @@ func (v *VerifyTokenCommandImpl) Execute(ctx context.Context, params VerifyToken
 	if err := v.v.Validate(params); err != nil {
 		return core.User{}, err
 	}
-	user, err := v.tg.VerifyToken(params.Token)
+	user, err := v.tg.VerifyToken(params.AccessToken)
 	if err != nil {
 		return core.User{}, err
 	}
