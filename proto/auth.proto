@@ -66,7 +66,8 @@ message RenewAccessTokenRequest {
   string refresh_token = 1;
 }
 message RenewAccessTokenResponse {
-  string new_access_token = 2;
+  string new_access_token = 1;
+  BasicResponse response = 2;
 }
 
 service AuthService {
