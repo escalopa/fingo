@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"github.com/escalopa/gochat/auth/internal/adapters/token"
 	"github.com/lordvidex/errs"
 )
@@ -45,6 +46,9 @@ func (v *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		User:      user,
 		SessionID: sessionID,
 	})
+	if err != nil {
+		return "", errs.B(err).Msg("failed to create access token").Err()
+	}
 	return accessToken, nil
 }
 

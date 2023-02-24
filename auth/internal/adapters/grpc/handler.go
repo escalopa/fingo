@@ -38,15 +38,16 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*pb.Si
 }
 
 func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.SigninResponse, error) {
-	token, err := h.uc.Signin.Execute(ctx, application.SigninParams{
+	tokens, err := h.uc.Signin.Execute(ctx, application.SigninParams{
 		Email: req.Email, Password: req.Password, MetaData: req.Metadata,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &pb.SigninResponse{
-		AccessToken: token,
-		Response:    &pb.BasicResponse{Status: 200, Message: "Successfully signed-in"},
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		Response:     &pb.BasicResponse{Status: 200, Message: "Successfully signed-in"},
 	}, nil
 }
 
