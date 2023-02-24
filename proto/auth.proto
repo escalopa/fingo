@@ -3,9 +3,6 @@ syntax = "proto3";
 import "basic.proto";
 import "user.proto";
 
-import "google/protobuf/timestamp.proto";
-
-
 option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
@@ -30,8 +27,6 @@ message SigninRequest {
 message SigninResponse {
   string accessToken = 1;
   string refreshToken = 2;
-  google.protobuf.Timestamp access_token_exp_at = 3;
-  google.protobuf.Timestamp refresh_token_exp_at = 4;
   BasicResponse response = 5;
 }
 
