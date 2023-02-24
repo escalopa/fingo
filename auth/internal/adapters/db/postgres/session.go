@@ -11,38 +11,23 @@ import (
 )
 
 type SessionRepository struct {
-	db *sql.DB
-	q  db.Querier
+	db  *sql.DB
+	q   db.Querier
+	std time.Duration // session time duration
 }
 
-func NewSessionRepository(conn *sql.DB) (*UserRepository, error) {
-	return &UserRepository{db: conn}, nil
+func NewSessionRepository(conn *sql.DB) *SessionRepository {
+	return &SessionRepository{db: conn}
 }
 
-type CreateSessionParams struct {
-	ID           uuid.UUID
-	UserID       uuid.UUID
-	RefreshToken string
-	UserAgent    string
-	ClientIp     string
-	ExpiresAt    time.Time
-	CreatedAt    time.Time
-}
-
-type SetSessionIsBlockedParams struct {
-	ID        uuid.UUID
-	IsBlocked bool
-}
-
-func (sr *SessionRepository) CreateSession(ctx context.Context, arg CreateSessionParams) error {
+func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateSessionParams) error {
 	err := sr.q.CreateSession(ctx, db.CreateSessionParams{
 		ID:           arg.ID,
 		UserID:       arg.UserID,
 		RefreshToken: arg.RefreshToken,
 		UserAgent:    arg.UserAgent,
 		ClientIp:     arg.ClientIp,
-		ExpiresAt:    arg.ExpiresAt,
-		CreatedAt:    arg.CreatedAt,
+		ExpiresAt:    time.Now().Add(sr.std),
 	})
 	if err != nil {
 		if isUniqueViolationError(err) { // Unique violation
@@ -93,7 +78,7 @@ func (sr *SessionRepository) GetUserDevices(ctx context.Context, userID uuid.UUI
 	return nil, nil
 }
 
-func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error {
+func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error {
 	err := sr.q.SetSessionIsBlocked(ctx, db.SetSessionIsBlockedParams{
 		ID:        arg.ID,
 		IsBlocked: arg.IsBlocked,

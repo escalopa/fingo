@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+
 	"github.com/escalopa/gochat/auth/internal/application"
 	"github.com/escalopa/gochat/auth/internal/core"
 	"github.com/escalopa/gochat/pb"
@@ -93,7 +94,7 @@ func (h *AuthHandler) RenewToken(ctx context.Context, req *pb.RenewAccessTokenRe
 
 func fromUserToPb(u core.User) *pb.User {
 	return &pb.User{
-		Id:        u.ID,
+		Id:        u.ID.String(),
 		Username:  u.Username,
 		Name:      u.Name,
 		Email:     u.Email,

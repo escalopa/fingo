@@ -14,29 +14,11 @@ type UserRepository struct {
 	q  db.Querier
 }
 
-func NewUserRepository(conn *sql.DB) (*UserRepository, error) {
-	return &UserRepository{db: conn}, nil
+func NewUserRepository(conn *sql.DB) *UserRepository {
+	return &UserRepository{db: conn}
 }
 
-type CreateUserParams struct {
-	ID             uuid.UUID
-	Name           string
-	Username       string
-	Email          string
-	HashedPassword string
-}
-
-type ChangeUserEmailParams struct {
-	ID    uuid.UUID
-	Email string
-}
-
-type ChangePasswordParams struct {
-	ID             uuid.UUID
-	HashedPassword string
-}
-
-func (ur *UserRepository) CreateUser(ctx context.Context, arg CreateUserParams) error {
+func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserParams) error {
 	err := ur.q.CreateUser(ctx, db.CreateUserParams{
 		ID:             arg.ID,
 		Name:           arg.Name,
@@ -84,7 +66,7 @@ func (ur *UserRepository) GetUserByUsername(ctx context.Context, username string
 	return fromDbUserToCore(user), nil
 }
 
-func (ur *UserRepository) ChangeUserEmail(ctx context.Context, arg ChangeUserEmailParams) error {
+func (ur *UserRepository) ChangeUserEmail(ctx context.Context, arg core.ChangeUserEmailParams) error {
 	err := ur.q.ChangeUserEmail(ctx, db.ChangeUserEmailParams{
 		ID:    arg.ID,
 		Email: arg.Email,
@@ -98,7 +80,7 @@ func (ur *UserRepository) ChangeUserEmail(ctx context.Context, arg ChangeUserEma
 	return nil
 }
 
-func (ur *UserRepository) ChangePassword(ctx context.Context, arg ChangePasswordParams) error {
+func (ur *UserRepository) ChangePassword(ctx context.Context, arg core.ChangePasswordParams) error {
 	err := ur.q.ChangePassword(ctx, db.ChangePasswordParams{
 		ID:             arg.ID,
 		HashedPassword: arg.HashedPassword,
