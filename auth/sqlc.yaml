@@ -2,10 +2,9 @@ version: 1
 packages:
   - name: "db"
     engine: "postgresql"
-    package: "mysqlc"
-    path: "./adapter/db/postgres/sqlc"
-    schema: "./adapter/db/postgres/migration/"
-    queries: "./adapter/cache/postgres/query/"
+    path: "./internal/adapters/db/postgres/sqlc"
+    schema: "./internal/adapters/db/postgres/migrations/"
+    queries: "./internal/adapters/db/postgres/query/"
     emit_db_tags: true
     emit_json_tags: true
     emit_interface: true
