@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -12,6 +13,7 @@ import (
 )
 
 func TestSaveUser(t *testing.T) {
+	ctx := context.Background()
 	ur := NewUserRepository(testRedis)
 
 	// Test cases
@@ -52,13 +54,14 @@ func TestSaveUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ur.Save(testContext, tc.user)
+			err := ur.Save(ctx, tc.user)
 			compareErrors(t, err, tc.err)
 		})
 	}
 }
 
 func TestGetUser(t *testing.T) {
+	ctx := context.Background()
 	ur := NewUserRepository(testRedis)
 	testCases := []struct {
 		name string
@@ -79,15 +82,16 @@ func TestGetUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ur.Save(testContext, tc.user)
+			err := ur.Save(ctx, tc.user)
 			require.NoError(t, err)
-			_, err = ur.Get(testContext, tc.user.Email)
+			_, err = ur.Get(ctx, tc.user.Email)
 			compareErrors(t, err, tc.err)
 		})
 	}
 }
 
 func TestUpdateUser(t *testing.T) {
+	ctx := context.Background()
 	ur := NewUserRepository(testRedis)
 	testCases := []struct {
 		name string
@@ -109,17 +113,17 @@ func TestUpdateUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// save user
-			err := ur.Save(testContext, tc.user)
+			err := ur.Save(ctx, tc.user)
 			require.NoError(t, err)
 			// get user
-			u1, err := ur.Get(testContext, tc.user.Email)
+			u1, err := ur.Get(ctx, tc.user.Email)
 			require.NoError(t, err)
 			// update user
 			u1.IsVerified = true
-			err = ur.Update(testContext, u1)
+			err = ur.Update(ctx, u1)
 			require.NoError(t, err)
 			// get user
-			u2, err := ur.Get(testContext, tc.user.Email)
+			u2, err := ur.Get(ctx, tc.user.Email)
 			require.NoError(t, err)
 			require.True(t, reflect.DeepEqual(u1, u2),
 				"users are not equal actual:%s, expected:%s", u1, u2)
