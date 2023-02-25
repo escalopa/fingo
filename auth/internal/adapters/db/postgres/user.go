@@ -10,12 +10,11 @@ import (
 )
 
 type UserRepository struct {
-	db *sql.DB
-	q  db.Querier
+	q db.Querier
 }
 
 func NewUserRepository(conn *sql.DB) *UserRepository {
-	return &UserRepository{db: conn}
+	return &UserRepository{q: db.New(conn)}
 }
 
 func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserParams) error {
@@ -97,6 +96,21 @@ func (ur *UserRepository) ChangePassword(ctx context.Context, arg core.ChangePas
 	err := ur.q.ChangePassword(ctx, db.ChangePasswordParams{
 		ID:             arg.ID,
 		HashedPassword: arg.HashedPassword,
+	})
+	if err != nil {
+		if isNotFoundError(err) {
+			return errs.B(err).Msgf("no user found with the given id, id: %s", arg.ID).Err()
+		}
+		return err
+	}
+	return nil
+}
+
+func (ur *UserRepository) ChangeNames(ctx context.Context, arg core.ChangeNamesParam) error {
+	err := ur.q.ChangeNames(ctx, db.ChangeNamesParams{
+		ID:       arg.ID,
+		Name:     sql.NullString{String: arg.Name},
+		Username: sql.NullString{String: arg.Username},
 	})
 	if err != nil {
 		if isNotFoundError(err) {

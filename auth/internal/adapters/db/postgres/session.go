@@ -11,13 +11,12 @@ import (
 )
 
 type SessionRepository struct {
-	db  *sql.DB
 	q   db.Querier
 	std time.Duration // session time duration
 }
 
 func NewSessionRepository(conn *sql.DB, std time.Duration) *SessionRepository {
-	return &SessionRepository{db: conn, std: std}
+	return &SessionRepository{q: db.New(conn), std: std}
 }
 
 func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateSessionParams) error {

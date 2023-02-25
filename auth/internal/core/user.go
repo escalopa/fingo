@@ -46,3 +46,9 @@ type ChangePasswordParams struct {
 	ID             uuid.UUID
 	HashedPassword string
 }
+
+type ChangeNamesParam struct {
+	ID       uuid.UUID
+	Name     string
+	Username string
+}
