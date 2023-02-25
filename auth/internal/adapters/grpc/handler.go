@@ -82,7 +82,7 @@ func (h *AuthHandler) VerifyToken(ctx context.Context, req *pb.VerifyTokenReques
 	}, nil
 }
 
-func (h *AuthHandler) RenewToken(ctx context.Context, req *pb.RenewAccessTokenRequest) (*pb.RenewAccessTokenResponse, error) {
+func (h *AuthHandler) RenewAccessToken(ctx context.Context, req *pb.RenewAccessTokenRequest) (*pb.RenewAccessTokenResponse, error) {
 	newAccessToken, err := h.uc.RenewToken.Execute(ctx, application.RenewTokenParams{RefreshToken: req.RefreshToken})
 	if err != nil {
 		return nil, err
