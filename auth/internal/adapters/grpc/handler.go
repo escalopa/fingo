@@ -51,6 +51,21 @@ func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.Si
 	}, nil
 }
 
+func (h *AuthHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (*pb.LogoutResponse, error) {
+	err := h.uc.Logout.Execute(ctx, application.LogoutParams{
+		AccessToken: req.AccessToken,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.LogoutResponse{
+		Response: &pb.BasicResponse{
+			Status:  0,
+			Message: "Successfully logged-out",
+		},
+	}, nil
+}
+
 func (h *AuthHandler) SendUserCode(ctx context.Context, req *pb.SendUserCodeRequest) (*pb.SendUserCodeResponse, error) {
 	err := h.uc.SendUserCode.Execute(ctx, application.SendUserCodeParam{Email: req.Email})
 	if err != nil {

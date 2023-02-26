@@ -21,3 +21,8 @@ WHERE id = $1;
 SELECT user_agent, client_ip
 FROM sessions
 WHERE user_id = $1;
+
+-- name: DeleteSessionByID :exec
+DELETE
+FROM sessions
+WHERE id = $1;

@@ -24,6 +24,7 @@ type SessionRepository interface {
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]core.Session, error)
 	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]core.UserDevice, error)
 	SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error
+	DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error
 }
 
 type PasswordHasher interface {

@@ -85,6 +85,18 @@ func (sr *SessionRepository) GetUserDevices(ctx context.Context, userID uuid.UUI
 	return nil, nil
 }
 
+func (sr *SessionRepository) DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := sr.q.GetSessionByID(ctx, sessionID)
+	if err != nil {
+		return errs.B(err).Msg("failed to get session with the given sID, sID: %s", sessionID.String()).Err()
+	}
+	err = sr.q.DeleteSessionByID(ctx, sessionID)
+	if err != nil {
+		return errs.B(err).Msg("failed to delete session with the given sID, sID: %s", sessionID.String()).Err()
+	}
+	return nil
+}
+
 func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error {
 	// Update session value by setting IsBlocked value
 	err := sr.q.SetSessionIsBlocked(ctx, db.SetSessionIsBlockedParams{
