@@ -22,11 +22,19 @@ message SignupResponse {
 message SigninRequest {
   string email = 1;
   string password = 2;
-  map<string,string> metadata = 3; // Client-IP, User-Agent
+  map<string, string> metadata = 3; // Client-IP, User-Agent
 }
 message SigninResponse {
   string accessToken = 1;
   string refreshToken = 2;
+  BasicResponse response = 5;
+}
+
+// Logout
+message LogoutRequest {
+  string accessToken = 1;
+}
+message LogoutResponse {
   BasicResponse response = 5;
 }
 
@@ -66,10 +74,14 @@ message RenewAccessTokenResponse {
 }
 
 service AuthService {
+  // Auth
   rpc Signup(SignupRequest) returns (SignupResponse);
   rpc Signin(SigninRequest) returns (SigninResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  // Contact with email service
   rpc SendUserCode(SendUserCodeRequest) returns (SendUserCodeResponse);
   rpc VerifyUserCode(VerifyUserCodeRequest) returns (VerifyUserCodeResponse);
-  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  // Token verifying & renewing
+  rpc VerifyAccessToken(VerifyTokenRequest) returns (VerifyTokenResponse);
   rpc RenewAccessToken(RenewAccessTokenRequest) returns (RenewAccessTokenResponse);
 }
