@@ -1,24 +1,22 @@
 package redis
 
 import (
-	"fmt"
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/escalopa/gofly/auth/internal/core"
-	"github.com/lordvidex/errs"
-	"github.com/stretchr/testify/require"
+	"context"
 	"reflect"
 	"testing"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/google/uuid"
+	"github.com/lordvidex/errs"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSaveUser(t *testing.T) {
-	ur := NewUserRepository(testRedis, WithUserContext(testContext))
+	ctx := context.Background()
+	ur := NewUserRepository(testRedis)
 
-	genID := func() string {
-		id, err := newUserID()
-		require.NoError(t, err)
-		return id
-	}
-
+	// Test cases
 	testCases := []struct {
 		name string
 		user core.User
@@ -27,7 +25,7 @@ func TestSaveUser(t *testing.T) {
 		{
 			name: "save user successfully",
 			user: core.User{
-				ID:         genID(),
+				ID:         randomUserID(t),
 				Email:      gofakeit.Email(),
 				Password:   gofakeit.Password(true, true, true, true, true, 32),
 				IsVerified: false,
@@ -36,7 +34,7 @@ func TestSaveUser(t *testing.T) {
 		}, {
 			name: "save user a user to prepare for duplicate user test",
 			user: core.User{
-				ID:         genID(),
+				ID:         randomUserID(t),
 				Email:      "ahmad@gmail.com",
 				Password:   gofakeit.Password(true, true, true, true, true, 32),
 				IsVerified: false,
@@ -45,40 +43,26 @@ func TestSaveUser(t *testing.T) {
 		}, {
 			name: "save duplicate user with same email",
 			user: core.User{
-				ID:         genID(),
+				ID:         randomUserID(t),
 				Email:      "ahmad@gmail.com",
 				Password:   gofakeit.Password(true, true, true, true, true, 32),
 				IsVerified: false,
 			},
-			err: errs.B().Msg("already_exists: user already exists").Err(),
+			err: errs.B().Code(errs.AlreadyExists).Msg("user already exists").Err(),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ur.Save(tc.user)
-			fmt.Println(err)
-			if err != nil && tc.err == nil || err == nil && tc.err != nil {
-				t.Errorf("errors are not the same actual:%s, excpected:%s", err, tc.err)
-			}
-			if err != nil && tc.err != nil {
-				if er1, ok := err.(*errs.Error); ok {
-					if er2, ok := tc.err.(*errs.Error); ok {
-						require.False(t, reflect.DeepEqual(er1.Msg, er2.Msg), "errors are not equal actual:%s, expected:%s", err, tc.err)
-					} else {
-						t.Errorf("err2 is not of type *errs.Err: actual:%T, excpected:%T", err, tc.err)
-					}
-				} else {
-					t.Errorf("err1 is not of type *errs.Err: actual:%T, excpected:%T", err, tc.err)
-				}
-			}
+			err := ur.Save(ctx, tc.user)
+			compareErrors(t, err, tc.err)
 		})
 	}
 }
 
 func TestGetUser(t *testing.T) {
-	ur := NewUserRepository(testRedis, WithUserContext(testContext))
-
+	ctx := context.Background()
+	ur := NewUserRepository(testRedis)
 	testCases := []struct {
 		name string
 		user core.User
@@ -87,7 +71,7 @@ func TestGetUser(t *testing.T) {
 		{
 			name: "get user successfully",
 			user: core.User{
-				ID:         "1",
+				ID:         randomUserID(t),
 				Email:      gofakeit.Email(),
 				Password:   gofakeit.Password(true, true, true, true, true, 32),
 				IsVerified: false,
@@ -98,17 +82,17 @@ func TestGetUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ur.Save(tc.user)
+			err := ur.Save(ctx, tc.user)
 			require.NoError(t, err)
-			_, err = ur.Get(tc.user.Email)
+			_, err = ur.Get(ctx, tc.user.Email)
 			compareErrors(t, err, tc.err)
 		})
 	}
 }
 
 func TestUpdateUser(t *testing.T) {
-	ur := NewUserRepository(testRedis, WithUserContext(testContext))
-
+	ctx := context.Background()
+	ur := NewUserRepository(testRedis)
 	testCases := []struct {
 		name string
 		user core.User
@@ -117,7 +101,7 @@ func TestUpdateUser(t *testing.T) {
 		{
 			name: "update user successfully",
 			user: core.User{
-				ID:         "1",
+				ID:         randomUserID(t),
 				Email:      gofakeit.Email(),
 				Password:   gofakeit.Password(true, true, true, true, true, 32),
 				IsVerified: false,
@@ -129,20 +113,26 @@ func TestUpdateUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// save user
-			err := ur.Save(tc.user)
+			err := ur.Save(ctx, tc.user)
 			require.NoError(t, err)
 			// get user
-			u1, err := ur.Get(tc.user.Email)
+			u1, err := ur.Get(ctx, tc.user.Email)
 			require.NoError(t, err)
 			// update user
-			tc.user.IsVerified = true
-			err = ur.Update(tc.user)
+			u1.IsVerified = true
+			err = ur.Update(ctx, u1)
 			require.NoError(t, err)
 			// get user
-			u2, err := ur.Get(tc.user.Email)
+			u2, err := ur.Get(ctx, tc.user.Email)
 			require.NoError(t, err)
 			require.True(t, reflect.DeepEqual(u1, u2),
 				"users are not equal actual:%s, expected:%s", u1, u2)
 		})
 	}
+}
+
+func randomUserID(t *testing.T) uuid.UUID {
+	id, err := newUserID()
+	require.NoError(t, err)
+	return id
 }

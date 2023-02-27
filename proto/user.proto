@@ -1,10 +1,115 @@
 syntax = "proto3";
 
-option go_package = "github.com/escalopa/gofly/pb";
+import "google/protobuf/timestamp.proto";
+
+import "basic.proto";
+
+option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
 
 message User {
   string id = 1;
-  string email = 2;
+  string username = 2;
+  string name = 3;
+  string email = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+message UserDevice {
+  string client_ip = 1;
+  string user_agent = 2;
+}
+
+message Session {
+  string id = 1;
+  string user_id = 2;
+  string refresh_token = 3;
+  UserDevice user_device =4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+
+// GetUserByUsername
+message GetUserByUsernameRequest {
+  string accessToken = 1;
+}
+message GetUserByUsernameResponse {
+  User user = 1;
+  BasicResponse response = 2;
+}
+
+// ChangeUserNames
+message ChangeUserNamesRequest {
+  string accessToken = 1;
+  optional string name = 2;
+  optional string username = 3;
+}
+message ChangeUserNamesResponse {
+  BasicResponse response = 1;
+}
+
+// ChangeUserEmail
+message ChangeUserEmailRequest {
+  string accessToken = 1;
+  string newEmail = 2;
+}
+message ChangeUserEmailResponse {
+  BasicResponse response = 1;
+}
+
+// ChangeUserPassword
+message ChangeUserPasswordRequest {
+  string accessToken = 1;
+  string oldPassword = 2;
+  string newPassword = 3;
+}
+message ChangeUserPasswordResponse {
+  BasicResponse response = 1;
+}
+
+// Get all user's sessions
+message GetUserSessionsRequest {
+  string accessToken = 1;
+}
+message GetUserSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+// DeleteUser
+message DeleteUserRequest {
+  string accessToken = 1;
+}
+message DeleteUserResponse {
+  BasicResponse response = 1;
+}
+
+message GetUserDevicesRequest {
+  string accessToken = 1;
+}
+message GetUserDevicesResponse {
+  repeated UserDevice user_devices = 1;
+}
+
+// DeleteSession (Remove a usersSession)
+message DeleteSessionRequest {
+  string accessToken = 1;
+  string session_id = 2;
+}
+message DeleteSessionResponse {
+  BasicResponse response = 1;
+}
+
+service UserService {
+  // User
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (GetUserByUsernameResponse);
+  rpc ChangeUserNames(ChangeUserNamesRequest) returns (ChangeUserNamesResponse);
+  rpc ChangeUserEmail(ChangeUserEmailRequest) returns (ChangeUserEmailResponse);
+  rpc ChangeUserPassword(ChangeUserPasswordRequest) returns (ChangeUserPasswordResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  // Sessions
+  rpc GetUserSessions(GetUserSessionsRequest) returns (GetUserSessionsResponse);
+  rpc GetUserDevices(GetUserDevicesRequest) returns (GetUserDevicesResponse);
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
 }

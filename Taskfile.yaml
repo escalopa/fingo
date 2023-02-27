@@ -1,6 +1,7 @@
 version: "3"
 
 tasks:
+  # General Commands
   pb:
     cmds:
       - rm -rf pb/*
@@ -15,3 +16,16 @@ tasks:
       - evans --host localhost {{.CLI_ARGS}} -r repl
     silent: true
     desc: "Connect to a grpc server, NOTE: you need to pass the port as a CLI arg in the form of `--port=50051`"
+
+  # AUTH Command
+  auth-mig:
+    cmds:
+      - migrate create -ext sql -dir ./auth/internal/adapters/db/postgres/migrations -seq {{.CLI_ARGS}}
+    silent: true
+    desc: "Create a new migration files(up/down) for auth service"
+
+  auth-sqlc:
+    cmds:
+      - sqlc generate -f ./auth/sqlc.yaml
+    silent: true
+    desc: "Run sqlc for auth service"

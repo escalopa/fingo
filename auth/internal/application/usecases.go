@@ -1,12 +1,13 @@
 package application
 
-import "github.com/escalopa/gofly/pb"
+import "github.com/escalopa/gochat/pb"
 
 type UseCases struct {
 	v   Validator
 	h   PasswordHasher
 	tg  TokenGenerator
 	ur  UserRepository
+	sr  SessionRepository
 	esc pb.EmailServiceClient
 
 	Query
@@ -20,10 +21,13 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 	}
 	u.Query = Query{}
 	u.Command = Command{
-		Signin:      NewSigninCommand(u.v, u.h, u.tg, u.ur),
-		Signup:      NewSignupCommand(u.v, u.h, u.ur),
-		VerifyToken: NewVerifyTokenCommand(u.v, u.tg),
-		VerifyUser:  NewVerifyUserCommand(u.v, u.ur, u.esc),
+		Signin:         NewSigninCommand(u.v, u.h, u.tg, u.ur, u.sr),
+		Signup:         NewSignupCommand(u.v, u.h, u.ur),
+		Logout:         NewLogoutCommand(u.v, u.tg, u.ur, u.sr),
+		SendUserCode:   NewSendUserCodeCommand(u.v, u.ur, u.esc),
+		VerifyUserCode: NewVerifyUserCodeCommand(u.v, u.ur, u.esc),
+		VerifyToken:    NewVerifyTokenCommand(u.v, u.tg, u.sr),
+		RenewToken:     NewRenewTokenCommand(u.v, u.tg, u.sr),
 	}
 	return u
 }
@@ -31,6 +35,12 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 func WithUserRepository(ur UserRepository) func(*UseCases) {
 	return func(u *UseCases) {
 		u.ur = ur
+	}
+}
+
+func WithSessionRepository(sr SessionRepository) func(*UseCases) {
+	return func(u *UseCases) {
+		u.sr = sr
 	}
 }
 
@@ -61,8 +71,11 @@ func WithValidator(v Validator) func(*UseCases) {
 type Query struct{}
 
 type Command struct {
-	Signin      SigninCommand
-	Signup      SignupCommand
-	VerifyToken VerifyTokenCommand
-	VerifyUser  VerifyUserCommand
+	Signin         SigninCommand
+	Signup         SignupCommand
+	Logout         LogoutCommand
+	SendUserCode   SendUserCodeCommand
+	VerifyUserCode VerifyUserCodeCommand
+	VerifyToken    VerifyTokenCommand
+	RenewToken     RenewTokenCommand
 }

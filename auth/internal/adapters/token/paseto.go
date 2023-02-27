@@ -1,9 +1,10 @@
 package token
 
 import (
+	"github.com/google/uuid"
 	"time"
 
-	ac "github.com/escalopa/gofly/auth/internal/core"
+	ac "github.com/escalopa/gochat/auth/internal/core"
 	"github.com/lordvidex/errs"
 
 	"github.com/o1egl/paseto"
@@ -14,45 +15,67 @@ const minSecretKeyLen = 32
 type PasetoTokenizer struct {
 	p   *paseto.V2
 	sk  []byte
-	ate time.Duration // access token expiration time
+	atd time.Duration // access token's duration
+	rtd time.Duration // refresh token's duration
 }
 
-func NewPaseto(secretKey string, accessTokenDuration time.Duration) (*PasetoTokenizer, error) {
+// NewPaseto Creates a new instance of PasetoTokenizer
+func NewPaseto(secretKey string, atd, rtd time.Duration) (*PasetoTokenizer, error) {
+	// Check that secret key is exactly equal to `minSecretKeyLen`
 	if len(secretKey) < minSecretKeyLen {
 		return nil, errs.B().
 			Code(errs.InvalidArgument).
-			Msgf("secretKet len is less than the min value %d", minSecretKeyLen).
+			Msgf("secretKey len is less than the min value %d", minSecretKeyLen).
 			Err()
 	}
-
+	// Return a new paseto tokenizer
 	return &PasetoTokenizer{
 		p:   paseto.NewV2(),
 		sk:  []byte(secretKey),
-		ate: accessTokenDuration,
+		atd: atd,
+		rtd: rtd,
 	}, nil
 }
 
-func (pt *PasetoTokenizer) GenerateToken(u ac.User) (string, error) {
-	ut := ac.UserToken{
-		User:      u,
-		IssuedAt:  time.Now(),
-		ExpiresAt: time.Now().Add(pt.ate),
-	}
-	token, err := pt.p.Encrypt(pt.sk, ut, nil)
-	if err != nil {
-		return "", err
-	}
-	return token, err
+// GenerateAccessToken Creates a new access token
+func (pt *PasetoTokenizer) GenerateAccessToken(gtp GenerateTokenParam) (string, error) {
+	return pt.generateToken(gtp.User, gtp.SessionID, pt.atd)
 }
 
-func (pt *PasetoTokenizer) VerifyToken(token string) (ac.User, error) {
+// GenerateRefreshToken Creates a new refresh token
+func (pt *PasetoTokenizer) GenerateRefreshToken(gtp GenerateTokenParam) (string, error) {
+	return pt.generateToken(gtp.User, gtp.SessionID, pt.rtd)
+}
+
+// generateToken Create a new token with user, sessionID, exp(Token life duration)
+func (pt *PasetoTokenizer) generateToken(u ac.User, sID uuid.UUID, exp time.Duration) (string, error) {
+	// Create userToken struct instance
+	ut := ac.UserToken{
+		User:      u,
+		SessionID: sID,
+		IssuedAt:  time.Now(),
+		ExpiresAt: time.Now().Add(exp),
+	}
+	// Encrypt userToken
+	token, err := pt.p.Encrypt(pt.sk, ut, nil)
+	if err != nil {
+		return "", errs.B(err).Code(errs.Internal).Msg("failed to create token").Err()
+	}
+	return token, nil
+}
+
+// VerifyToken decrypts the token to get `UserToken` & verifies that token hasn't expired
+func (pt *PasetoTokenizer) VerifyToken(token string) (ac.User, uuid.UUID, error) {
+	// Decrypt token
 	var ut ac.UserToken
 	err := pt.p.Decrypt(token, pt.sk, &ut, nil)
 	if err != nil {
-		return ac.User{}, err
+		return ac.User{}, uuid.UUID{}, errs.B(err).Code(errs.InvalidArgument).
+			Msg("failed to decrypt token, invalid token").Err()
 	}
+	// Check whether the token has expired
 	if time.Now().After(ut.ExpiresAt) {
-		return ac.User{}, errs.B().Code(errs.Unauthenticated).Msg("token expired").Err()
+		return ac.User{}, uuid.UUID{}, errs.B().Code(errs.Unauthenticated).Msg("token expired").Err()
 	}
-	return ut.User, nil
+	return ut.User, ut.SessionID, nil
 }

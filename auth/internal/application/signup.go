@@ -1,18 +1,22 @@
 package application
 
 import (
-	ac "github.com/escalopa/gofly/auth/internal/core"
+	"context"
+	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/google/uuid"
 )
 
 // ---------------------- Signup ---------------------- //
 
 type SignupParams struct {
+	Name     string `validate:"required,alpha"`
+	Username string `validate:"required,alphanum"`
 	Email    string `validate:"required,email"`
 	Password string `validate:"required,min=8"`
 }
 
 type SignupCommand interface {
-	Execute(params SignupParams) error
+	Execute(ctx context.Context, params SignupParams) error
 }
 
 type SignupCommandImpl struct {
@@ -21,7 +25,7 @@ type SignupCommandImpl struct {
 	ur UserRepository
 }
 
-func (l *SignupCommandImpl) Execute(params SignupParams) error {
+func (l *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
 	if err := l.v.Validate(params); err != nil {
 		return err
 	}
@@ -30,14 +34,14 @@ func (l *SignupCommandImpl) Execute(params SignupParams) error {
 	if err != nil {
 		return err
 	}
-	// Create user
-	user := ac.User{
-		Email:      params.Email,
-		Password:   hashedPassword,
-		IsVerified: false,
-	}
 	// Save user to cache
-	err = l.ur.Save(user)
+	err = l.ur.CreateUser(ctx, core.CreateUserParams{
+		ID:             uuid.New(),
+		Name:           params.Name,
+		Username:       params.Username,
+		Email:          params.Email,
+		HashedPassword: hashedPassword,
+	})
 	if err != nil {
 		return err
 	}

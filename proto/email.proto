@@ -2,29 +2,28 @@ syntax = "proto3";
 
 import "basic.proto";
 
-option go_package = "github.com/escalopa/gofly/pb";
+option go_package = "github.com/escalopa/gochat/pb";
 
 package pb;
 
-message VerifyEmailRequest {
+// SendCode
+message SendCodeRequest {
   string email = 1;
-  string code = 2;
 }
-
-message VerifyEmailResponse {
+message SendCodeResponse {
   BasicResponse response = 1;
 }
 
+// VerifyCode
 message VerifyCodeRequest {
   string email = 1;
   string code = 2;
 }
-
 message VerifyCodeResponse {
   BasicResponse response = 1;
 }
 
 service EmailService {
-  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc SendCode(SendCodeRequest) returns (SendCodeResponse);
   rpc VerifyCode(VerifyCodeRequest) returns (VerifyCodeResponse);
 }

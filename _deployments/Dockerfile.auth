@@ -1,5 +1,5 @@
 FROM golang:1.19 AS development
-WORKDIR /go/src/github.com/escalopa/goauth/
+WORKDIR /go/src/github.com/escalopa/gochat/
 COPY ./auth ./auth
 COPY ./pkg ./pkg
 COPY ./pb ./pb
@@ -9,14 +9,14 @@ RUN go install github.com/cespare/reflex@latest
 CMD reflex -sr '\.go$' go run ./auth/cmd/main.go
 
 FROM golang:alpine AS builder
-WORKDIR /go/src/github.com/escalopa/goauth/
+WORKDIR /go/src/github.com/escalopa/gochat/
 COPY ./auth ./auth
 COPY ./pkg ./pkg
 COPY ./pb ./pb
 COPY go.mod go.sum ./
-RUN go build -o /go/bin/goauth ./auth/cmd
+RUN go build -o /go/bin/auth ./auth/cmd
 
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
-COPY --from=builder /go/bin/goauth /go/bin/goauth
-ENTRYPOINT ["/go/bin/goauth"]
+COPY --from=builder /go/bin/auth /go/bin/auth
+ENTRYPOINT ["/go/bin/auth"]

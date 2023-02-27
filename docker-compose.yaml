@@ -1,28 +1,83 @@
-version: '3.8'
+version: "3.8"
 
 services:
   auth:
     container_name: "auth"
     restart: unless-stopped
     volumes:
-      - .:/go/src/github.com/escalopa/goauth/
+      - ./auth:/go/src/github.com/escalopa/gochat/
+      - ./pb:/go/src/github.com/escalopa/gochat/
     environment:
-      - GRPC_PORT=${GRPC_PORT}
-      - TOKEN_SECRET=${TOKEN_SECRET}
-      - TOKEN_ACCESS_DURATION=${TOKEN_ACCESS_DURATION}
-      - CACHE_URL=${CACHE_URL}
+      - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
+      - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
+      - AUTH_CACHE_URL=${AUTH_CACHE_URL}
+      - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
+      - AUTH_TOKEN_SECRET=${AUTH_TOKEN_SECRET}
+      - AUTH_ACCESS_TOKEN_DURATION=${AUTH_ACCESS_TOKEN_DURATION}
+      - AUTH_REFRESH_TOKEN_DURATION=${AUTH_REFRESH_TOKEN_DURATION}
+      - AUTH_USER_SESSION_DURATION=${AUTH_USER_SESSION_DURATION}
+      - AUTH_EMAIL_GRPC_URL=${AUTH_EMAIL_GRPC_URL}
     ports:
-      - "${GRPC_PORT}:${GRPC_PORT}"
+      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     build:
       context: .
       dockerfile: ./_deployments/Dockerfile.auth
       target: development
+    depends_on:
+      - cache
+      - email
+      - db
+
+  email:
+    container_name: "email"
+    restart: unless-stopped
+    volumes:
+      - ./email:/go/src/github.com/escalopa/gochat/
+      - ./pb:/go/src/github.com/escalopa/gochat/
+    environment:
+      - EMAIL_CACHE_URL=${EMAIL_CACHE_URL}
+      - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
+      - EMAIL_USER_CODE_LENGTH=${EMAIL_USER_CODE_LENGTH}
+      - EMAIL_USER_CODE_EXPIRATION=${EMAIL_USER_CODE_EXPIRATION}
+      - EMAIL_MIN_SEND_INTERVAL=${EMAIL_MIN_SEND_INTERVAL}
+      - EMAIL_COURIER_TOKEN=${EMAIL_COURIER_TOKEN}
+      - EMAIL_COURIER_VERIFICATION_TEMPLATE_ID=${EMAIL_COURIER_VERIFICATION_TEMPLATE_ID}
+    ports:
+      - "${EMAIL_GRPC_PORT}:${EMAIL_GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: _deployments/Dockerfile.email
+      target: development
+    depends_on:
+        - cache
 
   cache:
     image: redis:alpine
     container_name: "cache"
     restart: unless-stopped
     volumes:
-      - ./storage/cache:/data
+      - cache:/data
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+
+  db:
+      user: "0"
+      image: postgres:12.8
+      container_name: "database"
+      env_file:
+        - ./.db.env
+      ports:
+        - "5432:5432"
+      volumes:
+        - db:/var/lib/postgresql/data
+      healthcheck:
+        test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+volumes:
+  cache:
+  db:
