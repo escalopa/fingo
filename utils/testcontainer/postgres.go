@@ -3,8 +3,10 @@ package testcontainer
 import (
 	"context"
 	"database/sql"
+
 	"fmt"
 	"github.com/brianvoe/gofakeit/v6"
+	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"

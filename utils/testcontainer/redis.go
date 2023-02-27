@@ -9,8 +9,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-func StartRedisContainer() (client *redis.Client, terminate func() error, err error) {
-	ctx := context.Background()
+func StartRedisContainer(ctx context.Context) (client *redis.Client, terminate func() error, err error) {
 	redisContainer, err := startRedisContainer(ctx)
 	if err != nil {
 		return nil, nil, errs.B(err).Msg("failed to start redis container").Err()

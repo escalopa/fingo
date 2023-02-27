@@ -12,7 +12,7 @@ import (
 
 func TestCodeRepository(t *testing.T) {
 	exp := 3 * time.Second
-	cr := NewCodeRepository(testRedis, WithExpiration(exp))
+	cr := NewCodeRepository(redisClient, WithExpiration(exp))
 
 	testCases := []struct {
 		name  string

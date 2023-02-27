@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"github.com/escalopa/gochat/utils/testcontainer"
 	"log"
 	"reflect"
@@ -16,7 +17,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	client, terminate, err := testcontainer.StartRedisContainer()
+	ctx := context.Background()
+	client, terminate, err := testcontainer.StartRedisContainer(ctx)
 	if err != nil {
 		log.Fatalf("failed to start redis container for tests, err: %s", err)
 	}
@@ -31,7 +33,7 @@ func TestMain(m *testing.M) {
 
 func compareErrors(t *testing.T, e1, e2 error) {
 	if e1 != nil && e2 == nil || e1 == nil && e2 != nil {
-		t.Errorf("e1ors are not the same actual:%s, excpected:%s", e1, e2)
+		t.Errorf("errors are not the same actual: %s, excpected: %s", e1, e2)
 	}
 	if e1 != nil && e2 != nil {
 		er1, ok1 := e1.(*errs.Error)
