@@ -2,9 +2,9 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/escalopa/fingo/auth/internal/core"
 
-	"github.com/escalopa/gochat/pb"
+	"github.com/escalopa/fingo/pb"
 	"github.com/lordvidex/errs"
 )
 

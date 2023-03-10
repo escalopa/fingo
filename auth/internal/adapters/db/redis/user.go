@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	ac "github.com/escalopa/gochat/auth/internal/core"
+	ac "github.com/escalopa/fingo/auth/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"
 )

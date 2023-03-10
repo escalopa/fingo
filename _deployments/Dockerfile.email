@@ -1,5 +1,5 @@
 FROM golang:1.19 AS development
-WORKDIR /go/src/github.com/escalopa/gochat/
+WORKDIR /go/src/github.com/escalopa/fingo/
 COPY ./email ./email
 COPY ./pkg ./pkg
 COPY ./pb ./pb
@@ -9,7 +9,7 @@ RUN go install github.com/cespare/reflex@latest
 CMD reflex -sr '\.go$' go run ./email/cmd/main.go
 
 FROM golang:alpine AS builder
-WORKDIR /go/src/github.com/escalopa/gochat/
+WORKDIR /go/src/github.com/escalopa/fingo/
 COPY ./email ./email
 COPY ./pkg ./pkg
 COPY go.mod go.sum ./

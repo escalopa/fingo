@@ -3,8 +3,8 @@ package mypostgres
 import (
 	"context"
 	"database/sql"
-	db "github.com/escalopa/gochat/auth/internal/adapters/db/postgres/sqlc"
-	"github.com/escalopa/gochat/auth/internal/core"
+	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
+	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 	"time"

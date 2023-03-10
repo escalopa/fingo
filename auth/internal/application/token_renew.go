@@ -3,7 +3,7 @@ package application
 import (
 	"context"
 
-	"github.com/escalopa/gochat/auth/internal/adapters/token"
+	"github.com/escalopa/fingo/auth/internal/adapters/token"
 	"github.com/lordvidex/errs"
 )
 

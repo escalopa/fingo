@@ -1,4 +1,4 @@
-module github.com/escalopa/gochat
+module github.com/escalopa/fingo
 
 go 1.19
 

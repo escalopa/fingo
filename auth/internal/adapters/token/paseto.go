@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	"time"
 
-	ac "github.com/escalopa/gochat/auth/internal/core"
+	ac "github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
 
 	"github.com/o1egl/paseto"

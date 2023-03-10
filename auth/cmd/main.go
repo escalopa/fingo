@@ -1,18 +1,18 @@
 package main
 
 import (
-	mypostgres "github.com/escalopa/gochat/auth/internal/adapters/db/postgres"
+	mypostgres "github.com/escalopa/fingo/auth/internal/adapters/db/postgres"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"time"
 
-	mygrpc "github.com/escalopa/gochat/auth/internal/adapters/grpc"
-	"github.com/escalopa/gochat/auth/internal/adapters/hasher"
-	"github.com/escalopa/gochat/auth/internal/adapters/token"
-	myvalidator "github.com/escalopa/gochat/auth/internal/adapters/validator"
-	"github.com/escalopa/gochat/auth/internal/application"
-	"github.com/escalopa/gochat/pb"
+	mygrpc "github.com/escalopa/fingo/auth/internal/adapters/grpc"
+	"github.com/escalopa/fingo/auth/internal/adapters/hasher"
+	"github.com/escalopa/fingo/auth/internal/adapters/token"
+	myvalidator "github.com/escalopa/fingo/auth/internal/adapters/validator"
+	"github.com/escalopa/fingo/auth/internal/application"
+	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/goconfig"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

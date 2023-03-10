@@ -2,7 +2,7 @@ package mypostgres
 
 import (
 	"context"
-	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"testing"
 )

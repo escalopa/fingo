@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"github.com/escalopa/gochat/utils/testcontainer"
+	"github.com/escalopa/fingo/utils/testcontainer"
 	"log"
 	"testing"
 )

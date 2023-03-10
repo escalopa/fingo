@@ -3,9 +3,9 @@ package grpc
 import (
 	"context"
 
-	"github.com/escalopa/gochat/auth/internal/application"
-	"github.com/escalopa/gochat/auth/internal/core"
-	"github.com/escalopa/gochat/pb"
+	"github.com/escalopa/fingo/auth/internal/application"
+	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

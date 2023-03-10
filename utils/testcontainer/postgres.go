@@ -17,7 +17,7 @@ import (
 func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
 	dbUser := "posgtres"
 	dbPass := "postgres"
-	dbDB := "gochat"
+	dbDB := "fingo"
 
 	port := strconv.Itoa(gofakeit.IntRange(20_000, 30_000))
 	// Run container

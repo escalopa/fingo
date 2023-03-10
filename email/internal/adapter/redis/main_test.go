@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"github.com/escalopa/gochat/utils/testcontainer"
+	"github.com/escalopa/fingo/utils/testcontainer"
 	"github.com/go-redis/redis/v9"
 	"log"
 	"testing"

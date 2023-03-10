@@ -1,5 +1,5 @@
 FROM golang:1.19 AS development
-WORKDIR /go/src/github.com/escalopa/gochat/
+WORKDIR /go/src/github.com/escalopa/fingo/
 COPY ./chat ./chat
 COPY ./pkg ./pkg
 COPY go.mod go.sum ./
@@ -8,13 +8,13 @@ RUN go install github.com/cespare/reflex@latest
 CMD reflex -sr '\.go$' go run ./chat/cmd/main.go
 
 FROM golang:alpine AS builder
-WORKDIR /go/src/github.com/escalopa/gochat/
+WORKDIR /go/src/github.com/escalopa/fingo/
 COPY ./chat ./chat
 COPY ./pkg ./pkg
 COPY go.mod go.sum ./
-RUN go build -o /go/bin/gochat ./chat/cmd
+RUN go build -o /go/bin/fingo ./chat/cmd
 
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
-COPY --from=builder /go/bin/gochat /go/bin/gochat
-ENTRYPOINT ["/go/bin/gochat"]
+COPY --from=builder /go/bin/fingo /go/bin/fingo
+ENTRYPOINT ["/go/bin/fingo"]

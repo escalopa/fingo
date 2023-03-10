@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/escalopa/gochat/email/internal/core"
+	"github.com/escalopa/fingo/email/internal/core"
 	"github.com/lordvidex/errs"
 )
 

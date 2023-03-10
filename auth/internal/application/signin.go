@@ -2,8 +2,8 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/gochat/auth/internal/adapters/token"
-	"github.com/escalopa/gochat/auth/internal/core"
+	"github.com/escalopa/fingo/auth/internal/adapters/token"
+	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )

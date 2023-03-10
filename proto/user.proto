@@ -4,7 +4,7 @@ import "google/protobuf/timestamp.proto";
 
 import "basic.proto";
 
-option go_package = "github.com/escalopa/gochat/pb";
+option go_package = "github.com/escalopa/fingo/pb";
 
 package pb;
 

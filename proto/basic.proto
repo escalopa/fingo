@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/escalopa/gochat/pb";
+option go_package = "github.com/escalopa/fingo/pb";
 
 package pb;
 

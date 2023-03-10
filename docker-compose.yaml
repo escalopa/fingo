@@ -5,8 +5,8 @@ services:
     container_name: "auth"
     restart: unless-stopped
     volumes:
-      - ./auth:/go/src/github.com/escalopa/gochat/
-      - ./pb:/go/src/github.com/escalopa/gochat/
+      - ./auth:/go/src/github.com/escalopa/fingo/
+      - ./pb:/go/src/github.com/escalopa/fingo/
     environment:
       - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
       - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
@@ -32,8 +32,8 @@ services:
     container_name: "email"
     restart: unless-stopped
     volumes:
-      - ./email:/go/src/github.com/escalopa/gochat/
-      - ./pb:/go/src/github.com/escalopa/gochat/
+      - ./email:/go/src/github.com/escalopa/fingo/
+      - ./pb:/go/src/github.com/escalopa/fingo/
     environment:
       - EMAIL_CACHE_URL=${EMAIL_CACHE_URL}
       - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
