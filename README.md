@@ -1,93 +1,72 @@
-# gochat 💬
+# fingo 💸
 
-Live chatting distributed system service built with go, websockets, gRPC
+[![Go Report Card](https://goreportcard.com/badge/github.com/escalopa/fingo)](https://goreportcard.com/report/github.com/escalopa/fingo)
+[![codecov](https://codecov.io/gh/escalopa/fingo/branch/master/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/escalopa/fingo)
+[![Build Status](https://travis-ci.com/escalopa/fingo.svg?branch=master)](https://travis-ci.com/escalopa/fingo)
 
-## Functionalities & Features 🚀
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub issues](https://img.shields.io/github/issues/escalopa/fingo.svg)](https://github.com/escalopa/fingo/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/escalopa/fingo.svg)](https://github.com/escalopa/fingo/pulls)
 
-- Chat with other users as in default messenger apps
-- Chats are updated in real time as someone send a message
-- Robust authentication with email verification
-- Api endpoints to frontend consumption
 
-## Micro-Services Architecture 🏗
+## Features 🚀
 
-Communication between all the microservices is done using `grpc`
+TODO
 
-The following services are responsible for
+## Microservices Architecture 🏗
 
-- **Chat**: Storing message between users
-- **Email**: Sending and email for verifications
-- **Auth** CRUD account and token handling
-- **API** Providing endpoints to interact with the application
+Communication between all the microservices is done using `grpc` or `message brokers`.
+
+In fingo we have the following services, Where each one is responsible for a specific set of tasks.
+
+1. [**API**](./api)
+2. [**Auth**](./auth)
+3. [**User**](./user)
+4. [**Chat**](./chat)
+5. [**Wallet**](./wallet)
+6. [**Payment**](./payment)
+7. [**Email**](./email)
+8. [**Phone**](./phone)
+
+Our microservices are also powered by the best logging, tracing applications like
+
+1. OpenTelemetry
+2. Datadog
+3. Prometheus
+
+## Project Architecture 🏘
+
+![Diagram](./fingo.png)
 
 ## How to run 🏃‍♂️
 
-## Diagrams & BP 📝
+### Prerequisites
 
-* **Create An Account**
-  - User creates a new account with email & password
-  - Account confirmation is required to use the application, So a code is sent to your email upon creation.
+1. [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+2. [Docker](https://docs.docker.com/get-docker/)
+3. [Docker Compose](https://docs.docker.com/compose/install/)
+4. [Go](https://golang.org/doc/install)
 
-```mermaid
-sequenceDiagram
-    Client->>Server: Send new account Info
-    activate Server
-    Server->>Email Service: Send Confirmation Code
-    activate Email Service
-    Note over Server,Email Service: Validate email
-    deactivate Email Service
-    Server->>Database: Create Account
-    Server-->>Client: Account Created
-    deactivate Server
-    Client->>Server: Send Confirmation Code
-    activate Server
-    activate Email Service
-    Server->>Email Service: Verify confirmation code
-    Email Service-->>Server: Confirmation Code Verified
-    deactivate Email Service
-    Server->>Database: Update Account Status
-    Server-->>Client: Account activated
-    deactivate Server
+### Running the project
+
+First clone the project
+
+```bash
+git clone github.com/escalopa/fingo && cd fingo
 ```
 
-* **Send Messages**
-  - User must be authenticated to send messages
-  - Messages are should be updated in real time using websockets
+Copy
 
-```mermaid
-sequenceDiagram
-    actor Alice
-    actor Bob
-    Alice->>Server: Send Message to bob
-    activate Server
-    activate Database
-    Server->>Database: Store Message
-    deactivate Database
-    Server->>Message Queue: Produce a new message in the queue
-    Server-->>Alice: Message sent successfully response
-    deactivate Server
-    activate Message Queue
-    Bob->>Message Queue: Consume Message sent to him from the queue
-    Message Queue->>Bob: Send delivered message to the user
-    deactivate Message Queue
+- `.env.example` file to `.env` and fill in the empty fields.
+- `.db.env.example` file to `.db.env` and fill in the empty fields.
+
+```bash
+cp .env.example .env
+cp .db.env.example .db.env
 ```
 
-## Components Diagram 📊
+Run the project
 
-```mermaid
-graph TD
-    A[Client] -->| REST | B[API]
-    B -->| gRPC | D[Auth Service]
-    B -->| gRPC | C[Chat]
-    D -->| gRPC | H[Email Service]
-    D -->| SQL/NoSQL | E[Database]
-    C -->| SQL/NoSQL | F[Database]
-    C --> G[Message Queue]
-    G --> | Web Sockets | A
+```bash
+docker-compose up
 ```
-
-## Upcoming Features 📌
-
-### Milestones 1 🏁
-1. [x] Don't send email if email is already verified or a message already less than 2 minutes ago
-2. [x] Start `Auth-Service` **ONLY** after `Email-Service` using docker
