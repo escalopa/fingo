@@ -40,7 +40,7 @@ func NewSendCodeCommand(mti time.Duration, cr CodeRepository, cg CodeGenerator, 
 func (c *SendCodeCommandImpl) Execute(ctx context.Context, param SendCodeCommandParam) error {
 	// check if a message has been sent to the user in the last `c.mti`
 	if vc, err := c.cr.Get(ctx, param.Email); err == nil {
-		if time.Now().Sub(vc.SentAt) < c.mti {
+		if time.Since(vc.SentAt) < c.mti {
 			return errs.B().Msgf("please wait %d minute(s) before sending another code",
 				int(time.Now().Add(c.mti).Sub(vc.SentAt).Minutes())).Err()
 		}

@@ -2,10 +2,11 @@ package mypostgres
 
 import (
 	"context"
-	"github.com/escalopa/fingo/auth/internal/core"
-	"github.com/google/uuid"
 	"testing"
 	"time"
+
+	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/google/uuid"
 )
 
 func TestSessionRepository_CreateSession(t *testing.T) {
@@ -21,7 +22,7 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.CreateSession(ctx, tc.arg)
+			_ = sr.CreateSession(ctx, tc.arg)
 		})
 	}
 }
@@ -39,7 +40,7 @@ func TestSessionRepository_GetSessionByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.GetSessionByID(ctx, tc.arg)
+			_, _ = sr.GetSessionByID(ctx, tc.arg)
 		})
 	}
 }
@@ -57,7 +58,7 @@ func TestSessionRepository_GetUserSessions(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.GetUserSessions(ctx, tc.arg)
+			_, _ = sr.GetUserSessions(ctx, tc.arg)
 		})
 	}
 }
@@ -75,7 +76,7 @@ func TestSessionRepository_GetUserDevices(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.GetUserDevices(ctx, tc.arg)
+			_, _ = sr.GetUserDevices(ctx, tc.arg)
 		})
 	}
 }
@@ -93,7 +94,7 @@ func TestSessionRepository_SetSessionIsBlocked(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.SetSessionIsBlocked(ctx, tc.arg)
+			_ = sr.SetSessionIsBlocked(ctx, tc.arg)
 		})
 	}
 }

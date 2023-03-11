@@ -12,7 +12,7 @@ import (
 type Sender struct {
 	c   *courier.Client
 	exp time.Duration
-	vtc string //verificationTemplateCode
+	vtc string // verificationTemplateCode
 }
 
 func New(token string, opts ...func(*Sender)) (*Sender, error) {

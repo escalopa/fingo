@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestUser_CreateUser(t *testing.T) {
@@ -19,7 +20,7 @@ func TestUser_CreateUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.CreateUser(ctx, tc.arg)
+			_ = q.CreateUser(ctx, tc.arg)
 		})
 	}
 }
@@ -38,7 +39,7 @@ func TestUser_GetUserByEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.GetUserByEmail(ctx, tc.arg)
+			_, _ = q.GetUserByEmail(ctx, tc.arg)
 		})
 	}
 }
@@ -56,7 +57,7 @@ func TestUser_GetUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.GetUserByID(ctx, tc.arg)
+			_, _ = q.GetUserByID(ctx, tc.arg)
 		})
 	}
 }
@@ -74,7 +75,7 @@ func TestUser_GetUserByUsername(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.GetUserByUsername(ctx, tc.arg)
+			_, _ = q.GetUserByUsername(ctx, tc.arg)
 		})
 	}
 }
@@ -92,7 +93,7 @@ func TestUser_SetUserIsVerified(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.SetUserIsVerified(ctx, tc.arg)
+			_ = q.SetUserIsVerified(ctx, tc.arg)
 		})
 	}
 }
@@ -110,7 +111,7 @@ func TestUser_ChangeNames(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.ChangeNames(ctx, tc.arg)
+			_ = q.ChangeNames(ctx, tc.arg)
 		})
 	}
 }
@@ -128,7 +129,7 @@ func TestUser_ChangePassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.ChangePassword(ctx, tc.arg)
+			_ = q.ChangePassword(ctx, tc.arg)
 		})
 	}
 }
@@ -146,7 +147,7 @@ func TestUser_ChangeUserEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.ChangeUserEmail(ctx, tc.arg)
+			_ = q.ChangeUserEmail(ctx, tc.arg)
 		})
 	}
 }
@@ -164,7 +165,7 @@ func TestUser_DeleteUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.DeleteUserByID(ctx, tc.arg)
+			_ = q.DeleteUserByID(ctx, tc.arg)
 		})
 	}
 }

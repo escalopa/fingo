@@ -5,13 +5,12 @@ import (
 	"database/sql"
 
 	"fmt"
+	"strconv"
+
 	"github.com/brianvoe/gofakeit/v6"
 	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"strconv"
-	"time"
 )
 
 func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
@@ -22,7 +21,7 @@ func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error)
 	port := strconv.Itoa(gofakeit.IntRange(20_000, 30_000))
 	// Run container
 	ctx := context.Background()
-	pgContainer, err := startPostgresContainer(ctx,
+	pgContainer, err := spinPostgresContainer(ctx,
 		withInitialDatabase(dbUser, dbPass, dbDB),
 		withPort(port),
 	)
@@ -56,11 +55,11 @@ type postgresContainer struct {
 
 type postgresContainerOption func(req *testcontainers.ContainerRequest)
 
-func withWaitStrategy(strategies ...wait.Strategy) func(req *testcontainers.ContainerRequest) {
-	return func(req *testcontainers.ContainerRequest) {
-		req.WaitingFor = wait.ForAll(strategies...).WithDeadline(1 * time.Minute)
-	}
-}
+// func withWaitStrategy(strategies ...wait.Strategy) func(req *testcontainers.ContainerRequest) {
+// 	return func(req *testcontainers.ContainerRequest) {
+// 		req.WaitingFor = wait.ForAll(strategies...).WithDeadline(1 * time.Minute)
+// 	}
+// }
 
 func withPort(port string) func(req *testcontainers.ContainerRequest) {
 	return func(req *testcontainers.ContainerRequest) {
@@ -76,8 +75,8 @@ func withInitialDatabase(user string, password string, dbName string) func(req *
 	}
 }
 
-// startPostgresContainer creates an instance of the postgres container type
-func startPostgresContainer(ctx context.Context, opts ...postgresContainerOption) (*postgresContainer, error) {
+// spinPostgresContainer creates an instance of the postgres container type
+func spinPostgresContainer(ctx context.Context, opts ...postgresContainerOption) (*postgresContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:12.8",
 		Env:          map[string]string{},
