@@ -59,11 +59,9 @@ func main() {
 	// Create a code generator
 	codeLen, err := strconv.Atoi(c.Get("EMAIL_USER_CODE_LENGTH"))
 	checkError(err, "Failed to parse code length")
-	if codeLen < 1 {
-		log.Println("Code length must be greater than 0")
-	}
+	cg, err := codegen.New(codeLen)
+	checkError(err, "Failed to create code-generator")
 	log.Println("Using Code-length:", codeLen)
-	cg := codegen.New(codeLen)
 
 	// Create use cases
 	mti, err := time.ParseDuration(c.Get("EMAIL_MIN_SEND_INTERVAL"))
@@ -99,7 +97,6 @@ func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
 
 func checkError(err error, msg string) {
 	if err != nil {
-		log.Println(err, msg)
-		os.Exit(1)
+		log.Fatal(err, msg)
 	}
 }

@@ -2,8 +2,9 @@ package db
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 func TestSession_CreateSession(t *testing.T) {
@@ -19,7 +20,7 @@ func TestSession_CreateSession(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.CreateSession(ctx, tc.arg)
+			_ = q.CreateSession(ctx, tc.arg)
 		})
 	}
 }
@@ -37,7 +38,7 @@ func TestSession_GetSessionByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.GetSessionByID(ctx, tc.arg)
+			_, _ = q.GetSessionByID(ctx, tc.arg)
 		})
 	}
 }
@@ -55,7 +56,7 @@ func TestSession_GetUserDevices(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.GetUserDevices(ctx, tc.arg)
+			_, _ = q.GetUserDevices(ctx, tc.arg)
 		})
 	}
 }
@@ -73,7 +74,7 @@ func TestSession_GetUserSessions(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.GetUserSessions(ctx, tc.arg)
+			_, _ = q.GetUserSessions(ctx, tc.arg)
 		})
 	}
 }
@@ -91,7 +92,7 @@ func TestSession_SetSessionIsBlocked(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			q.SetSessionIsBlocked(ctx, tc.arg)
+			_ = q.SetSessionIsBlocked(ctx, tc.arg)
 		})
 	}
 }

@@ -1,8 +1,9 @@
 package codegen
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestCodeGen(t *testing.T) {
@@ -17,11 +18,12 @@ func TestCodeGen(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cg := New(tc.length)
+			cg, err := New(tc.length)
+			require.NoError(t, err)
 			code, err := cg.GenerateCode()
 			require.NoError(t, err)
 			require.Len(t, code, tc.length)
-			require.True(t, cg.VerifyCode(code))
+			require.Truef(t, cg.VerifyCode(code), "Failed to verify code")
 		})
 	}
 }

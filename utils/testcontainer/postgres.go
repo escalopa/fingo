@@ -5,13 +5,12 @@ import (
 	"database/sql"
 
 	"fmt"
+	"strconv"
+
 	"github.com/brianvoe/gofakeit/v6"
 	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"strconv"
-	"time"
 )
 
 func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
@@ -56,11 +55,11 @@ type postgresContainer struct {
 
 type postgresContainerOption func(req *testcontainers.ContainerRequest)
 
-func withWaitStrategy(strategies ...wait.Strategy) func(req *testcontainers.ContainerRequest) {
-	return func(req *testcontainers.ContainerRequest) {
-		req.WaitingFor = wait.ForAll(strategies...).WithDeadline(1 * time.Minute)
-	}
-}
+// func withWaitStrategy(strategies ...wait.Strategy) func(req *testcontainers.ContainerRequest) {
+// 	return func(req *testcontainers.ContainerRequest) {
+// 		req.WaitingFor = wait.ForAll(strategies...).WithDeadline(1 * time.Minute)
+// 	}
+// }
 
 func withPort(port string) func(req *testcontainers.ContainerRequest) {
 	return func(req *testcontainers.ContainerRequest) {

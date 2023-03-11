@@ -2,9 +2,10 @@ package mypostgres
 
 import (
 	"context"
+	"testing"
+
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
-	"testing"
 )
 
 func TestUserRepository_CreateUser(t *testing.T) {
@@ -20,7 +21,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.CreateUser(ctx, tc.arg)
+			_ = ur.CreateUser(ctx, tc.arg)
 		})
 	}
 }
@@ -39,7 +40,7 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.GetUserByEmail(ctx, tc.arg)
+			_, _ = ur.GetUserByEmail(ctx, tc.arg)
 		})
 	}
 }
@@ -57,7 +58,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.GetUserByID(ctx, tc.arg)
+			_, _ = ur.GetUserByID(ctx, tc.arg)
 		})
 	}
 }
@@ -75,7 +76,7 @@ func TestUserRepository_GetUserByUsername(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.GetUserByUsername(ctx, tc.arg)
+			_, _ = ur.GetUserByUsername(ctx, tc.arg)
 		})
 	}
 }
@@ -93,7 +94,7 @@ func TestUserRepository_SetUserIsVerified(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.SetUserIsVerified(ctx, tc.arg)
+			_ = ur.SetUserIsVerified(ctx, tc.arg)
 		})
 	}
 }
@@ -111,7 +112,7 @@ func TestUserRepository_ChangeNames(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.ChangeNames(ctx, tc.arg)
+			_ = ur.ChangeNames(ctx, tc.arg)
 		})
 	}
 }
@@ -129,7 +130,7 @@ func TestUserRepository_ChangePassword(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.ChangePassword(ctx, tc.arg)
+			_ = ur.ChangePassword(ctx, tc.arg)
 		})
 	}
 }
@@ -147,7 +148,7 @@ func TestUserRepository_ChangeUserEmail(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.ChangeUserEmail(ctx, tc.arg)
+			_ = ur.ChangeUserEmail(ctx, tc.arg)
 		})
 	}
 }
@@ -165,7 +166,7 @@ func TestUserRepository_DeleteUserByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ur.DeleteUserByID(ctx, tc.arg)
+			_ = ur.DeleteUserByID(ctx, tc.arg)
 		})
 	}
 }
