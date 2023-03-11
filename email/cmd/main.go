@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -18,22 +20,21 @@ import (
 )
 
 func main() {
+	// Return code
+	returnCode := 0
+	defer func() { os.Exit(returnCode) }()
+
+	// Create a new config instance
 	c := goconfig.New()
 
-	// Create db connection
-	//ctx, cancel := context.WithCancel(context.Background())
-	//defer cancel()
+	// Create redis client
 	cache, err := redis.New(c.Get("EMAIL_CACHE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkError(err, "Failed to connect to cache")
 	log.Println("Connected to cache")
 
 	// Parse code expiration from config
 	exp, err := time.ParseDuration(c.Get("EMAIL_USER_CODE_EXPIRATION"))
-	if err != nil {
-		log.Fatal(err, "Failed to parse code expiration")
-	}
+	checkError(err, "Failed to parse code expiration")
 	log.Println("Using code-expiration:", exp)
 
 	// Create a code repo
@@ -41,12 +42,10 @@ func main() {
 		redis.WithExpiration(exp),
 	)
 	// Close code repo on exit
-	defer func(cr *redis.CodeRepository) {
+	defer func() {
 		err := cr.Close()
-		if err != nil {
-			log.Println(err, "Failed to close code repo")
-		}
-	}(cr)
+		checkError(err, "Failed to close code repo")
+	}()
 	log.Println("Connected to code-repo")
 
 	// Create a courier sender
@@ -54,27 +53,21 @@ func main() {
 		mycourier.WithExpiration(exp),
 		mycourier.WithVerificationTemplate(c.Get("EMAIL_COURIER_VERIFICATION_TEMPLATE_ID")),
 	)
-	if err != nil {
-		log.Fatal(err, "Failed to create courier sender")
-	}
+	checkError(err, "Failed to create courier sender")
 	log.Println("Connected to courier-sender")
 
 	// Create a code generator
 	codeLen, err := strconv.Atoi(c.Get("EMAIL_USER_CODE_LENGTH"))
-	if err != nil {
-		log.Fatal(err, "Failed to parse code length")
-	}
+	checkError(err, "Failed to parse code length")
 	if codeLen < 1 {
-		log.Fatal("Code length must be greater than 0")
+		log.Println("Code length must be greater than 0")
 	}
 	log.Println("Using Code-length:", codeLen)
 	cg := codegen.New(codeLen)
 
 	// Create use cases
 	mti, err := time.ParseDuration(c.Get("EMAIL_MIN_SEND_INTERVAL"))
-	if err != nil {
-		log.Fatal(err, "Failed to parse min send interval")
-	}
+	checkError(err, "Failed to parse min send interval")
 	log.Println("Using min-send-interval:", mti)
 
 	uc := application.NewUseCases(
@@ -97,12 +90,16 @@ func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
 	// Start the server
 	port := c.Get("EMAIL_GRPC_PORT")
 	lis, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		panic(err)
-	}
+	checkError(err, fmt.Sprintf("Failed to listen on port %s", port))
+
 	log.Println("Starting gRPC server on port", port)
 	err = grpcS.Serve(lis)
+	checkError(err, "Failed to start gRPC server")
+}
+
+func checkError(err error, msg string) {
 	if err != nil {
-		return
+		log.Println(err, msg)
+		os.Exit(1)
 	}
 }

@@ -22,5 +22,4 @@ func TestUser_Binary(t *testing.T) {
 	var userB User
 	err = userB.UnmarshalBinary(b)
 	require.NoError(t, err)
-	//require.Equal(t, user, userB)
 }

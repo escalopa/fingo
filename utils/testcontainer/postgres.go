@@ -22,7 +22,7 @@ func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error)
 	port := strconv.Itoa(gofakeit.IntRange(20_000, 30_000))
 	// Run container
 	ctx := context.Background()
-	pgContainer, err := startPostgresContainer(ctx,
+	pgContainer, err := spinPostgresContainer(ctx,
 		withInitialDatabase(dbUser, dbPass, dbDB),
 		withPort(port),
 	)
@@ -76,8 +76,8 @@ func withInitialDatabase(user string, password string, dbName string) func(req *
 	}
 }
 
-// startPostgresContainer creates an instance of the postgres container type
-func startPostgresContainer(ctx context.Context, opts ...postgresContainerOption) (*postgresContainer, error) {
+// spinPostgresContainer creates an instance of the postgres container type
+func spinPostgresContainer(ctx context.Context, opts ...postgresContainerOption) (*postgresContainer, error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:12.8",
 		Env:          map[string]string{},

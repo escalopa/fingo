@@ -10,7 +10,7 @@ import (
 )
 
 func StartRedisContainer(ctx context.Context) (client *redis.Client, terminate func() error, err error) {
-	redisContainer, err := startRedisContainer(ctx)
+	redisContainer, err := spinRedisContainer(ctx)
 	if err != nil {
 		return nil, nil, errs.B(err).Msg("failed to start redis container").Err()
 	}
@@ -37,7 +37,7 @@ func StartRedisContainer(ctx context.Context) (client *redis.Client, terminate f
 	return client, terminate, nil
 }
 
-func startRedisContainer(ctx context.Context) (testcontainers.Container, error) {
+func spinRedisContainer(ctx context.Context) (testcontainers.Container, error) {
 	req := testcontainers.ContainerRequest{
 		Image:        "redis:alpine",
 		ExposedPorts: []string{"6379/tcp"},
