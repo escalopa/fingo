@@ -1,4 +1,4 @@
-# fingo 💸
+# fingo 🏦💸
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/escalopa/fingo)](https://goreportcard.com/report/github.com/escalopa/fingo)
 [![codecov](https://codecov.io/gh/escalopa/fingo/branch/master/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/escalopa/fingo)
@@ -8,44 +8,64 @@
 [![GitHub issues](https://img.shields.io/github/issues/escalopa/fingo.svg)](https://github.com/escalopa/fingo/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/escalopa/fingo.svg)](https://github.com/escalopa/fingo/pulls)
 
+fingo is a scalable, robust payment system that allows users to send money to each other. fingo users can issue wallet with more than one currency.
 
-## Features 🚀
+Currently, fingo supports 5 currencies: USD, EUR, GBP, EGP, RUB.
 
-TODO
+Besides that we also support chat feature between its users to communicate with each other.
 
-## Microservices Architecture 🏗
+## Table of Contents 📑
 
-Communication between all the microservices is done using `grpc` or `message brokers`.
+  - [Tech Stack](#tech-stack)
+  - [Project Architecture 🏘](#project-architecture-)
+  - [How to run 🏃‍♂️](#how-to-run-)
 
-In fingo we have the following services, Where each one is responsible for a specific set of tasks.
+## Tech Stack 🛠
 
-1. [**API**](./api)
-2. [**Auth**](./auth)
-3. [**User**](./user)
-4. [**Chat**](./chat)
-5. [**Wallet**](./wallet)
-6. [**Payment**](./payment)
-7. [**Email**](./email)
-8. [**Phone**](./phone)
+fingo is built using scalable, reliable, robust and secure technologies which are listed below. 🔥
 
-Our microservices are also powered by the best logging, tracing applications like
+- Language: [Go](https://golang.org/)
+- Communication: [gRPC](https://grpc.io/), [gin](https://github.com/gin-gonic/gin), [RabbitMQ](https://www.rabbitmq.com/)
+- Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [mongoDB](https://www.mongodb.com/)
+- Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/)
+- Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Datadog](https://www.datadoghq.com/), [Prometheus](https://prometheus.io/)
+- Security: [Paseto](https://paseto.io/)
+- External API: [Courier](https://www.courier.com/)
 
-1. OpenTelemetry
-2. Datadog
-3. Prometheus
+We use
 
-## Project Architecture 🏘
 
+## Architecture 🏗
+
+Communication between all the microservices is done using `grpc` or `message brokers` to
+ensure that the system is scalable and reliable.
+
+In fingo we have the following services, Where each one is responsible for a specific set of tasks,
+Click on each service to see its documentation and how it works.
+
+1. [**API**](./api) (Under development)
+2. [**Auth**](./auth) (Done)
+3. [**User**](./user) (Done)
+4. [**Chat**](./chat) (Under development)
+5. [**Wallet**](./wallet) (Under development)
+6. [**Payment**](./payment) (Under development)
+7. [**Email**](./email) (Done)
+8. [**Phone**](./phone) (Done)
+
+
+Each service is built using the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
+This allows us to have a clean separation between the business logic and the infrastructure. This way we can easily swap the infrastructure without affecting the business logic.
+
+### Components
 ![Diagram](./fingo.png)
 
-## How to run 🏃‍♂️
+## How to run ⚙️
 
 ### Prerequisites
 
 1. [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 2. [Docker](https://docs.docker.com/get-docker/)
 3. [Docker Compose](https://docs.docker.com/compose/install/)
-4. [Go](https://golang.org/doc/install)
 
 ### Running the project
 
