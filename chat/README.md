@@ -12,7 +12,8 @@ This service is responsible for handling all the chat related operations, such a
   - Messages are should be updated in real time using websockets
 
 ```mermaid
-sequenceDiagramautonumber
+sequenceDiagram
+    autonumber
         actor Alice
     actor Bob
     Alice->>Server: Send Message to bob
