@@ -3,11 +3,12 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"testing"
+	"time"
+
 	"github.com/brianvoe/gofakeit/v6"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestConsumer_HandleSendVerificationsCode(t *testing.T) {

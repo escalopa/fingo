@@ -2,10 +2,11 @@ package mysmtp
 
 import (
 	"fmt"
-	"github.com/lordvidex/errs"
 	"html/template"
 	"net/smtp"
 	"time"
+
+	"github.com/lordvidex/errs"
 )
 
 // Sender is an email sender using smtp

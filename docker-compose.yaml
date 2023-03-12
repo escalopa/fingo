@@ -33,23 +33,26 @@ services:
     restart: unless-stopped
     volumes:
       - ./email:/go/src/github.com/escalopa/fingo/
-      - ./pb:/go/src/github.com/escalopa/fingo/
     environment:
-      - EMAIL_CACHE_URL=${EMAIL_CACHE_URL}
-      - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
-      - EMAIL_USER_CODE_LENGTH=${EMAIL_USER_CODE_LENGTH}
-      - EMAIL_USER_CODE_EXPIRATION=${EMAIL_USER_CODE_EXPIRATION}
-      - EMAIL_MIN_SEND_INTERVAL=${EMAIL_MIN_SEND_INTERVAL}
-      - EMAIL_COURIER_TOKEN=${EMAIL_COURIER_TOKEN}
-      - EMAIL_COURIER_VERIFICATION_TEMPLATE_ID=${EMAIL_COURIER_VERIFICATION_TEMPLATE_ID}
-    ports:
-      - "${EMAIL_GRPC_PORT}:${EMAIL_GRPC_PORT}"
+      - EMAIL_CODES_EXPIRATION={EMAIL_CODES_EXPIRATION}
+      - EMAIL_SEND_CODE_MIN_INTERVAL={EMAIL_SEND_CODE_MIN_INTERVAL}
+      - EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL={EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL}
+
+      - EMAIL_RABBITMQ_URL={EMAIL_RABBITMQ_URL}
+      - EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME={EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME}
+      - EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME={EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME}
+      - EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME={EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
+
+      - EMAIL_COURIER_TOKEN={EMAIL_COURIER_TOKEN}
+      - EMAIL_COURIER_VERIFICATION_TEMPLATE_ID={EMAIL_COURIER_VERIFICATION_TEMPLATE_ID}
+      - EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID={EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID}
+      - EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID={EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID}
     build:
       context: .
       dockerfile: _deployments/Dockerfile.email
       target: development
     depends_on:
-        - cache
+        - rabbitmq
 
   cache:
     image: redis:alpine
@@ -77,6 +80,24 @@ services:
         interval: 5s
         timeout: 5s
         retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.8.9-management
+    container_name: "rabbitmq"
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ./.rabbitmq.env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   cache:

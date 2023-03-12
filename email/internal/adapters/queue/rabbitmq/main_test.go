@@ -2,9 +2,10 @@ package rabbitmq
 
 import (
 	"context"
-	"github.com/escalopa/fingo/utils/testcontainer"
 	"log"
 	"testing"
+
+	"github.com/escalopa/fingo/utils/testcontainer"
 )
 
 var testRabbitMQ *Consumer
