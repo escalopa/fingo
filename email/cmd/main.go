@@ -1,98 +1,98 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net"
 	"os"
-	"strconv"
+	"os/signal"
+	"syscall"
 	"time"
 
-	"github.com/escalopa/fingo/email/internal/adapter/codegen"
-	"github.com/escalopa/fingo/email/internal/adapter/email/mycourier"
-	mygrpc "github.com/escalopa/fingo/email/internal/adapter/grpc"
-	"github.com/escalopa/fingo/email/internal/adapter/redis"
+	"github.com/escalopa/fingo/email/internal/adapters/server"
+	"github.com/escalopa/fingo/email/internal/adapters/validator"
+
+	"github.com/escalopa/fingo/email/internal/adapters/email/mycourier"
+	"github.com/escalopa/fingo/email/internal/adapters/queue/rabbitmq"
 	"github.com/escalopa/fingo/email/internal/application"
-	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/goconfig"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	// Return code
-	returnCode := 0
-	defer func() { os.Exit(returnCode) }()
-
 	// Create a new config instance
 	c := goconfig.New()
 
-	// Create redis client
-	cache, err := redis.New(c.Get("EMAIL_CACHE_URL"))
-	checkError(err, "Failed to connect to cache")
-	log.Println("Connected to cache")
-
 	// Parse code expiration from config
-	exp, err := time.ParseDuration(c.Get("EMAIL_USER_CODE_EXPIRATION"))
+	exp, err := time.ParseDuration(c.Get("EMAIL_CODES_EXPIRATION"))
 	checkError(err, "Failed to parse code expiration")
-	log.Println("Using code-expiration:", exp)
-
-	// Create a code repo
-	cr := redis.NewCodeRepository(cache,
-		redis.WithExpiration(exp),
-	)
-	// Close code repo on exit
-	defer func() {
-		err := cr.Close()
-		checkError(err, "Failed to close code repo")
-	}()
-	log.Println("Connected to code-repo")
+	log.Println("Using codes-expiration:", exp)
 
 	// Create a courier sender
 	cs, err := mycourier.New(c.Get("EMAIL_COURIER_TOKEN"),
 		mycourier.WithExpiration(exp),
 		mycourier.WithVerificationTemplate(c.Get("EMAIL_COURIER_VERIFICATION_TEMPLATE_ID")),
+		mycourier.WithResetPasswordTemplate(c.Get("EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID")),
+		mycourier.WithNewSignInSessionTemplate(c.Get("EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID")),
 	)
 	checkError(err, "Failed to create courier sender")
-	log.Println("Connected to courier-sender")
+	defer func() {
+		log.Println("Closing courier-sender")
+		_ = cs.Close()
+	}()
+	log.Println("Created courier-sender")
 
-	// Create a code generator
-	codeLen, err := strconv.Atoi(c.Get("EMAIL_USER_CODE_LENGTH"))
-	checkError(err, "Failed to parse code length")
-	cg, err := codegen.New(codeLen)
-	checkError(err, "Failed to create code-generator")
-	log.Println("Using Code-length:", codeLen)
+	// Create a rabbitmq consumer
+	rbc, err := rabbitmq.NewConsumer(c.Get("EMAIL_RABBITMQ_URL"),
+		rabbitmq.WithVerificationCodeQueue(c.Get("EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME")),
+		rabbitmq.WithResetPasswordTokenQueue(c.Get("EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME")),
+		rabbitmq.WithNewSignInSessionQueue(c.Get("EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME")),
+	)
+	checkError(err, "Failed to create rabbitmq consumer")
+	defer func() {
+		log.Println("Closing rabbitmq consumer")
+		_ = rbc.Close()
+	}()
+
+	// Parse send code min interval from config
+	smi, err := time.ParseDuration(c.Get("EMAIL_SEND_CODE_MIN_INTERVAL"))
+	checkError(err, "Failed to parse send code min interval")
+	log.Println("Using send-min-interval:", smi)
+	// Parse send reset password token min interval from config
+	spi, err := time.ParseDuration(c.Get("EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL"))
+	checkError(err, "Failed to parse send reset password token min interval")
+	log.Println("Using send-min-interval:", spi)
+
+	// Create a validator
+	v := validator.NewValidator()
+	log.Println("Created validator")
 
 	// Create use cases
-	mti, err := time.ParseDuration(c.Get("EMAIL_MIN_SEND_INTERVAL"))
-	checkError(err, "Failed to parse min send interval")
-	log.Println("Using min-send-interval:", mti)
-
 	uc := application.NewUseCases(
-		application.WithCodeRepository(cr),
-		application.WithCodeGenerator(cg),
+		application.WithValidator(v),
 		application.WithEmailSender(cs),
-		application.WithMinTimeInterval(mti),
+		application.WithMinSendCodeInterval(smi),
+		application.WithMinSendPasswordTokenInterval(spi),
 	)
 
-	StartGRPCServer(c, uc)
-}
+	// Create server
+	s := server.NewServer(uc, rbc)
+	log.Println("Created server")
 
-func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
-	// Create a new gRPC server
-	grpcH := mygrpc.New(uc)
-	grpcS := grpc.NewServer()
-	pb.RegisterEmailServiceServer(grpcS, grpcH)
-	reflection.Register(grpcS)
+	// Handle SIGINT and SIGTERM.
+	signalChannel := make(chan os.Signal, 2)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		sig := <-signalChannel
+		switch sig {
+		case os.Interrupt, syscall.SIGTERM:
+			log.Println("Gracefully Stopping server")
+			s.Stop()
+		}
+	}()
 
-	// Start the server
-	port := c.Get("EMAIL_GRPC_PORT")
-	lis, err := net.Listen("tcp", ":"+port)
-	checkError(err, fmt.Sprintf("Failed to listen on port %s", port))
-
-	log.Println("Starting gRPC server on port", port)
-	err = grpcS.Serve(lis)
-	checkError(err, "Failed to start gRPC server")
+	// Start server
+	log.Println("Starting server")
+	if err = s.Start(); err != nil {
+		log.Fatal(err, "Failed to start server")
+	}
 }
 
 func checkError(err error, msg string) {

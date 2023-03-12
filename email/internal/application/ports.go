@@ -2,21 +2,26 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/email/internal/core"
 )
 
-type CodeRepository interface {
-	Save(ctx context.Context, email string, vc core.VerificationCode) error
-	Get(ctx context.Context, email string) (core.VerificationCode, error)
-	Close() error
-}
-
 type EmailSender interface {
-	SendVerificationCode(ctx context.Context, email string, code string) error
+	SendVerificationCode(ctx context.Context, email string, name string, code string) error
+	SendResetPasswordToken(ctx context.Context, email string, name string, token string) error
+	SendNewSignInSession(ctx context.Context, email string, name string, clientIP string, userAgent string) error
 	Close() error
 }
 
-type CodeGenerator interface {
-	GenerateCode() (string, error)
-	VerifyCode(code string) bool
+type Validator interface {
+	Validate(i interface{}) error
+}
+
+type MessageQueueConsumer interface {
+	HandleSendVerificationsCode(handler func(ctx context.Context, email string, code string) error) error
+	HandleSendResetPasswordToken(handler func(ctx context.Context, email string, token string) error) error
+	HandleSendNewSignInSession(handler func(ctx context.Context, email string, clientIP string, userAgent string) error) error
+}
+
+type Server interface {
+	Start() error
+	Stop()
 }
