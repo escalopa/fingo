@@ -24,8 +24,8 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateS
 		ID:           arg.ID,
 		UserID:       arg.UserID,
 		RefreshToken: arg.RefreshToken,
-		UserAgent:    sql.NullString{String: arg.UserAgent},
-		ClientIp:     sql.NullString{String: arg.ClientIp},
+		UserAgent:    arg.UserAgent,
+		ClientIp:     arg.ClientIp,
 		ExpiresAt:    time.Now().Add(sr.std),
 	})
 	if err != nil {
@@ -118,8 +118,8 @@ func fromDbSessionToCore(session db.Session) core.Session {
 		ID:           session.ID,
 		UserID:       session.UserID,
 		RefreshToken: session.RefreshToken,
-		UserAgent:    session.UserAgent.String,
-		ClientIp:     session.ClientIp.String,
+		UserAgent:    session.UserAgent,
+		ClientIp:     session.ClientIp,
 		IsBlocked:    session.IsBlocked,
 		ExpiresAt:    session.ExpiresAt,
 		CreatedAt:    session.CreatedAt,
@@ -128,7 +128,7 @@ func fromDbSessionToCore(session db.Session) core.Session {
 
 func fromDbDeviceToCore(row db.GetUserDevicesRow) core.UserDevice {
 	return core.UserDevice{
-		UserAgent: row.UserAgent.String,
-		ClientIP:  row.ClientIp.String,
+		UserAgent: row.UserAgent,
+		ClientIP:  row.ClientIp,
 	}
 }

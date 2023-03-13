@@ -10,12 +10,12 @@ import (
 func TestSendResetPasswordTokenCommandImpl_Execute(t *testing.T) {
 	testCases := []struct {
 		name        string
-		param       SendResetPasswordTokenCommandParam
+		params      SendResetPasswordTokenCommandParam
 		expectError bool
 	}{
 		{
 			name: "valid",
-			param: SendResetPasswordTokenCommandParam{
+			params: SendResetPasswordTokenCommandParam{
 				Name:  gofakeit.FirstName(),
 				Email: gofakeit.Email(),
 				Token: gofakeit.UUID(),
@@ -24,7 +24,7 @@ func TestSendResetPasswordTokenCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid name",
-			param: SendResetPasswordTokenCommandParam{
+			params: SendResetPasswordTokenCommandParam{
 				Name:  "",
 				Email: gofakeit.Email(),
 				Token: gofakeit.UUID(),
@@ -33,7 +33,7 @@ func TestSendResetPasswordTokenCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid email",
-			param: SendResetPasswordTokenCommandParam{
+			params: SendResetPasswordTokenCommandParam{
 				Name:  gofakeit.FirstName(),
 				Email: "invalid",
 				Token: gofakeit.UUID(),
@@ -42,7 +42,7 @@ func TestSendResetPasswordTokenCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid token",
-			param: SendResetPasswordTokenCommandParam{
+			params: SendResetPasswordTokenCommandParam{
 				Name:  gofakeit.FirstName(),
 				Email: gofakeit.Email(),
 				Token: "",
@@ -54,7 +54,11 @@ func TestSendResetPasswordTokenCommandImpl_Execute(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// execute command
-			err := testUseCases.SendResetPasswordToken.Execute(context.Background(), tc.param)
+			err := testUseCases.SendResetPasswordToken.Execute(context.Background(), SendResetPasswordTokenCommandParam{
+				Name:  tc.params.Name,
+				Email: tc.params.Email,
+				Token: tc.params.Token,
+			})
 			if (err != nil) != tc.expectError {
 				t.Errorf("unexpected error: %v", err)
 			}

@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"github.com/escalopa/fingo/email/internal/core"
 	"testing"
 	"time"
 
@@ -13,19 +14,16 @@ import (
 
 func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
 	// Start the consumer
-	results := make(chan sendVerificationCodeMessage)
+	results := make(chan core.SendVerificationCodeMessage)
 	go func() {
-		err := testRabbitMQ.HandleSendVerificationsCode(func(ctx context.Context, email string, code string) error {
-			results <- sendVerificationCodeMessage{
-				Email: email,
-				Code:  code,
-			}
+		err := testConsumer.HandleSendVerificationsCode(func(ctx context.Context, params core.SendVerificationCodeMessage) error {
+			results <- params
 			return nil
 		})
 		require.NoError(t, err)
 	}()
 	// Create a channel
-	ch, err := testRabbitMQ.q.Channel()
+	ch, err := testConsumer.q.Channel()
 	require.NoError(t, err)
 	defer func() { require.NoError(t, ch.Close()) }()
 	// Declare the queue
@@ -41,11 +39,11 @@ func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
 	// Publish a message to the queue
 	testCases := []struct {
 		name string
-		msg  sendVerificationCodeMessage
+		msg  core.SendVerificationCodeMessage
 	}{
 		{
 			name: "Send verification code",
-			msg: sendVerificationCodeMessage{
+			msg: core.SendVerificationCodeMessage{
 				Email: gofakeit.Email(),
 				Code:  gofakeit.UUID(),
 			},
@@ -82,19 +80,16 @@ func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
 
 func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
 	// Start the consumer
-	results := make(chan sendResetPasswordTokenMessage)
+	results := make(chan core.SendResetPasswordTokenMessage)
 	go func() {
-		err := testRabbitMQ.HandleSendResetPasswordToken(func(ctx context.Context, email string, token string) error {
-			results <- sendResetPasswordTokenMessage{
-				Email: email,
-				Token: token,
-			}
+		err := testConsumer.HandleSendResetPasswordToken(func(ctx context.Context, params core.SendResetPasswordTokenMessage) error {
+			results <- params
 			return nil
 		})
 		require.NoError(t, err)
 	}()
 	// Create a channel
-	ch, err := testRabbitMQ.q.Channel()
+	ch, err := testConsumer.q.Channel()
 	require.NoError(t, err)
 	defer func() { require.NoError(t, ch.Close()) }()
 	// Declare the queue
@@ -111,11 +106,11 @@ func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
 	// Publish a message to the queue
 	testCases := []struct {
 		name string
-		msg  sendResetPasswordTokenMessage
+		msg  core.SendResetPasswordTokenMessage
 	}{
 		{
 			name: "Send reset password token",
-			msg: sendResetPasswordTokenMessage{
+			msg: core.SendResetPasswordTokenMessage{
 				Email: gofakeit.Email(),
 				Token: gofakeit.UUID(),
 			},
@@ -151,20 +146,16 @@ func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
 
 func TestConsumer_HandleSendNewSignInSession(t *testing.T) {
 	// Start the consumer
-	results := make(chan sendNewSignInSessionMessage)
+	results := make(chan core.SendNewSignInSessionMessage)
 	go func() {
-		err := testRabbitMQ.HandleSendNewSignInSession(func(ctx context.Context, email string, clientIP string, userAgent string) error {
-			results <- sendNewSignInSessionMessage{
-				Email:     email,
-				ClientIP:  clientIP,
-				UserAgent: userAgent,
-			}
+		err := testConsumer.HandleSendNewSignInSession(func(ctx context.Context, params core.SendNewSignInSessionMessage) error {
+			results <- params
 			return nil
 		})
 		require.NoError(t, err)
 	}()
 	// Create a channel
-	ch, err := testRabbitMQ.q.Channel()
+	ch, err := testConsumer.q.Channel()
 	require.NoError(t, err)
 	defer func() { require.NoError(t, ch.Close()) }()
 	// Declare the queue
@@ -180,11 +171,11 @@ func TestConsumer_HandleSendNewSignInSession(t *testing.T) {
 	// Publish a message to the queue
 	testCases := []struct {
 		name string
-		msg  sendNewSignInSessionMessage
+		msg  core.SendNewSignInSessionMessage
 	}{
 		{
 			name: "Send new sign in session",
-			msg: sendNewSignInSessionMessage{
+			msg: core.SendNewSignInSessionMessage{
 				Email:     gofakeit.Email(),
 				ClientIP:  gofakeit.IPv4Address(),
 				UserAgent: gofakeit.UserAgent(),

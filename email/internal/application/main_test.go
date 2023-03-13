@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"github.com/escalopa/fingo/email/internal/core"
 	"testing"
 	"time"
 
@@ -13,13 +14,13 @@ var testUseCases *UseCases
 type emailSenderMock struct {
 }
 
-func (esm *emailSenderMock) SendVerificationCode(ctx context.Context, email string, name string, code string) error {
+func (esm *emailSenderMock) SendVerificationCode(_ context.Context, _ core.SendVerificationCodeMessage) error {
 	return nil
 }
-func (esm *emailSenderMock) SendResetPasswordToken(ctx context.Context, email string, name string, token string) error {
+func (esm *emailSenderMock) SendResetPasswordToken(_ context.Context, _ core.SendResetPasswordTokenMessage) error {
 	return nil
 }
-func (esm *emailSenderMock) SendNewSignInSession(ctx context.Context, email string, name string, clientIP string, userAgent string) error {
+func (esm *emailSenderMock) SendNewSignInSession(_ context.Context, _ core.SendNewSignInSessionMessage) error {
 	return nil
 }
 

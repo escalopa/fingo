@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"github.com/escalopa/fingo/email/internal/core"
 	"log"
 	"time"
 
@@ -13,9 +14,9 @@ import (
 type Consumer struct {
 	q *amqp.Connection
 
-	vcq  string // verificationCodeQueueName
-	rsq  string // resetPasswordTokenQueueName
-	sisq string // newSignInSessionQueueName
+	vcq string // verificationCodeQueueName
+	rsq string // resetPasswordTokenQueueName
+	ssq string // newSignInSessionQueueName
 }
 
 func NewConsumer(url string, opts ...func(*Consumer)) (*Consumer, error) {
@@ -37,7 +38,7 @@ func NewConsumer(url string, opts ...func(*Consumer)) (*Consumer, error) {
 		return nil, errs.B(err).Code(errs.InvalidArgument).
 			Msg("RabbitMQ Consumer: sendResetPasswordTokenQueueName is not set").Err()
 	}
-	if r.sisq == "" {
+	if r.ssq == "" {
 		return nil, errs.B(err).Code(errs.InvalidArgument).
 			Msg("RabbitMQ Consumer: sendNewSignInSessionQueueName is not set").Err()
 	}
@@ -59,68 +60,52 @@ func WithResetPasswordTokenQueue(name string) func(*Consumer) {
 
 func WithNewSignInSessionQueue(name string) func(*Consumer) {
 	return func(r *Consumer) {
-		r.sisq = name
+		r.ssq = name
 	}
 }
 
-type sendVerificationCodeMessage struct {
-	Email string `json:"email"`
-	Code  string `json:"code"`
-}
-
-func (r *Consumer) HandleSendVerificationsCode(handler func(ctx context.Context, email string, code string) error) error {
+func (r *Consumer) HandleSendVerificationsCode(handler func(ctx context.Context, params core.SendVerificationCodeMessage) error) error {
 	messages, err := r.setupQueue(r.vcq)
 	if err != nil {
 		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on send verification code").Err()
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
-			var m sendVerificationCodeMessage
+			var m core.SendVerificationCodeMessage
 			r.handleMessage(d, &m, func(ctx context.Context) error {
-				return handler(ctx, m.Email, m.Code)
+				return handler(ctx, m)
 			})
 		}(d)
 	}
 	return nil
 }
 
-type sendResetPasswordTokenMessage struct {
-	Email string `json:"email"`
-	Token string `json:"token"`
-}
-
-func (r *Consumer) HandleSendResetPasswordToken(handler func(ctx context.Context, email string, token string) error) error {
+func (r *Consumer) HandleSendResetPasswordToken(handler func(ctx context.Context, params core.SendResetPasswordTokenMessage) error) error {
 	messages, err := r.setupQueue(r.rsq)
 	if err != nil {
 		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on send verification code").Err()
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
-			var m sendResetPasswordTokenMessage
+			var m core.SendResetPasswordTokenMessage
 			r.handleMessage(d, &m, func(ctx context.Context) error {
-				return handler(ctx, m.Email, m.Token)
+				return handler(ctx, m)
 			})
 		}(d)
 	}
 	return nil
 }
 
-type sendNewSignInSessionMessage struct {
-	Email     string `json:"email"`
-	ClientIP  string `json:"client_ip"`
-	UserAgent string `json:"user_agent"`
-}
-
-func (r *Consumer) HandleSendNewSignInSession(handler func(ctx context.Context, email string, clientIP string, userAgent string) error) error {
-	messages, err := r.setupQueue(r.sisq)
+func (r *Consumer) HandleSendNewSignInSession(handler func(ctx context.Context, params core.SendNewSignInSessionMessage) error) error {
+	messages, err := r.setupQueue(r.ssq)
 	if err != nil {
 		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on send verification code").Err()
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
-			var m sendNewSignInSessionMessage
+			var m core.SendNewSignInSessionMessage
 			r.handleMessage(d, &m, func(ctx context.Context) error {
-				return handler(ctx, m.Email, m.ClientIP, m.UserAgent)
+				return handler(ctx, m)
 			})
 		}(d)
 	}

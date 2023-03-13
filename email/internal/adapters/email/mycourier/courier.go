@@ -2,6 +2,7 @@ package mycourier
 
 import (
 	"context"
+	"github.com/escalopa/fingo/email/internal/core"
 	"strconv"
 	"time"
 
@@ -72,15 +73,15 @@ func WithNewSignInSessionTemplate(templateCode string) func(*Sender) {
 }
 
 // SendVerificationCode sends a verification code to the given email
-func (c *Sender) SendVerificationCode(ctx context.Context, email string, name string, code string) error {
+func (c *Sender) SendVerificationCode(ctx context.Context, params core.SendVerificationCodeMessage) error {
 	requestID, err := c.c.SendMessage(ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{
-				"to":       map[string]string{"email": email},
+				"to":       map[string]string{"email": params.Email},
 				"template": c.vt,
 				"data": map[string]string{
-					"name":       name,
-					"code":       code,
+					"name":       params.Name,
+					"code":       params.Code,
 					"expiration": strconv.Itoa(int(c.exp.Minutes())),
 				},
 			},
@@ -94,15 +95,15 @@ func (c *Sender) SendVerificationCode(ctx context.Context, email string, name st
 
 // SendResetPasswordToken sends a reset password token to the given email
 // The token is used to reset the password and set a new one
-func (c *Sender) SendResetPasswordToken(ctx context.Context, email string, name string, token string) error {
+func (c *Sender) SendResetPasswordToken(ctx context.Context, params core.SendResetPasswordTokenMessage) error {
 	requestID, err := c.c.SendMessage(ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{
-				"to":       map[string]string{"email": email},
+				"to":       map[string]string{"email": params.Email},
 				"template": c.rpt,
 				"data": map[string]string{
-					"name":       name,
-					"token":      token,
+					"name":       params.Name,
+					"token":      params.Token,
 					"expiration": strconv.Itoa(int(c.exp.Minutes())),
 				},
 			},
@@ -115,16 +116,16 @@ func (c *Sender) SendResetPasswordToken(ctx context.Context, email string, name 
 }
 
 // SendNewSignInSession sends an email to notify user about a new login session on his account
-func (c *Sender) SendNewSignInSession(ctx context.Context, email string, name string, clientIP string, userAgent string) error {
+func (c *Sender) SendNewSignInSession(ctx context.Context, params core.SendNewSignInSessionMessage) error {
 	requestID, err := c.c.SendMessage(ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{
-				"to":       map[string]string{"email": email},
+				"to":       map[string]string{"email": params.Email},
 				"template": c.nsst,
 				"data": map[string]string{
-					"name":       name,
-					"client_ip":  clientIP,
-					"user_agent": userAgent,
+					"name":       params.Name,
+					"client_ip":  params.ClientIP,
+					"user_agent": params.UserAgent,
 				},
 			},
 		},

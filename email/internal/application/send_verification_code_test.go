@@ -11,12 +11,12 @@ func TestSendVerificationCodeCommandImpl_Execute(t *testing.T) {
 
 	testCases := []struct {
 		name        string
-		param       SendVerificationCodeCommandParam
+		params      SendVerificationCodeCommandParam
 		expectError bool
 	}{
 		{
 			name: "valid",
-			param: SendVerificationCodeCommandParam{
+			params: SendVerificationCodeCommandParam{
 				Name:  gofakeit.FirstName(),
 				Email: gofakeit.Email(),
 				Code:  gofakeit.UUID(),
@@ -25,7 +25,7 @@ func TestSendVerificationCodeCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid name",
-			param: SendVerificationCodeCommandParam{
+			params: SendVerificationCodeCommandParam{
 				Name:  "",
 				Email: gofakeit.Email(),
 				Code:  gofakeit.UUID(),
@@ -34,7 +34,7 @@ func TestSendVerificationCodeCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid email",
-			param: SendVerificationCodeCommandParam{
+			params: SendVerificationCodeCommandParam{
 				Name:  gofakeit.FirstName(),
 				Email: "invalid",
 				Code:  gofakeit.UUID(),
@@ -43,7 +43,7 @@ func TestSendVerificationCodeCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid code",
-			param: SendVerificationCodeCommandParam{
+			params: SendVerificationCodeCommandParam{
 				Name:  gofakeit.FirstName(),
 				Email: gofakeit.Email(),
 				Code:  "",
@@ -55,7 +55,11 @@ func TestSendVerificationCodeCommandImpl_Execute(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// execute command
-			err := testUseCases.SendVerificationCode.Execute(context.Background(), tc.param)
+			err := testUseCases.SendVerificationCode.Execute(context.Background(), SendVerificationCodeCommandParam{
+				Name:  tc.params.Name,
+				Email: tc.params.Email,
+				Code:  tc.params.Code,
+			})
 			if (err != nil) != tc.expectError {
 				t.Errorf("unexpected error: %v", err)
 			}

@@ -10,12 +10,12 @@ import (
 func TestSendNewSingInSessionCommandImpl_Execute(t *testing.T) {
 	testCases := []struct {
 		name        string
-		param       SendNewSingInSessionCommandParam
+		params      SendNewSingInSessionCommandParam
 		expectError bool
 	}{
 		{
 			name: "valid",
-			param: SendNewSingInSessionCommandParam{
+			params: SendNewSingInSessionCommandParam{
 				Name:      gofakeit.FirstName(),
 				Email:     gofakeit.Email(),
 				ClientIP:  gofakeit.IPv4Address(),
@@ -25,7 +25,7 @@ func TestSendNewSingInSessionCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid name",
-			param: SendNewSingInSessionCommandParam{
+			params: SendNewSingInSessionCommandParam{
 				Name:      "",
 				Email:     gofakeit.Email(),
 				ClientIP:  gofakeit.IPv4Address(),
@@ -35,7 +35,7 @@ func TestSendNewSingInSessionCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid email",
-			param: SendNewSingInSessionCommandParam{
+			params: SendNewSingInSessionCommandParam{
 				Name:      gofakeit.FirstName(),
 				Email:     "invalid",
 				ClientIP:  gofakeit.IPv4Address(),
@@ -45,7 +45,7 @@ func TestSendNewSingInSessionCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid client ip",
-			param: SendNewSingInSessionCommandParam{
+			params: SendNewSingInSessionCommandParam{
 				Name:      gofakeit.FirstName(),
 				Email:     gofakeit.Email(),
 				ClientIP:  "",
@@ -55,7 +55,7 @@ func TestSendNewSingInSessionCommandImpl_Execute(t *testing.T) {
 		},
 		{
 			name: "invalid user agent",
-			param: SendNewSingInSessionCommandParam{
+			params: SendNewSingInSessionCommandParam{
 				Name:      gofakeit.FirstName(),
 				Email:     gofakeit.Email(),
 				ClientIP:  gofakeit.IPv4Address(),
@@ -68,7 +68,7 @@ func TestSendNewSingInSessionCommandImpl_Execute(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// execute command
-			err := testUseCases.SendNewSignInSession.Execute(context.Background(), tc.param)
+			err := testUseCases.SendNewSignInSession.Execute(context.Background(), tc.params)
 			if (err != nil) != tc.expectError {
 				t.Errorf("unexpected error: %v", err)
 			}

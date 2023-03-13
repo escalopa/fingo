@@ -3,16 +3,18 @@ package server
 import (
 	"context"
 
+	"github.com/escalopa/fingo/email/internal/core"
+
 	"github.com/escalopa/fingo/email/internal/application"
 )
 
 type Server struct {
 	uc      *application.UseCases
-	mqc     application.MessageQueueConsumer
+	mqc     application.MessageConsumer
 	errChan chan error
 }
 
-func NewServer(uc *application.UseCases, mqc application.MessageQueueConsumer) *Server {
+func NewServer(uc *application.UseCases, mqc application.MessageConsumer) *Server {
 	return &Server{
 		uc:  uc,
 		mqc: mqc,
@@ -32,31 +34,34 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) handleSendEmailVerificationCode() error {
-	err := s.mqc.HandleSendVerificationsCode(func(ctx context.Context, email string, code string) error {
+	err := s.mqc.HandleSendVerificationsCode(func(ctx context.Context, params core.SendVerificationCodeMessage) error {
 		return s.uc.SendVerificationCode.Execute(ctx, application.SendVerificationCodeCommandParam{
-			Email: email,
-			Code:  code,
+			Name:  params.Name,
+			Email: params.Email,
+			Code:  params.Code,
 		})
 	})
 	return err
 }
 
 func (s *Server) handleSendResetPasswordToken() error {
-	err := s.mqc.HandleSendResetPasswordToken(func(ctx context.Context, email string, token string) error {
+	err := s.mqc.HandleSendResetPasswordToken(func(ctx context.Context, params core.SendResetPasswordTokenMessage) error {
 		return s.uc.SendResetPasswordToken.Execute(ctx, application.SendResetPasswordTokenCommandParam{
-			Email: email,
-			Token: token,
+			Name:  params.Name,
+			Email: params.Email,
+			Token: params.Token,
 		})
 	})
 	return err
 }
 
 func (s *Server) handleSendNewSignInSessionCode() error {
-	err := s.mqc.HandleSendNewSignInSession(func(ctx context.Context, email string, clientIP string, userAgent string) error {
+	err := s.mqc.HandleSendNewSignInSession(func(ctx context.Context, params core.SendNewSignInSessionMessage) error {
 		return s.uc.SendNewSignInSession.Execute(ctx, application.SendNewSingInSessionCommandParam{
-			Email:     email,
-			ClientIP:  clientIP,
-			UserAgent: userAgent,
+			Name:      params.Name,
+			Email:     params.Email,
+			ClientIP:  params.ClientIP,
+			UserAgent: params.UserAgent,
 		})
 	})
 	return err

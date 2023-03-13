@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"github.com/escalopa/fingo/email/internal/core"
 )
 
 type SendNewSingInSessionCommandParam struct {
@@ -12,7 +13,7 @@ type SendNewSingInSessionCommandParam struct {
 }
 
 type SendNewSingInSessionCommand interface {
-	Execute(ctx context.Context, param SendNewSingInSessionCommandParam) error
+	Execute(ctx context.Context, params SendNewSingInSessionCommandParam) error
 }
 
 type SendNewSingInSessionCommandImpl struct {
@@ -27,11 +28,17 @@ func NewSendNewSingInSessionCommand(v Validator, es EmailSender) SendNewSingInSe
 	}
 }
 
-func (c *SendNewSingInSessionCommandImpl) Execute(ctx context.Context, param SendNewSingInSessionCommandParam) error {
-	if err := c.v.Validate(param); err != nil {
+func (c *SendNewSingInSessionCommandImpl) Execute(ctx context.Context, params SendNewSingInSessionCommandParam) error {
+	if err := c.v.Validate(params); err != nil {
 		return err
 	}
-	if err := c.es.SendNewSignInSession(ctx, param.Name, param.Email, param.ClientIP, param.UserAgent); err != nil {
+	err := c.es.SendNewSignInSession(ctx, core.SendNewSignInSessionMessage{
+		Name:      params.Name,
+		Email:     params.Email,
+		ClientIP:  params.ClientIP,
+		UserAgent: params.UserAgent,
+	})
+	if err != nil {
 		return err
 	}
 	return nil

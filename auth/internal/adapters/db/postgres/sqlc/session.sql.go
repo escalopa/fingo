@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,13 +18,13 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type CreateSessionParams struct {
-	ID           uuid.UUID      `db:"id" json:"id"`
-	UserID       uuid.UUID      `db:"user_id" json:"user_id"`
-	RefreshToken string         `db:"refresh_token" json:"refresh_token"`
-	UserAgent    sql.NullString `db:"user_agent" json:"user_agent"`
-	ClientIp     sql.NullString `db:"client_ip" json:"client_ip"`
-	ExpiresAt    time.Time      `db:"expires_at" json:"expires_at"`
-	CreatedAt    time.Time      `db:"created_at" json:"created_at"`
+	ID           uuid.UUID `db:"id" json:"id"`
+	UserID       uuid.UUID `db:"user_id" json:"user_id"`
+	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
+	UserAgent    string    `db:"user_agent" json:"user_agent"`
+	ClientIp     string    `db:"client_ip" json:"client_ip"`
+	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
+	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
@@ -81,8 +80,8 @@ WHERE user_id = $1
 `
 
 type GetUserDevicesRow struct {
-	UserAgent sql.NullString `db:"user_agent" json:"user_agent"`
-	ClientIp  sql.NullString `db:"client_ip" json:"client_ip"`
+	UserAgent string `db:"user_agent" json:"user_agent"`
+	ClientIp  string `db:"client_ip" json:"client_ip"`
 }
 
 func (q *Queries) GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUserDevicesRow, error) {

@@ -12,20 +12,28 @@ import (
 
 type Querier interface {
 	ChangeNames(ctx context.Context, arg ChangeNamesParams) error
-	ChangePassword(ctx context.Context, arg ChangePasswordParams) error
 	ChangeUserEmail(ctx context.Context, arg ChangeUserEmailParams) error
+	ChangeUserPassword(ctx context.Context, arg ChangeUserPasswordParams) error
+	ChangeUserPhone(ctx context.Context, arg ChangeUserPhoneParams) error
+	CreateRole(ctx context.Context, name string) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) error
+	DeleteRole(ctx context.Context, id int32) error
 	DeleteSessionByID(ctx context.Context, id uuid.UUID) error
 	DeleteUserByID(ctx context.Context, id uuid.UUID) error
+	GetRoleUsers(ctx context.Context, roleID int32) ([]uuid.UUID, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByPhone(ctx context.Context, phoneNumber string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUserDevicesRow, error)
+	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Session, error)
 	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error
-	SetUserIsVerified(ctx context.Context, arg SetUserIsVerifiedParams) error
+	SetUserEmailIsVerified(ctx context.Context, arg SetUserEmailIsVerifiedParams) error
+	SetUserPhoneIsVerified(ctx context.Context, arg SetUserPhoneIsVerifiedParams) error
+	UpdateRole(ctx context.Context, arg UpdateRoleParams) error
 }
 
 var _ Querier = (*Queries)(nil)

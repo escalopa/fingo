@@ -3,6 +3,8 @@ package application
 import (
 	"context"
 	"time"
+
+	"github.com/escalopa/fingo/email/internal/core"
 )
 
 type SendResetPasswordTokenCommandParam struct {
@@ -12,7 +14,7 @@ type SendResetPasswordTokenCommandParam struct {
 }
 
 type SendResetPasswordTokenCommand interface {
-	Execute(ctx context.Context, param SendResetPasswordTokenCommandParam) error
+	Execute(ctx context.Context, params SendResetPasswordTokenCommandParam) error
 }
 
 type SendResetPasswordTokenCommandImpl struct {
@@ -29,12 +31,17 @@ func NewSendResetPasswordTokenCommand(v Validator, es EmailSender, spi time.Dura
 	}
 }
 
-func (c *SendResetPasswordTokenCommandImpl) Execute(ctx context.Context, param SendResetPasswordTokenCommandParam) error {
+func (c *SendResetPasswordTokenCommandImpl) Execute(ctx context.Context, params SendResetPasswordTokenCommandParam) error {
 	// TODO: check if the user has requested a password reset token in the last `c.spi` if so, return an error
-	if err := c.v.Validate(param); err != nil {
+	if err := c.v.Validate(params); err != nil {
 		return err
 	}
-	if err := c.es.SendResetPasswordToken(ctx, param.Name, param.Email, param.Token); err != nil {
+	err := c.es.SendResetPasswordToken(ctx, core.SendResetPasswordTokenMessage{
+		Name:  params.Name,
+		Email: params.Email,
+		Token: params.Token,
+	})
+	if err != nil {
 		return err
 	}
 	return nil

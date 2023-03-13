@@ -2,12 +2,13 @@ package application
 
 import (
 	"context"
+	"github.com/escalopa/fingo/email/internal/core"
 )
 
 type EmailSender interface {
-	SendVerificationCode(ctx context.Context, email string, name string, code string) error
-	SendResetPasswordToken(ctx context.Context, email string, name string, token string) error
-	SendNewSignInSession(ctx context.Context, email string, name string, clientIP string, userAgent string) error
+	SendVerificationCode(ctx context.Context, params core.SendVerificationCodeMessage) error
+	SendResetPasswordToken(ctx context.Context, params core.SendResetPasswordTokenMessage) error
+	SendNewSignInSession(ctx context.Context, params core.SendNewSignInSessionMessage) error
 	Close() error
 }
 
@@ -15,10 +16,11 @@ type Validator interface {
 	Validate(i interface{}) error
 }
 
-type MessageQueueConsumer interface {
-	HandleSendVerificationsCode(handler func(ctx context.Context, email string, code string) error) error
-	HandleSendResetPasswordToken(handler func(ctx context.Context, email string, token string) error) error
-	HandleSendNewSignInSession(handler func(ctx context.Context, email string, clientIP string, userAgent string) error) error
+type MessageConsumer interface {
+	HandleSendVerificationsCode(handler func(ctx context.Context, params core.SendVerificationCodeMessage) error) error
+	HandleSendResetPasswordToken(handler func(ctx context.Context, params core.SendResetPasswordTokenMessage) error) error
+	HandleSendNewSignInSession(handler func(ctx context.Context, params core.SendNewSignInSessionMessage) error) error
+	Close() error
 }
 
 type Server interface {

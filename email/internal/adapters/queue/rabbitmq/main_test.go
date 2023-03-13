@@ -8,7 +8,7 @@ import (
 	"github.com/escalopa/fingo/utils/testcontainer"
 )
 
-var testRabbitMQ *Consumer
+var testConsumer *Consumer
 
 func TestMain(m *testing.M) {
 	// Start the RabbitMQ container
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 		}
 	}()
 	// Create the consumer
-	testRabbitMQ, err = NewConsumer(url,
+	testConsumer, err = NewConsumer(url,
 		WithVerificationCodeQueue("verification_code_queue"),
 		WithResetPasswordTokenQueue("reset_password_token_queue"),
 		WithNewSignInSessionQueue("new_sign_in_session_queue"),

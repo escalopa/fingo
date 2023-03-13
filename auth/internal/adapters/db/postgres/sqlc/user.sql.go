@@ -8,48 +8,42 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 const changeNames = `-- name: ChangeNames :exec
 UPDATE users
-SET name     = coalesce($1, name),
-    username = coalesce($2, name)
-WHERE id = $3
+SET first_name = coalesce($1, first_name),
+    last_name  = coalesce($2, last_name),
+    username   = coalesce($3, username),
+    birthday   = coalesce($4, birthday)
+WHERE id = $5
 `
 
 type ChangeNamesParams struct {
-	Name     sql.NullString `db:"name" json:"name"`
-	Username sql.NullString `db:"username" json:"username"`
-	ID       uuid.UUID      `db:"id" json:"id"`
+	FirstName sql.NullString `db:"first_name" json:"first_name"`
+	LastName  sql.NullString `db:"last_name" json:"last_name"`
+	Username  sql.NullString `db:"username" json:"username"`
+	Birthday  sql.NullTime   `db:"birthday" json:"birthday"`
+	ID        uuid.UUID      `db:"id" json:"id"`
 }
 
 func (q *Queries) ChangeNames(ctx context.Context, arg ChangeNamesParams) error {
-	_, err := q.db.ExecContext(ctx, changeNames, arg.Name, arg.Username, arg.ID)
-	return err
-}
-
-const changePassword = `-- name: ChangePassword :exec
-UPDATE users
-SET hashed_password = $2
-WHERE id = $1
-`
-
-type ChangePasswordParams struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	HashedPassword string    `db:"hashed_password" json:"hashed_password"`
-}
-
-func (q *Queries) ChangePassword(ctx context.Context, arg ChangePasswordParams) error {
-	_, err := q.db.ExecContext(ctx, changePassword, arg.ID, arg.HashedPassword)
+	_, err := q.db.ExecContext(ctx, changeNames,
+		arg.FirstName,
+		arg.LastName,
+		arg.Username,
+		arg.Birthday,
+		arg.ID,
+	)
 	return err
 }
 
 const changeUserEmail = `-- name: ChangeUserEmail :exec
 UPDATE users
-SET email       = $2,
-    is_verified = false
+SET email = $2
 WHERE id = $1
 `
 
@@ -63,25 +57,75 @@ func (q *Queries) ChangeUserEmail(ctx context.Context, arg ChangeUserEmailParams
 	return err
 }
 
+const changeUserPassword = `-- name: ChangeUserPassword :exec
+UPDATE users
+SET hashed_password     = $2,
+    password_changed_at = now()
+WHERE id = $1
+`
+
+type ChangeUserPasswordParams struct {
+	ID             uuid.UUID `db:"id" json:"id"`
+	HashedPassword string    `db:"hashed_password" json:"hashed_password"`
+}
+
+func (q *Queries) ChangeUserPassword(ctx context.Context, arg ChangeUserPasswordParams) error {
+	_, err := q.db.ExecContext(ctx, changeUserPassword, arg.ID, arg.HashedPassword)
+	return err
+}
+
+const changeUserPhone = `-- name: ChangeUserPhone :exec
+UPDATE users
+SET phone_number = $2
+WHERE id = $1
+`
+
+type ChangeUserPhoneParams struct {
+	ID          uuid.UUID `db:"id" json:"id"`
+	PhoneNumber string    `db:"phone_number" json:"phone_number"`
+}
+
+func (q *Queries) ChangeUserPhone(ctx context.Context, arg ChangeUserPhoneParams) error {
+	_, err := q.db.ExecContext(ctx, changeUserPhone, arg.ID, arg.PhoneNumber)
+	return err
+}
+
 const createUser = `-- name: CreateUser :exec
-INSERT INTO users (id, name, username, email, hashed_password)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (id,
+                   first_name,
+                   last_name,
+                   username,
+                   gender,
+                   birthday,
+                   email,
+                   phone_number,
+                   hashed_password,
+                   created_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
 `
 
 type CreateUserParams struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	Name           string    `db:"name" json:"name"`
-	Username       string    `db:"username" json:"username"`
-	Email          string    `db:"email" json:"email"`
-	HashedPassword string    `db:"hashed_password" json:"hashed_password"`
+	ID             uuid.UUID   `db:"id" json:"id"`
+	FirstName      string      `db:"first_name" json:"first_name"`
+	LastName       string      `db:"last_name" json:"last_name"`
+	Username       string      `db:"username" json:"username"`
+	Gender         interface{} `db:"gender" json:"gender"`
+	Birthday       time.Time   `db:"birthday" json:"birthday"`
+	Email          string      `db:"email" json:"email"`
+	PhoneNumber    string      `db:"phone_number" json:"phone_number"`
+	HashedPassword string      `db:"hashed_password" json:"hashed_password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	_, err := q.db.ExecContext(ctx, createUser,
 		arg.ID,
-		arg.Name,
+		arg.FirstName,
+		arg.LastName,
 		arg.Username,
+		arg.Gender,
+		arg.Birthday,
 		arg.Email,
+		arg.PhoneNumber,
 		arg.HashedPassword,
 	)
 	return err
@@ -99,7 +143,7 @@ func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, username, email, hashed_password, is_verified, created_at
+SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, birthday, created_at
 FROM users
 WHERE email = $1
 LIMIT 1
@@ -110,18 +154,24 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.FirstName,
+		&i.LastName,
 		&i.Username,
+		&i.Gender,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.HashedPassword,
-		&i.IsVerified,
+		&i.PasswordChangedAt,
+		&i.IsVerifiedEmail,
+		&i.IsVerifiedPhone,
+		&i.Birthday,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, name, username, email, hashed_password, is_verified, created_at
+SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, birthday, created_at
 FROM users
 WHERE id = $1
 LIMIT 1
@@ -132,18 +182,52 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.FirstName,
+		&i.LastName,
 		&i.Username,
+		&i.Gender,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.HashedPassword,
-		&i.IsVerified,
+		&i.PasswordChangedAt,
+		&i.IsVerifiedEmail,
+		&i.IsVerifiedPhone,
+		&i.Birthday,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getUserByPhone = `-- name: GetUserByPhone :one
+SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, birthday, created_at
+FROM users
+WHERE phone_number = $1
+LIMIT 1
+`
+
+func (q *Queries) GetUserByPhone(ctx context.Context, phoneNumber string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByPhone, phoneNumber)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.FirstName,
+		&i.LastName,
+		&i.Username,
+		&i.Gender,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.HashedPassword,
+		&i.PasswordChangedAt,
+		&i.IsVerifiedEmail,
+		&i.IsVerifiedPhone,
+		&i.Birthday,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, name, username, email, hashed_password, is_verified, created_at
+SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, birthday, created_at
 FROM users
 WHERE username = $1
 `
@@ -153,28 +237,50 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.FirstName,
+		&i.LastName,
 		&i.Username,
+		&i.Gender,
 		&i.Email,
+		&i.PhoneNumber,
 		&i.HashedPassword,
-		&i.IsVerified,
+		&i.PasswordChangedAt,
+		&i.IsVerifiedEmail,
+		&i.IsVerifiedPhone,
+		&i.Birthday,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
-const setUserIsVerified = `-- name: SetUserIsVerified :exec
+const setUserEmailIsVerified = `-- name: SetUserEmailIsVerified :exec
 UPDATE users
-SET is_verified = $2
+SET is_verified_email = $2
 WHERE id = $1
 `
 
-type SetUserIsVerifiedParams struct {
-	ID         uuid.UUID `db:"id" json:"id"`
-	IsVerified bool      `db:"is_verified" json:"is_verified"`
+type SetUserEmailIsVerifiedParams struct {
+	ID              uuid.UUID `db:"id" json:"id"`
+	IsVerifiedEmail bool      `db:"is_verified_email" json:"is_verified_email"`
 }
 
-func (q *Queries) SetUserIsVerified(ctx context.Context, arg SetUserIsVerifiedParams) error {
-	_, err := q.db.ExecContext(ctx, setUserIsVerified, arg.ID, arg.IsVerified)
+func (q *Queries) SetUserEmailIsVerified(ctx context.Context, arg SetUserEmailIsVerifiedParams) error {
+	_, err := q.db.ExecContext(ctx, setUserEmailIsVerified, arg.ID, arg.IsVerifiedEmail)
+	return err
+}
+
+const setUserPhoneIsVerified = `-- name: SetUserPhoneIsVerified :exec
+UPDATE users
+SET is_verified_phone = $2
+WHERE id = $1
+`
+
+type SetUserPhoneIsVerifiedParams struct {
+	ID              uuid.UUID `db:"id" json:"id"`
+	IsVerifiedPhone bool      `db:"is_verified_phone" json:"is_verified_phone"`
+}
+
+func (q *Queries) SetUserPhoneIsVerified(ctx context.Context, arg SetUserPhoneIsVerifiedParams) error {
+	_, err := q.db.ExecContext(ctx, setUserPhoneIsVerified, arg.ID, arg.IsVerifiedPhone)
 	return err
 }
