@@ -8,15 +8,16 @@ services:
       - ./auth:/go/src/github.com/escalopa/fingo/
       - ./pb:/go/src/github.com/escalopa/fingo/
     environment:
+      - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
       - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
       - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
-      - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
+      - AUTH_RABBITMQ_URL={AUTH_RABBITMQ_URL}
+
       - AUTH_TOKEN_SECRET=${AUTH_TOKEN_SECRET}
       - AUTH_ACCESS_TOKEN_DURATION=${AUTH_ACCESS_TOKEN_DURATION}
       - AUTH_REFRESH_TOKEN_DURATION=${AUTH_REFRESH_TOKEN_DURATION}
       - AUTH_USER_SESSION_DURATION=${AUTH_USER_SESSION_DURATION}
-      - AUTH_EMAIL_GRPC_URL=${AUTH_EMAIL_GRPC_URL}
     ports:
       - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     build:
@@ -82,7 +83,7 @@ services:
         retries: 5
 
   rabbitmq:
-    image: rabbitmq:3.8.9-management
+    image: rabbitmq:3.10.19-management
     container_name: "rabbitmq"
     restart: unless-stopped
     ports:
