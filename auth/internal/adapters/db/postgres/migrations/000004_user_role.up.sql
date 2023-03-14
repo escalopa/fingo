@@ -2,7 +2,11 @@ CREATE TABLE IF NOT EXISTS "roles"
 (
   "id"   SERIAL PRIMARY KEY NOT NULL,
   "name" varchar UNIQUE     NOT NULL
+
 );
+
+ALTER TABLE roles
+  ADD CHECK ( name != '');
 
 CREATE TABLE IF NOT EXISTS "user_roles"
 (
@@ -12,4 +16,5 @@ CREATE TABLE IF NOT EXISTS "user_roles"
   "created_at" timestamptz        NOT NULL DEFAULT (now())
 );
 
-ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_unique" UNIQUE ("user_id", "role_id");
+ALTER TABLE "user_roles"
+  ADD CONSTRAINT "user_roles_unique" UNIQUE ("user_id", "role_id");

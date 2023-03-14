@@ -20,6 +20,6 @@ CREATE TABLE IF NOT EXISTS "users"
   "password_changed_at" timestamptz         NOT NULL DEFAULT (now()),
   "is_verified_email"   boolean             NOT NULL DEFAULT false,
   "is_verified_phone"   boolean             NOT NULL DEFAULT false,
-  birthday              date                NOT NULL,
+  "birthday"            date                NOT NULL,
   "created_at"          timestamptz         NOT NULL DEFAULT (now())
 );

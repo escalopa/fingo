@@ -12,6 +12,12 @@ SELECT *
 FROM sessions
 WHERE user_id = $1;
 
+-- name: UpdateSession
+UPDATE sessions
+SET refresh_token = $2,
+    expires_at    = $3
+WHERE id = $1;
+
 -- name: SetSessionIsBlocked :exec
 UPDATE sessions
 SET is_blocked = $2
