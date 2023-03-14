@@ -42,7 +42,7 @@ func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
 		msg  core.SendVerificationCodeMessage
 	}{
 		{
-			name: "Send verification code",
+			name: "success",
 			msg: core.SendVerificationCodeMessage{
 				Email: gofakeit.Email(),
 				Code:  gofakeit.UUID(),
@@ -109,7 +109,7 @@ func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
 		msg  core.SendResetPasswordTokenMessage
 	}{
 		{
-			name: "Send reset password token",
+			name: "success",
 			msg: core.SendResetPasswordTokenMessage{
 				Email: gofakeit.Email(),
 				Token: gofakeit.UUID(),
@@ -174,7 +174,7 @@ func TestConsumer_HandleSendNewSignInSession(t *testing.T) {
 		msg  core.SendNewSignInSessionMessage
 	}{
 		{
-			name: "Send new sign in session",
+			name: "success",
 			msg: core.SendNewSignInSessionMessage{
 				Email:     gofakeit.Email(),
 				ClientIP:  gofakeit.IPv4Address(),

@@ -12,22 +12,25 @@ import (
 func NewRabbitMQContainer(ctx context.Context) (usi string, terminate func() error, err error) {
 	rabbitContainer, err := spinRabbitmqContainer(ctx)
 	if err != nil {
-		return "", nil, errs.B(err).Msg("failed to start rabbitmq container").Err()
+		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to start rabbitmq container").Err()
 	}
 	mappedPort, err := rabbitContainer.MappedPort(ctx, "5672")
 	if err != nil {
-		return "", nil, errs.B(err).Msg("failed to get container port").Err()
+		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to get container port").Err()
 	}
 
 	hostIP, err := rabbitContainer.Host(ctx)
 	if err != nil {
-		return "", nil, errs.B(err).Msg("failed to get container host").Err()
+		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to get container host").Err()
 	}
 	// Create a new connection for
 	uri := fmt.Sprintf("amqp://guest:guest@%s:%s/", hostIP, mappedPort.Port())
 	// Create terminate function
 	terminate = func() error {
-		return rabbitContainer.Terminate(ctx)
+		if err := rabbitContainer.Terminate(ctx); err != nil {
+			return errs.B(err).Code(errs.Unknown).Msg("failed to terminate rabbit container").Err()
+		}
+		return nil
 	}
 	return uri, terminate, nil
 }
@@ -44,7 +47,7 @@ func spinRabbitmqContainer(ctx context.Context) (testcontainers.Container, error
 		Started:          true,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errs.B(err).Code(errs.Unknown).Msg("failed to start rabbit container").Err()
 	}
 	return container, nil
 }

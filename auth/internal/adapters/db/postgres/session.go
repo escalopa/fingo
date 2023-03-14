@@ -61,7 +61,7 @@ func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (
 		if err == sql.ErrNoRows {
 			return core.Session{}, errs.B(err).Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", id).Err()
 		}
-		return core.Session{}, errs.B(err).Msgf("failed to get user sessions with id, id: %s", id).Err()
+		return core.Session{}, errs.B(err).Code(errs.Internal).Msgf("failed to get user sessions with id, id: %s", id).Err()
 	}
 	if session.ID == uuid.Nil {
 
@@ -120,7 +120,7 @@ func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, params cor
 func (sr *SessionRepository) DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error {
 	rows, err := sr.q.DeleteSessionByID(ctx, sessionID)
 	if err != nil {
-		return errs.B(err).Msg("failed to delete sessions with the given sID, sID: %s", sessionID.String()).Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to delete sessions with the given sID, sID: %s", sessionID.String()).Err()
 	}
 	if rows == 0 {
 		return errs.B(err).Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", sessionID.String()).Err()

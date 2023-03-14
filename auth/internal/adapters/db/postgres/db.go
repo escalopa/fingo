@@ -16,7 +16,7 @@ func New(url string) (*sql.DB, error) {
 	// Creates a new postgres conn
 	conn, err := sql.Open("postgres", url)
 	if err != nil {
-		return nil, errs.B(err).Msg("failed to open postgres connection").Err()
+		return nil, errs.B(err).Code(errs.Internal).Msg("failed to open postgres connection").Err()
 	}
 	return conn, nil
 }
@@ -26,14 +26,14 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 	// Create a new pg instance
 	driver, err := postgres.WithInstance(conn, &postgres.Config{})
 	if err != nil {
-		return errs.B(err).Msg("failed to create driver for migration").Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to create driver for migration").Err()
 	}
 	// Load migration files
 	m, err := migrate.NewWithDatabaseInstance(
 		migrationDir,
 		"postgres", driver)
 	if err != nil {
-		return errs.B(err).Msg("failed to create new pg instance for migration").Err()
+		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to create new pg instance for migration").Err()
 	}
 	// Push migration changes
 	if err = m.Up(); err != nil {

@@ -43,7 +43,7 @@ func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (core.U
 	user, err := ur.q.GetUserByID(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return core.User{}, errs.B(err).Msgf("no user found with the given id, id: %s", id).Err()
+			return core.User{}, errs.B(err).Code(errs.NotFound).Msgf("no user found with the given id, id: %s", id).Err()
 		}
 		return core.User{}, errs.B(err).Code(errs.Internal).Msgf("failed to get user with id: %s", id).Err()
 	}
@@ -54,7 +54,7 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (cor
 	user, err := ur.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return core.User{}, errs.B(err).Msgf("no user found with the given email, email: %s", email).Err()
+			return core.User{}, errs.B(err).Code(errs.NotFound).Msgf("no user found with the given email, email: %s", email).Err()
 		}
 		return core.User{}, errs.B(err).Code(errs.Internal).Msgf("failed to get user with email: %s", email).Err()
 	}
@@ -67,7 +67,7 @@ func (ur *UserRepository) DeleteUserByID(ctx context.Context, id uuid.UUID) erro
 		return errs.B(err).Code(errs.Internal).Msgf("failed to delete user with id: %s", id).Err()
 	}
 	if rows == 0 {
-		return errs.B(err).Msgf("no user found with the given id, id: %s", id).Err()
+		return errs.B(err).Code(errs.NotFound).Msgf("no user found with the given id, id: %s", id).Err()
 	}
 	return nil
 }

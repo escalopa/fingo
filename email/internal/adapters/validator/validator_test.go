@@ -22,7 +22,7 @@ func TestValidator(t *testing.T) {
 		isErr bool
 	}{
 		{
-			name: "valid",
+			name: "success",
 			tv: TestValidatorStruct{
 				Name:     gofakeit.FirstName(),
 				Email:    gofakeit.Email(),

@@ -187,5 +187,9 @@ func (r *Consumer) setupQueue(queueName string) (<-chan amqp.Delivery, error) {
 }
 
 func (r *Consumer) Close() error {
-	return r.q.Close()
+	err := r.q.Close()
+	if err != nil {
+		return errs.B(err).Code(errs.Internal).Msg("failed to close connection").Err()
+	}
+	return nil
 }

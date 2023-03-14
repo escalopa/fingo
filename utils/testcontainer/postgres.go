@@ -33,20 +33,19 @@ func NewPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
 	// Get pgContainer host
 	host, err := pgContainer.Host(ctx)
 	if err != nil {
-		return nil, nil, errs.B(err).Msg("failed to get postgres container host").Err()
-
+		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to get postgres container host").Err()
 	}
 	// Get container port
 	port, err := pgContainer.MappedPort(ctx, "5432")
 	if err != nil {
-		return nil, nil, errs.B(err).Msg("failed to get postgres container port").Err()
+		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to get postgres container port").Err()
 	}
 	// Create connection URL & connect to pg instance
 	dbUrl := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
 		dbUser, dbPass, host, port.Port(), dbDB)
 	dbSQL, err = sql.Open("postgres", dbUrl)
 	if err != nil {
-		return nil, nil, errs.B(err).Msg("failed to open postgres connection").Err()
+		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to open postgres connection").Err()
 	}
 	if err = dbSQL.Ping(); err != nil {
 		log.Fatal(fmt.Sprintf("failed to ping pg test container: %s", err))
