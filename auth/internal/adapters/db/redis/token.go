@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"github.com/lordvidex/errs"
 	"time"
 
 	"github.com/escalopa/fingo/auth/internal/core"
@@ -32,10 +33,24 @@ func WithTokenDuration(td time.Duration) func(*TokenRepository) {
 
 // Store stores a token mapped to a session id
 func (tr *TokenRepository) Store(ctx context.Context, token string, params core.TokenCache) error {
-	return tr.r.Set(ctx, token, params, tr.td).Err()
+	if token == "" {
+		return errs.B(nil).Code(errs.InvalidArgument).Msg("token cannot be empty").Err()
+	}
+	err := tr.r.Set(ctx, token, params, tr.td).Err()
+	if err != nil {
+		return errs.B(err).Code(errs.Internal).Msg("failed to store token").Err()
+	}
+	return nil
 }
 
 // Delete deletes a token from the cache
 func (tr *TokenRepository) Delete(ctx context.Context, token string) error {
-	return tr.r.Del(ctx, token).Err()
+	if token == "" {
+		return errs.B(nil).Code(errs.InvalidArgument).Msg("token cannot be empty").Err()
+	}
+	err := tr.r.Del(ctx, token).Err()
+	if err != nil {
+		return errs.B(err).Code(errs.Internal).Msg("failed to delete token").Err()
+	}
+	return nil
 }

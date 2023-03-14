@@ -18,29 +18,48 @@ func TestTokenRepository_Store(t *testing.T) {
 	tr := NewTokenRepository(testRedis, WithTokenDuration(tokenDuration))
 	// Test cases
 	testCases := []struct {
-		name  string
-		token string
-		arg   core.TokenCache
+		name      string
+		token     string
+		arg       core.TokenCache
+		wantError bool
 	}{
 		{
-			name:  "store token",
+			name:  "success",
 			token: gofakeit.UUID(),
 			arg: core.TokenCache{
 				UserID: uuid.New().String(),
 				Roles:  []string{"admin"},
 			},
+			wantError: false,
+		},
+		{
+			name:  "empty token",
+			token: "",
+			arg: core.TokenCache{
+				UserID: uuid.New().String(),
+				Roles:  []string{"admin"},
+			},
+			wantError: true,
 		},
 	}
 	// Run test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tr.Store(ctx, tc.token, tc.arg)
-			require.NoError(t, err)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if err == nil && tc.wantError {
+				t.Error("expected error but got nil")
+			}
+			if err == nil {
+				_, err = tr.r.Get(ctx, tc.token).Result()
+				require.NoError(t, err)
+			}
 		})
 	}
 	// Wait for token to expire
 	time.Sleep(tokenDuration)
-	// Run test cases again to check if the token is deleted
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := tr.r.Get(ctx, tc.token).Result()
@@ -55,38 +74,45 @@ func TestTokenRepository_Delete(t *testing.T) {
 	tr := NewTokenRepository(testRedis, WithTokenDuration(1*time.Minute))
 	// Test cases
 	testCases := []struct {
-		name  string
-		token string
-		arg   core.TokenCache
+		name      string
+		token     string
+		arg       core.TokenCache
+		wantError bool
 	}{
 		{
-			name:  "delete token",
+			name:  "success",
 			token: gofakeit.UUID(),
 			arg: core.TokenCache{
 				UserID: uuid.New().String(),
 				Roles:  []string{"admin"},
 			},
+			wantError: false,
+		},
+		{
+			name:      "empty token",
+			token:     "",
+			arg:       core.TokenCache{},
+			wantError: true,
 		},
 	}
-	// Run test cases
+	// Run test cases again to check if the token is deleted
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tr.Store(ctx, tc.token, tc.arg)
-			require.NoError(t, err)
-		})
-	}
-	// Run test cases again to check if the token is deleted
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tr.Delete(ctx, tc.token)
-			require.NoError(t, err)
-		})
-	}
-	// Run test cases again to check if the token is deleted
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := tr.r.Get(ctx, tc.token).Result()
-			require.ErrorIs(t, err, redis.Nil)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if err == nil && tc.wantError {
+				t.Error("expected error but got nil")
+			}
+			if err == nil {
+				_, err = tr.r.Get(ctx, tc.token).Result()
+				require.NoError(t, err)
+				err = tr.Delete(ctx, tc.token)
+				require.NoError(t, err)
+				_, err = tr.r.Get(ctx, tc.token).Result()
+				require.ErrorIs(t, err, redis.Nil)
+			}
 		})
 	}
 }
