@@ -26,7 +26,7 @@ type Querier interface {
 	GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) (int64, error)
 	RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) (int64, error)
 	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) (int64, error)
-	UpdateSessionRefreshToken(ctx context.Context, arg UpdateSessionRefreshTokenParams) (int64, error)
+	UpdateSessionTokens(ctx context.Context, arg UpdateSessionTokensParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

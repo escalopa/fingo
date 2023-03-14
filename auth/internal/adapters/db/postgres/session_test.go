@@ -361,6 +361,7 @@ func randomSession(userID uuid.UUID) core.CreateSessionParams {
 	return core.CreateSessionParams{
 		ID:           uuid.New(),
 		UserID:       userID,
+		AccessToken:  gofakeit.UUID(),
 		RefreshToken: gofakeit.UUID(),
 		UserDevice: core.UserDevice{
 			ClientIP:  gofakeit.IPv4Address(),

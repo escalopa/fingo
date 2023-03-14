@@ -13,13 +13,14 @@ import (
 )
 
 const createSession = `-- name: CreateSession :exec
-INSERT INTO sessions (id, user_id, refresh_token, user_agent, client_ip, expires_at)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO sessions (id, user_id, access_token, refresh_token, user_agent, client_ip, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 `
 
 type CreateSessionParams struct {
 	ID           uuid.UUID `db:"id" json:"id"`
 	UserID       uuid.UUID `db:"user_id" json:"user_id"`
+	AccessToken  string    `db:"access_token" json:"access_token"`
 	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
 	UserAgent    string    `db:"user_agent" json:"user_agent"`
 	ClientIp     string    `db:"client_ip" json:"client_ip"`
@@ -30,6 +31,7 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 	_, err := q.db.ExecContext(ctx, createSession,
 		arg.ID,
 		arg.UserID,
+		arg.AccessToken,
 		arg.RefreshToken,
 		arg.UserAgent,
 		arg.ClientIp,
@@ -53,9 +55,10 @@ func (q *Queries) DeleteSessionByID(ctx context.Context, id uuid.UUID) (int64, e
 }
 
 const getSessionByID = `-- name: GetSessionByID :one
-SELECT id, user_id, refresh_token, is_blocked, user_agent, client_ip, expires_at, created_at
+SELECT id, user_id, access_token, refresh_token, is_blocked, user_agent, client_ip, expires_at, created_at
 FROM sessions
 WHERE id = $1
+LIMIT 1
 `
 
 func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error) {
@@ -64,6 +67,7 @@ func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, er
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
+		&i.AccessToken,
 		&i.RefreshToken,
 		&i.IsBlocked,
 		&i.UserAgent,
@@ -110,7 +114,7 @@ func (q *Queries) GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUs
 }
 
 const getUserSessions = `-- name: GetUserSessions :many
-SELECT id, user_id, refresh_token, is_blocked, user_agent, client_ip, expires_at, created_at
+SELECT id, user_id, access_token, refresh_token, is_blocked, user_agent, client_ip, expires_at, created_at
 FROM sessions
 WHERE user_id = $1
 `
@@ -127,6 +131,7 @@ func (q *Queries) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Sess
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
+			&i.AccessToken,
 			&i.RefreshToken,
 			&i.IsBlocked,
 			&i.UserAgent,
@@ -166,21 +171,28 @@ func (q *Queries) SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlock
 	return result.RowsAffected()
 }
 
-const updateSessionRefreshToken = `-- name: UpdateSessionRefreshToken :execrows
+const updateSessionTokens = `-- name: UpdateSessionTokens :execrows
 UPDATE sessions
-SET refresh_token = $2,
-    expires_at    = $3
+SET access_token  = $2,
+    refresh_token = $3,
+    expires_at    = $4
 WHERE id = $1
 `
 
-type UpdateSessionRefreshTokenParams struct {
+type UpdateSessionTokensParams struct {
 	ID           uuid.UUID `db:"id" json:"id"`
+	AccessToken  string    `db:"access_token" json:"access_token"`
 	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
 	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
 }
 
-func (q *Queries) UpdateSessionRefreshToken(ctx context.Context, arg UpdateSessionRefreshTokenParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, updateSessionRefreshToken, arg.ID, arg.RefreshToken, arg.ExpiresAt)
+func (q *Queries) UpdateSessionTokens(ctx context.Context, arg UpdateSessionTokensParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, updateSessionTokens,
+		arg.ID,
+		arg.AccessToken,
+		arg.RefreshToken,
+		arg.ExpiresAt,
+	)
 	if err != nil {
 		return 0, err
 	}

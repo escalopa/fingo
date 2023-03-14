@@ -1,6 +1,6 @@
 -- name: CreateSession :exec
-INSERT INTO sessions (id, user_id, refresh_token, user_agent, client_ip, expires_at)
-VALUES ($1, $2, $3, $4, $5, $6);
+INSERT INTO sessions (id, user_id, access_token, refresh_token, user_agent, client_ip, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7);
 
 -- name: GetSessionByID :one
 SELECT *
@@ -13,10 +13,11 @@ SELECT *
 FROM sessions
 WHERE user_id = $1;
 
--- name: UpdateSessionRefreshToken :execrows
+-- name: UpdateSessionTokens :execrows
 UPDATE sessions
-SET refresh_token = $2,
-    expires_at    = $3
+SET access_token  = $2,
+    refresh_token = $3,
+    expires_at    = $4
 WHERE id = $1;
 
 -- name: SetSessionIsBlocked :execrows

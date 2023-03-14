@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS "sessions"
 (
   "id"            uuid PRIMARY KEY NOT NULL,
   "user_id"       uuid             NOT NULL,
+  "access_token"  varchar UNIQUE   NOT NULL,
   "refresh_token" varchar UNIQUE   NOT NULL,
   "is_blocked"    boolean          NOT NULL DEFAULT false,
   "user_agent"    varchar          NOT NULL,

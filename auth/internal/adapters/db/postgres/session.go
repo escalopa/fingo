@@ -35,13 +35,14 @@ func WithSessionDuration(d time.Duration) func(*SessionRepository) {
 }
 
 // CreateSession creates a new sessions for a user
-func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateSessionParams) error {
+func (sr *SessionRepository) CreateSession(ctx context.Context, params core.CreateSessionParams) error {
 	err := sr.q.CreateSession(ctx, db.CreateSessionParams{
-		ID:           arg.ID,
-		UserID:       arg.UserID,
-		RefreshToken: arg.RefreshToken,
-		UserAgent:    arg.UserDevice.UserAgent,
-		ClientIp:     arg.UserDevice.ClientIP,
+		ID:           params.ID,
+		UserID:       params.UserID,
+		AccessToken:  params.AccessToken,
+		RefreshToken: params.RefreshToken,
+		UserAgent:    params.UserDevice.UserAgent,
+		ClientIp:     params.UserDevice.ClientIP,
 		ExpiresAt:    time.Now().Add(sr.std),
 	})
 	if err != nil {
@@ -84,8 +85,9 @@ func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UU
 
 // UpdateSessionRefreshToken returns a sessions by its refresh token value
 func (sr *SessionRepository) UpdateSessionRefreshToken(ctx context.Context, params core.UpdateSessionRefreshTokenParams) error {
-	rows, err := sr.q.UpdateSessionRefreshToken(ctx, db.UpdateSessionRefreshTokenParams{
+	rows, err := sr.q.UpdateSessionTokens(ctx, db.UpdateSessionTokensParams{
 		ID:           params.ID,
+		AccessToken:  params.AccessToken,
 		RefreshToken: params.RefreshToken,
 		ExpiresAt:    time.Now().Add(sr.std),
 	})
@@ -99,17 +101,17 @@ func (sr *SessionRepository) UpdateSessionRefreshToken(ctx context.Context, para
 }
 
 // SetSessionIsBlocked sets the IsBlocked value of a sessions to true or false
-func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error {
+func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, params core.SetSessionIsBlockedParams) error {
 	// Update sessions value by setting IsBlocked value
 	rows, err := sr.q.SetSessionIsBlocked(ctx, db.SetSessionIsBlockedParams{
-		ID:        arg.ID,
-		IsBlocked: arg.IsBlocked,
+		ID:        params.ID,
+		IsBlocked: params.IsBlocked,
 	})
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("failed to set sessions is_blocked value").Err()
 	}
 	if rows == 0 {
-		return errs.B().Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", arg.ID.String()).Err()
+		return errs.B().Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", params.ID.String()).Err()
 	}
 	return nil
 }
@@ -130,6 +132,7 @@ func fromDbSessionToCore(session db.Session) core.Session {
 	return core.Session{
 		ID:           session.ID,
 		UserID:       session.UserID,
+		AccessToken:  session.AccessToken,
 		RefreshToken: session.RefreshToken,
 		UserDevice:   core.UserDevice{ClientIP: session.ClientIp, UserAgent: session.UserAgent},
 		IsBlocked:    session.IsBlocked,

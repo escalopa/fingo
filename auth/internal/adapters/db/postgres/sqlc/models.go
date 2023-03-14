@@ -18,6 +18,7 @@ type Role struct {
 type Session struct {
 	ID           uuid.UUID `db:"id" json:"id"`
 	UserID       uuid.UUID `db:"user_id" json:"user_id"`
+	AccessToken  string    `db:"access_token" json:"access_token"`
 	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
 	IsBlocked    bool      `db:"is_blocked" json:"is_blocked"`
 	UserAgent    string    `db:"user_agent" json:"user_agent"`

@@ -25,6 +25,7 @@ const getRoleByName = `-- name: GetRoleByName :one
 SELECT id, name
 FROM roles
 WHERE name = $1
+LIMIT 1
 `
 
 func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) {
@@ -83,7 +84,8 @@ func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams
 }
 
 const revokeRoleFromUser = `-- name: RevokeRoleFromUser :execrows
-DELETE FROM user_roles
+DELETE
+FROM user_roles
 WHERE user_id = $1
   AND role_id = $2
 `
