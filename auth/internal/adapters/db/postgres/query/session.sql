@@ -12,7 +12,7 @@ SELECT *
 FROM sessions
 WHERE user_id = $1;
 
--- name: UpdateSession
+-- name: UpdateSession :exec
 UPDATE sessions
 SET refresh_token = $2,
     expires_at    = $3

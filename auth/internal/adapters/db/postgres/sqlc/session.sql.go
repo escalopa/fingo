@@ -160,3 +160,21 @@ func (q *Queries) SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlock
 	_, err := q.db.ExecContext(ctx, setSessionIsBlocked, arg.ID, arg.IsBlocked)
 	return err
 }
+
+const updateSession = `-- name: UpdateSession :exec
+UPDATE sessions
+SET refresh_token = $2,
+    expires_at    = $3
+WHERE id = $1
+`
+
+type UpdateSessionParams struct {
+	ID           uuid.UUID `db:"id" json:"id"`
+	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
+	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
+}
+
+func (q *Queries) UpdateSession(ctx context.Context, arg UpdateSessionParams) error {
+	_, err := q.db.ExecContext(ctx, updateSession, arg.ID, arg.RefreshToken, arg.ExpiresAt)
+	return err
+}

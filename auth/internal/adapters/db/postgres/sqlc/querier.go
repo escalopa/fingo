@@ -11,29 +11,22 @@ import (
 )
 
 type Querier interface {
-	ChangeNames(ctx context.Context, arg ChangeNamesParams) error
-	ChangeUserEmail(ctx context.Context, arg ChangeUserEmailParams) error
-	ChangeUserPassword(ctx context.Context, arg ChangeUserPasswordParams) error
-	ChangeUserPhone(ctx context.Context, arg ChangeUserPhoneParams) error
 	CreateRole(ctx context.Context, name string) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) error
-	DeleteRole(ctx context.Context, id int32) error
 	DeleteSessionByID(ctx context.Context, id uuid.UUID) error
 	DeleteUserByID(ctx context.Context, id uuid.UUID) error
-	GetRoleUsers(ctx context.Context, roleID int32) ([]uuid.UUID, error)
+	GetRoleByName(ctx context.Context, name string) (Role, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
-	GetUserByPhone(ctx context.Context, phoneNumber string) (User, error)
-	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUserDevicesRow, error)
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Session, error)
+	GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) error
+	RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) error
 	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error
-	SetUserEmailIsVerified(ctx context.Context, arg SetUserEmailIsVerifiedParams) error
-	SetUserPhoneIsVerified(ctx context.Context, arg SetUserPhoneIsVerifiedParams) error
-	UpdateRole(ctx context.Context, arg UpdateRoleParams) error
+	UpdateSession(ctx context.Context, arg UpdateSessionParams) error
 }
 
 var _ Querier = (*Queries)(nil)

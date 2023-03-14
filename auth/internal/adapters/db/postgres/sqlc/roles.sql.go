@@ -21,45 +21,17 @@ func (q *Queries) CreateRole(ctx context.Context, name string) error {
 	return err
 }
 
-const deleteRole = `-- name: DeleteRole :exec
-DELETE
+const getRoleByName = `-- name: GetRoleByName :one
+SELECT id, name
 FROM roles
-WHERE id = $1
+WHERE name = $1
 `
 
-func (q *Queries) DeleteRole(ctx context.Context, id int32) error {
-	_, err := q.db.ExecContext(ctx, deleteRole, id)
-	return err
-}
-
-const getRoleUsers = `-- name: GetRoleUsers :many
-SELECT u.id
-FROM user_roles ur
-       JOIN users u on u.id = ur.user_id
-WHERE ur.role_id = $1
-`
-
-func (q *Queries) GetRoleUsers(ctx context.Context, roleID int32) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, getRoleUsers, roleID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []uuid.UUID{}
-	for rows.Next() {
-		var id uuid.UUID
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetRoleByName(ctx context.Context, name string) (Role, error) {
+	row := q.db.QueryRowContext(ctx, getRoleByName, name)
+	var i Role
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
 }
 
 const getUserRoles = `-- name: GetUserRoles :many
@@ -92,18 +64,33 @@ func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string,
 	return items, nil
 }
 
-const updateRole = `-- name: UpdateRole :exec
-UPDATE roles
-SET name = $2
-WHERE id = $1
+const grantRoleToUser = `-- name: GrantRoleToUser :exec
+INSERT INTO user_roles (user_id, role_id)
+VALUES ($1, $2)
 `
 
-type UpdateRoleParams struct {
-	ID   int32  `db:"id" json:"id"`
-	Name string `db:"name" json:"name"`
+type GrantRoleToUserParams struct {
+	UserID uuid.UUID `db:"user_id" json:"user_id"`
+	RoleID int32     `db:"role_id" json:"role_id"`
 }
 
-func (q *Queries) UpdateRole(ctx context.Context, arg UpdateRoleParams) error {
-	_, err := q.db.ExecContext(ctx, updateRole, arg.ID, arg.Name)
+func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) error {
+	_, err := q.db.ExecContext(ctx, grantRoleToUser, arg.UserID, arg.RoleID)
+	return err
+}
+
+const revokeRoleFromUser = `-- name: RevokeRoleFromUser :exec
+DELETE FROM user_roles
+WHERE user_id = $1
+  AND role_id = $2
+`
+
+type RevokeRoleFromUserParams struct {
+	UserID uuid.UUID `db:"user_id" json:"user_id"`
+	RoleID int32     `db:"role_id" json:"role_id"`
+}
+
+func (q *Queries) RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) error {
+	_, err := q.db.ExecContext(ctx, revokeRoleFromUser, arg.UserID, arg.RoleID)
 	return err
 }
