@@ -64,7 +64,7 @@ func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string,
 	return items, nil
 }
 
-const grantRoleToUser = `-- name: GrantRoleToUser :exec
+const grantRoleToUser = `-- name: GrantRoleToUser :execrows
 INSERT INTO user_roles (user_id, role_id)
 VALUES ($1, $2)
 `
@@ -74,12 +74,15 @@ type GrantRoleToUserParams struct {
 	RoleID int32     `db:"role_id" json:"role_id"`
 }
 
-func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) error {
-	_, err := q.db.ExecContext(ctx, grantRoleToUser, arg.UserID, arg.RoleID)
-	return err
+func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, grantRoleToUser, arg.UserID, arg.RoleID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
-const revokeRoleFromUser = `-- name: RevokeRoleFromUser :exec
+const revokeRoleFromUser = `-- name: RevokeRoleFromUser :execrows
 DELETE FROM user_roles
 WHERE user_id = $1
   AND role_id = $2
@@ -90,7 +93,10 @@ type RevokeRoleFromUserParams struct {
 	RoleID int32     `db:"role_id" json:"role_id"`
 }
 
-func (q *Queries) RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) error {
-	_, err := q.db.ExecContext(ctx, revokeRoleFromUser, arg.UserID, arg.RoleID)
-	return err
+func (q *Queries) RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, revokeRoleFromUser, arg.UserID, arg.RoleID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

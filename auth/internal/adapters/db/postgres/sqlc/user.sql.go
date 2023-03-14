@@ -21,8 +21,7 @@ INSERT INTO users (id,
                    birthday,
                    email,
                    phone_number,
-                   hashed_password
-                   )
+                   hashed_password)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 `
 
@@ -53,15 +52,18 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 	return err
 }
 
-const deleteUserByID = `-- name: DeleteUserByID :exec
+const deleteUserByID = `-- name: DeleteUserByID :execrows
 DELETE
 FROM users
 WHERE id = $1
 `
 
-func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteUserByID, id)
-	return err
+func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteUserByID, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one

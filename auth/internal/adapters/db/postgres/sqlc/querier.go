@@ -14,8 +14,8 @@ type Querier interface {
 	CreateRole(ctx context.Context, name string) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) error
-	DeleteSessionByID(ctx context.Context, id uuid.UUID) error
-	DeleteUserByID(ctx context.Context, id uuid.UUID) error
+	DeleteSessionByID(ctx context.Context, id uuid.UUID) (int64, error)
+	DeleteUserByID(ctx context.Context, id uuid.UUID) (int64, error)
 	GetRoleByName(ctx context.Context, name string) (Role, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
@@ -23,10 +23,10 @@ type Querier interface {
 	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUserDevicesRow, error)
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Session, error)
-	GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) error
-	RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) error
-	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error
-	UpdateSession(ctx context.Context, arg UpdateSessionParams) error
+	GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams) (int64, error)
+	RevokeRoleFromUser(ctx context.Context, arg RevokeRoleFromUserParams) (int64, error)
+	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) (int64, error)
+	UpdateSessionRefreshToken(ctx context.Context, arg UpdateSessionRefreshTokenParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

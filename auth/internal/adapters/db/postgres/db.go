@@ -11,6 +11,7 @@ import (
 	"log"
 )
 
+// New creates a new postgres connection with the given connection string
 func New(url string) (*sql.DB, error) {
 	// Creates a new postgres conn
 	conn, err := sql.Open("postgres", url)
@@ -20,6 +21,7 @@ func New(url string) (*sql.DB, error) {
 	return conn, nil
 }
 
+// Migrate runs the migrations on the database
 func Migrate(conn *sql.DB, migrationDir string) error {
 	// Create a new pg instance
 	driver, err := postgres.WithInstance(conn, &postgres.Config{})
@@ -43,11 +45,7 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 	return nil
 }
 
-func isNotFoundError(err error) bool {
-	er, ok := err.(*pq.Error)
-	return ok && er.Code == "20000"
-}
-
+// isUniqueViolationError checks if an error is a unique violation error
 func isUniqueViolationError(err error) bool {
 	er, ok := err.(*pq.Error)
 	return ok && er.Code == "23505"

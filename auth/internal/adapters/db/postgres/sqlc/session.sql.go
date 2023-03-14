@@ -13,8 +13,8 @@ import (
 )
 
 const createSession = `-- name: CreateSession :exec
-INSERT INTO sessions (id, user_id, refresh_token, user_agent, client_ip, expires_at, created_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO sessions (id, user_id, refresh_token, user_agent, client_ip, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type CreateSessionParams struct {
@@ -24,7 +24,6 @@ type CreateSessionParams struct {
 	UserAgent    string    `db:"user_agent" json:"user_agent"`
 	ClientIp     string    `db:"client_ip" json:"client_ip"`
 	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
@@ -35,20 +34,22 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 		arg.UserAgent,
 		arg.ClientIp,
 		arg.ExpiresAt,
-		arg.CreatedAt,
 	)
 	return err
 }
 
-const deleteSessionByID = `-- name: DeleteSessionByID :exec
+const deleteSessionByID = `-- name: DeleteSessionByID :execrows
 DELETE
 FROM sessions
 WHERE id = $1
 `
 
-func (q *Queries) DeleteSessionByID(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.ExecContext(ctx, deleteSessionByID, id)
-	return err
+func (q *Queries) DeleteSessionByID(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteSessionByID, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const getSessionByID = `-- name: GetSessionByID :one
@@ -77,6 +78,7 @@ const getUserDevices = `-- name: GetUserDevices :many
 SELECT user_agent, client_ip
 FROM sessions
 WHERE user_id = $1
+ORDER BY created_at DESC
 `
 
 type GetUserDevicesRow struct {
@@ -145,7 +147,7 @@ func (q *Queries) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Sess
 	return items, nil
 }
 
-const setSessionIsBlocked = `-- name: SetSessionIsBlocked :exec
+const setSessionIsBlocked = `-- name: SetSessionIsBlocked :execrows
 UPDATE sessions
 SET is_blocked = $2
 WHERE id = $1
@@ -156,25 +158,31 @@ type SetSessionIsBlockedParams struct {
 	IsBlocked bool      `db:"is_blocked" json:"is_blocked"`
 }
 
-func (q *Queries) SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error {
-	_, err := q.db.ExecContext(ctx, setSessionIsBlocked, arg.ID, arg.IsBlocked)
-	return err
+func (q *Queries) SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, setSessionIsBlocked, arg.ID, arg.IsBlocked)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
-const updateSession = `-- name: UpdateSession :exec
+const updateSessionRefreshToken = `-- name: UpdateSessionRefreshToken :execrows
 UPDATE sessions
 SET refresh_token = $2,
     expires_at    = $3
 WHERE id = $1
 `
 
-type UpdateSessionParams struct {
+type UpdateSessionRefreshTokenParams struct {
 	ID           uuid.UUID `db:"id" json:"id"`
 	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
 	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
 }
 
-func (q *Queries) UpdateSession(ctx context.Context, arg UpdateSessionParams) error {
-	_, err := q.db.ExecContext(ctx, updateSession, arg.ID, arg.RefreshToken, arg.ExpiresAt)
-	return err
+func (q *Queries) UpdateSessionRefreshToken(ctx context.Context, arg UpdateSessionRefreshTokenParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, updateSessionRefreshToken, arg.ID, arg.RefreshToken, arg.ExpiresAt)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
