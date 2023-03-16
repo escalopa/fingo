@@ -1,7 +1,6 @@
 FROM golang:1.19 AS development
 WORKDIR /go/src/github.com/escalopa/fingo/
 COPY ./email ./email
-COPY ./pkg ./pkg
 COPY go.mod go.sum ./
 RUN go mod download
 RUN go install github.com/cespare/reflex@latest
@@ -13,7 +12,7 @@ COPY ./email ./email
 COPY go.mod go.sum ./
 RUN go build -o /go/bin/email ./email/cmd
 
-FROM alpine:latest AS productiondocker
+FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
 COPY --from=builder /go/bin/email /go/bin/email
 ENTRYPOINT ["/go/bin/email"]
