@@ -3,26 +3,29 @@ package core
 import (
 	"encoding/json"
 	"github.com/google/uuid"
+	"time"
 )
 
-type TokenCache struct {
-	UserID    string
-	ClientIP  string
-	UserAgent string
+type TokenPayload struct {
+	UserID    uuid.UUID
+	SessionID uuid.UUID
+	IssuedAt  time.Time
+	ExpiresAt time.Time
 	Roles     []string
 }
 
-func (t TokenCache) MarshalBinary() ([]byte, error) {
+func (t TokenPayload) MarshalBinary() ([]byte, error) {
 	return json.Marshal(t)
 }
 
-func (t TokenCache) UnmarshalBinary(data []byte) error {
+func (t TokenPayload) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, &t)
 }
 
 // ------------------------- Params -------------------------
 
 type GenerateTokenParam struct {
-	User      User
+	UserID    uuid.UUID
 	SessionID uuid.UUID
+	Roles     []string
 }
