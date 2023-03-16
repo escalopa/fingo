@@ -2,42 +2,62 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/auth/internal/adapters/token"
+
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 )
 
+// UserRepository is an interface for interacting with users in the database
 type UserRepository interface {
 	CreateUser(ctx context.Context, arg core.CreateUserParams) error
 	GetUserByID(ctx context.Context, id uuid.UUID) (core.User, error)
 	GetUserByEmail(ctx context.Context, email string) (core.User, error)
-	GetUserByUsername(ctx context.Context, username string) (core.User, error)
-	SetUserIsVerified(ctx context.Context, arg core.SetUserIsVerifiedParams) error
-	ChangeUserEmail(ctx context.Context, arg core.ChangeUserEmailParams) error
-	ChangePassword(ctx context.Context, arg core.ChangePasswordParams) error
-	DeleteUserByID(ctx context.Context, id uuid.UUID) error
 }
 
+// SessionRepository is an interface for interacting with sessions in the database
 type SessionRepository interface {
 	CreateSession(ctx context.Context, arg core.CreateSessionParams) error
 	GetSessionByID(ctx context.Context, id uuid.UUID) (core.Session, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]core.Session, error)
-	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]core.UserDevice, error)
-	SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error
+	UpdateSessionTokens(ctx context.Context, params core.UpdateSessionTokenParams) error
 	DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error
 }
 
+// RoleRepository is an interface for interacting with roles in the database
+type RoleRepository interface {
+	CreateRole(ctx context.Context, name string) error
+	GetRoleByName(ctx context.Context, name string) (core.Role, error)
+	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]core.Role, error)
+	GrantRole(ctx context.Context, params core.GrantRoleToUserParams) error
+	RevokeRole(ctx context.Context, params core.RevokeRoleFromUserParams) error
+	HasPrivillage(ctx context.Context, params core.HasPrivillageParams) (bool, error)
+}
+
+// TokenRepository is an interface for interacting with tokens in cache
+type TokenRepository interface {
+	Store(ctx context.Context, token string, params core.TokenPayload) error
+	Delete(ctx context.Context, token string) error
+}
+
+// PasswordHasher is an interface for hashing and comparing passwords
 type PasswordHasher interface {
 	Hash(password string) (hashedPassword string, err error)
 	Compare(password, hash string) (isSamePassword bool)
 }
 
+// TokenGenerator is an interface for generating and verifying tokens
 type TokenGenerator interface {
-	GenerateAccessToken(param token.GenerateTokenParam) (token string, err error)
-	GenerateRefreshToken(param token.GenerateTokenParam) (token string, err error)
-	VerifyToken(token string) (user core.User, sessionID uuid.UUID, err error)
+	GenerateAccessToken(params core.GenerateTokenParam) (token string, err error)
+	GenerateRefreshToken(params core.GenerateTokenParam) (token string, err error)
+	DecryptToken(token string) (params core.TokenPayload, err error)
 }
 
+// MessageProducer is an interface for sending messages to a queue
+type MessageProducer interface {
+	SendNewSignInSessionMessage(ctx context.Context, params core.SendNewSignInSessionParams) error
+}
+
+// Validator is an interface for validating structs using tags
 type Validator interface {
 	Validate(s interface{}) (err error)
 }

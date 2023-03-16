@@ -16,7 +16,7 @@ message Session {
   }
   string id = 1;
   UserDevice user_device = 2;
-  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 3;
   google.protobuf.Timestamp expires_at = 4;
 }
 

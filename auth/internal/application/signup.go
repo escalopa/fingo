@@ -4,15 +4,19 @@ import (
 	"context"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
+	"time"
 )
 
 // ---------------------- Signup ---------------------- //
 
 type SignupParams struct {
-	Name     string `validate:"required,alpha"`
-	Username string `validate:"required,alphanum"`
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,min=8"`
+	FirstName string `validate:"required,alpha"`
+	LastName  string `validate:"required,alpha"`
+	Username  string `validate:"required,alphanum"`
+	Email     string `validate:"required,email"`
+	Password  string `validate:"required,min=8"`
+	Phone     string `validate:"required,e164"`
+	Gender    string `validate:"required,alpha,oneof=MALE FEMALE"`
 }
 
 type SignupCommand interface {
@@ -25,27 +29,32 @@ type SignupCommandImpl struct {
 	ur UserRepository
 }
 
-func (l *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
-	if err := l.v.Validate(params); err != nil {
-		return err
-	}
-	// Hash password
-	hashedPassword, err := l.h.Hash(params.Password)
-	if err != nil {
-		return err
-	}
-	// Save user to cache
-	err = l.ur.CreateUser(ctx, core.CreateUserParams{
-		ID:             uuid.New(),
-		Name:           params.Name,
-		Username:       params.Username,
-		Email:          params.Email,
-		HashedPassword: hashedPassword,
+func (c *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
+	return executeWithContextTimeout(ctx, 5*time.Second, func() error {
+		if err := c.v.Validate(params); err != nil {
+			return err
+		}
+		// Hash password
+		hashedPassword, err := c.h.Hash(params.Password)
+		if err != nil {
+			return err
+		}
+		// Save user to db
+		err = c.ur.CreateUser(ctx, core.CreateUserParams{
+			ID:             uuid.New(),
+			FirstName:      params.FirstName,
+			LastName:       params.LastName,
+			Username:       params.Username,
+			Phone:          params.Phone,
+			Gender:         params.Gender,
+			Email:          params.Email,
+			HashedPassword: hashedPassword,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func NewSignupCommand(v Validator, h PasswordHasher, ur UserRepository) SignupCommand {
