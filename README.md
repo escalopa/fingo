@@ -1,12 +1,13 @@
 # fingo 🏦💸
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/escalopa/fingo)](https://goreportcard.com/report/github.com/escalopa/fingo)
+[![wakatime](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21.svg)](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21)
 [![codecov](https://codecov.io/gh/escalopa/fingo/branch/master/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/escalopa/fingo)
 [![Build Status](https://travis-ci.com/escalopa/fingo.svg?branch=master)](https://travis-ci.com/escalopa/fingo)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub issues](https://img.shields.io/github/issues/escalopa/fingo.svg)](https://github.com/escalopa/fingo/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/escalopa/fingo.svg)](https://github.com/escalopa/fingo/pulls)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 fingo is a scalable, robust payment system that allows users to send money to each other. fingo users can issue wallet with more than one currency.
 
@@ -16,7 +17,7 @@ Besides that we also support chat feature between its users to communicate with 
 
 ## Table of Contents 📑
 
-  - [Tech Stack](#tech-stack)
+  - [Tech Stack](#tech-stack) 🛠
   - [Project Architecture 🏘](#project-architecture-)
   - [How to run 🏃‍♂️](#how-to-run-)
 
@@ -27,12 +28,10 @@ fingo is built using scalable, reliable, robust and secure technologies which ar
 - Language: [Go](https://golang.org/)
 - Communication: [gRPC](https://grpc.io/), [gin](https://github.com/gin-gonic/gin), [RabbitMQ](https://www.rabbitmq.com/)
 - Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [mongoDB](https://www.mongodb.com/)
-- Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/)
+- Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [Docker Swarm](https://docs.docker.com/engine/swarm/)
 - Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Datadog](https://www.datadoghq.com/), [Prometheus](https://prometheus.io/)
 - Security: [Paseto](https://paseto.io/)
 - External API: [Courier](https://www.courier.com/)
-
-We use
 
 
 ## Architecture 🏗
@@ -45,12 +44,12 @@ Click on each service to see its documentation and how it works.
 
 1. [**API**](./api) (Under development)
 2. [**Auth**](./auth) (Done)
-3. [**User**](./user) (Done)
+3. [**User**](./user) (Under development)
 4. [**Chat**](./chat) (Under development)
 5. [**Wallet**](./wallet) (Under development)
 6. [**Payment**](./payment) (Under development)
 7. [**Email**](./email) (Done)
-8. [**Phone**](./phone) (Done)
+8. [**Phone**](./phone) (Under development)
 
 
 Each service is built using the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
