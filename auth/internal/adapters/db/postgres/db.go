@@ -11,27 +11,29 @@ import (
 	"log"
 )
 
+// New creates a new postgres connection with the given connection string
 func New(url string) (*sql.DB, error) {
 	// Creates a new postgres conn
 	conn, err := sql.Open("postgres", url)
 	if err != nil {
-		return nil, errs.B(err).Msg("failed to open postgres connection").Err()
+		return nil, errs.B(err).Code(errs.Internal).Msg("failed to open postgres connection").Err()
 	}
 	return conn, nil
 }
 
+// Migrate runs the migrations on the database
 func Migrate(conn *sql.DB, migrationDir string) error {
 	// Create a new pg instance
 	driver, err := postgres.WithInstance(conn, &postgres.Config{})
 	if err != nil {
-		return errs.B(err).Msg("failed to create driver for migration").Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to create driver for migration").Err()
 	}
 	// Load migration files
 	m, err := migrate.NewWithDatabaseInstance(
 		migrationDir,
 		"postgres", driver)
 	if err != nil {
-		return errs.B(err).Msg("failed to create new pg instance for migration").Err()
+		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to create new pg instance for migration").Err()
 	}
 	// Push migration changes
 	if err = m.Up(); err != nil {
@@ -43,11 +45,7 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 	return nil
 }
 
-func isNotFoundError(err error) bool {
-	er, ok := err.(*pq.Error)
-	return ok && er.Code == "20000"
-}
-
+// isUniqueViolationError checks if an error is a unique violation error
 func isUniqueViolationError(err error) bool {
 	er, ok := err.(*pq.Error)
 	return ok && er.Code == "23505"

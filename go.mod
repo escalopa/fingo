@@ -12,6 +12,7 @@ require (
 	github.com/lordvidex/errs v1.1.0
 	github.com/mattes/migrate v3.0.1+incompatible
 	github.com/o1egl/paseto v1.0.0
+	github.com/rabbitmq/amqp091-go v1.7.0
 	github.com/stretchr/testify v1.8.1
 	github.com/testcontainers/testcontainers-go v0.18.0
 	github.com/trycourier/courier-go/v2 v2.7.0

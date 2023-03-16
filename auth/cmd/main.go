@@ -1,12 +1,14 @@
 package main
 
 import (
-	mypostgres "github.com/escalopa/fingo/auth/internal/adapters/db/postgres"
-	"google.golang.org/grpc/credentials/insecure"
+	"fmt"
+	"github.com/escalopa/fingo/auth/internal/adapters/db/redis"
+	"github.com/escalopa/fingo/auth/internal/adapters/queue/rabbitmq"
 	"log"
 	"net"
 	"time"
 
+	mypostgres "github.com/escalopa/fingo/auth/internal/adapters/db/postgres"
 	mygrpc "github.com/escalopa/fingo/auth/internal/adapters/grpc"
 	"github.com/escalopa/fingo/auth/internal/adapters/hasher"
 	"github.com/escalopa/fingo/auth/internal/adapters/token"
@@ -14,6 +16,7 @@ import (
 	"github.com/escalopa/fingo/auth/internal/application"
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/goconfig"
+	"github.com/lordvidex/errs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -26,56 +29,58 @@ func main() {
 
 	// Create a new token generator
 	atd, err := time.ParseDuration(c.Get("AUTH_ACCESS_TOKEN_DURATION"))
-	if err != nil {
-		log.Fatal(err, "Invalid access token duration")
-	}
+	checkError(err, "invalid access token duration")
+	log.Println("successfully parsed access token duration: ", atd)
 	rtd, err := time.ParseDuration(c.Get("AUTH_REFRESH_TOKEN_DURATION"))
-	if err != nil {
-		log.Fatal(err, "Invalid refresh token duration")
-	}
-	log.Println("Successfully parsed access token duration")
+	checkError(err, "invalid refresh token duration")
+	log.Println("successfully parsed refresh token duration: ", rtd)
 	tg, err := token.NewPaseto(c.Get("AUTH_TOKEN_SECRET"), atd, rtd)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Successfully create token generator")
+	checkError(err, "failed to create token generator")
+	log.Println(fmt.Sprintf("successfully create token generator"))
 
 	// Create postgres conn
 	pgConn, err := mypostgres.New(c.Get("AUTH_DATABASE_URL"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Successfully connected to postgres")
+	checkError(err, "failed to connect to postgres")
+	log.Println("successfully connected to postgres")
 
 	// Migrate database
 	err = mypostgres.Migrate(pgConn, c.Get("AUTH_DATABASE_MIGRATION_PATH"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println("Successfully migrated postgres db")
+	checkError(err, "failed to migrate postgres db")
+	log.Println("successfully migrated postgres db")
 
 	// Create user repository
-	ur := mypostgres.NewUserRepository(pgConn)
-	log.Println("Successfully created user repository")
+	ur, err := mypostgres.NewUserRepository(pgConn)
+	checkError(err, "failed to create user repository")
+	log.Println("successfully created user repository")
 
 	// Create session repository
 	std, err := time.ParseDuration(c.Get("AUTH_USER_SESSION_DURATION"))
-	if err != nil {
-		log.Fatal(err, "Invalid user session duration")
-	}
-	log.Println("Successfully parsed user session duration")
-	sr := mypostgres.NewSessionRepository(pgConn, std)
-	log.Println("Successfully created session repository")
+	checkError(err, "invalid user session duration")
+	log.Println("successfully parsed user session duration: ", std)
+	sr, err := mypostgres.NewSessionRepository(pgConn, mypostgres.WithSessionDuration(std))
+	checkError(err, "failed to create session repository")
+	log.Println("successfully created session repository")
 
-	// Connect to email service with gRPC
-	conn, err := grpc.Dial(c.Get("AUTH_EMAIL_GRPC_URL"),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	// Create role repository
+	rr, err := mypostgres.NewRolesRepository(pgConn)
+	checkError(err, "failed to create role repository")
+	log.Println("successfully created role repository")
+
+	// Connect to redis cache
+	redisConn, err := redis.New(c.Get("AUTH_CACHE_URL"))
+	checkError(err, "failed to connect to redis cache")
+	log.Println("successfully connected to redis cache")
+
+	// Create token repository
+	tr := redis.NewTokenRepository(redisConn, redis.WithTokenDuration(atd))
+	log.Println("successfully created token repository")
+
+	// Connect to rabbitmq & Create a new message producer
+	rbp, err := rabbitmq.NewProducer(c.Get("AUTH_RABBITMQ_URL"),
+		rabbitmq.WithNewSignInSessionQueue(c.Get("AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME")),
 	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	esc := pb.NewEmailServiceClient(conn)
-	log.Println("Connected to email-service")
+	checkError(err, "failed to connect to rabbitmq")
+	log.Println("successfully connected to rabbitmq")
 
 	// Create a new use case
 	uc := application.NewUseCases(
@@ -84,15 +89,17 @@ func main() {
 		application.WithTokenGenerator(tg),
 		application.WithUserRepository(ur),
 		application.WithSessionRepository(sr),
-		application.WithEmailService(esc),
+		application.WithTokenRepository(tr),
+		application.WithRoleRepository(rr),
+		application.WithMessageProducer(rbp),
 	)
 
 	// Start the server
-	StartGRPCServer(c, uc)
+	checkError(startGRPCServer(c, uc), "Failed to start gRPC server")
 }
 
-func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
-	// Create a new gRPC server
+func startGRPCServer(c *goconfig.Config, uc *application.UseCases) error {
+	// Create a new gRPC server with TLS enabled
 	grpcAH := mygrpc.NewAuthHandler(uc)
 	grpcS := grpc.NewServer()
 	pb.RegisterAuthServiceServer(grpcS, grpcAH)
@@ -102,11 +109,18 @@ func StartGRPCServer(c *goconfig.Config, uc *application.UseCases) {
 	port := c.Get("AUTH_GRPC_PORT")
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		panic(err)
+		return errs.B(err).Msg(fmt.Sprintf("Failed to listen on port %s", port)).Err()
 	}
-	log.Println("Starting gRPC server on port", port)
+	log.Println("starting gRPC server on port", port)
 	err = grpcS.Serve(lis)
 	if err != nil {
-		return
+		return errs.B(err).Msg(fmt.Sprintf("Failed to serve on port %s", port)).Err()
+	}
+	return nil
+}
+
+func checkError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
 	}
 }

@@ -5,18 +5,21 @@ services:
     container_name: "auth"
     restart: unless-stopped
     volumes:
-      - ./auth:/go/src/github.com/escalopa/fingo/
-      - ./pb:/go/src/github.com/escalopa/fingo/
+      - ./auth:/go/src/github.com/escalopa/fingo/auth
+      - ./pb:/go/src/github.com/escalopa/fingo/pb
     environment:
+      - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
       - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
       - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
-      - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
+
+      - AUTH_RABBITMQ_URL=${AUTH_RABBITMQ_URL}
+      - AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=${AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
+
       - AUTH_TOKEN_SECRET=${AUTH_TOKEN_SECRET}
       - AUTH_ACCESS_TOKEN_DURATION=${AUTH_ACCESS_TOKEN_DURATION}
       - AUTH_REFRESH_TOKEN_DURATION=${AUTH_REFRESH_TOKEN_DURATION}
       - AUTH_USER_SESSION_DURATION=${AUTH_USER_SESSION_DURATION}
-      - AUTH_EMAIL_GRPC_URL=${AUTH_EMAIL_GRPC_URL}
     ports:
       - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     build:
@@ -24,32 +27,40 @@ services:
       dockerfile: ./_deployments/Dockerfile.auth
       target: development
     depends_on:
-      - cache
-      - email
-      - db
+      cache:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 
   email:
     container_name: "email"
     restart: unless-stopped
     volumes:
-      - ./email:/go/src/github.com/escalopa/fingo/
-      - ./pb:/go/src/github.com/escalopa/fingo/
+      - ./email:/go/src/github.com/escalopa/fingo/email
     environment:
-      - EMAIL_CACHE_URL=${EMAIL_CACHE_URL}
-      - EMAIL_GRPC_PORT=${EMAIL_GRPC_PORT}
-      - EMAIL_USER_CODE_LENGTH=${EMAIL_USER_CODE_LENGTH}
-      - EMAIL_USER_CODE_EXPIRATION=${EMAIL_USER_CODE_EXPIRATION}
-      - EMAIL_MIN_SEND_INTERVAL=${EMAIL_MIN_SEND_INTERVAL}
+      - EMAIL_CODES_EXPIRATION=${EMAIL_CODES_EXPIRATION}
+      - EMAIL_SEND_CODE_MIN_INTERVAL=${EMAIL_SEND_CODE_MIN_INTERVAL}
+      - EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL=${EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL}
+
+      - EMAIL_RABBITMQ_URL=${EMAIL_RABBITMQ_URL}
+      - EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME=${EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME}
+      - EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME=${EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME}
+      - EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=${EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
+
       - EMAIL_COURIER_TOKEN=${EMAIL_COURIER_TOKEN}
       - EMAIL_COURIER_VERIFICATION_TEMPLATE_ID=${EMAIL_COURIER_VERIFICATION_TEMPLATE_ID}
-    ports:
-      - "${EMAIL_GRPC_PORT}:${EMAIL_GRPC_PORT}"
+      - EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID=${EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID}
+      - EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID=${EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID}
     build:
       context: .
       dockerfile: _deployments/Dockerfile.email
       target: development
     depends_on:
-        - cache
+      rabbitmq:
+        condition: service_healthy
 
   cache:
     image: redis:alpine
@@ -64,7 +75,7 @@ services:
 
   db:
       image: postgres:12
-      container_name: "database"
+      container_name: "db"
       env_file:
         - ./.db.env
       ports:
@@ -77,6 +88,21 @@ services:
         interval: 5s
         timeout: 5s
         retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.10.19-management
+    container_name: "rabbitmq"
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ./.rabbitmq.env
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   cache:

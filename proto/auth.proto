@@ -1,87 +1,97 @@
 syntax = "proto3";
 
-import "basic.proto";
-import "user.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "github.com/escalopa/fingo/pb";
 
 package pb;
 
+
+
+message Session {
+  message UserDevice {
+    string client_ip = 1;
+    string user_agent = 2;
+  }
+  string id = 1;
+  UserDevice user_device = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  google.protobuf.Timestamp expires_at = 4;
+}
+
 // Signup
 message SignupRequest {
-  string name = 1;
-  string username = 2;
-  string email = 3;
-  string password = 4;
-}
-message SignupResponse {
-  BasicResponse response = 1;
+  string first_name = 1;
+  string last_name = 2;
+  string username = 3;
+  string email = 4;
+  string password = 5;
+  string phone = 6;
+  string gender = 7;
 }
 
 // Signin
 message SigninRequest {
   string email = 1;
   string password = 2;
-  map<string, string> metadata = 3; // Client-IP, User-Agent
 }
 message SigninResponse {
   string accessToken = 1;
   string refreshToken = 2;
-  BasicResponse response = 5;
 }
 
 // Logout
 message LogoutRequest {
-  string accessToken = 1;
-}
-message LogoutResponse {
-  BasicResponse response = 5;
-}
-
-// SendUserCode
-message SendUserCodeRequest {
-  string email = 1;
-}
-message SendUserCodeResponse {
-  BasicResponse response = 1;
-}
-
-// VerifyUserCode
-message VerifyUserCodeRequest {
-  string email = 1;
-  string code = 2;
-}
-message VerifyUserCodeResponse {
-  BasicResponse response = 1;
-}
-
-// VerifyToken
-message VerifyTokenRequest {
-  string access_token = 1;
-}
-message VerifyTokenResponse {
-  User user = 1;
-  BasicResponse response = 2;
+  string session_id = 1;
 }
 
 // RenewAccessToken
 message RenewAccessTokenRequest {
-  string refresh_token = 1;
+  string user_id = 1;
+  string refresh_token = 2;
 }
 message RenewAccessTokenResponse {
-  string new_access_token = 1;
-  BasicResponse response = 2;
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+// GetUserDevices
+message GetUserDevicesRequest {
+  string user_id = 1;
+}
+message GetUserDevicesResponse {
+  repeated Session devices_sessions = 1;
+}
+
+// CreateRole
+message CreateRoleRequest {
+  string name = 1;
+}
+
+// GrantRole
+message GrantRoleRequest {
+  string user_id = 1;
+  string role_name = 2;
+}
+
+// RevokeRole
+message RevokeRoleRequest {
+  string user_id = 1;
+  string role_name = 2;
 }
 
 service AuthService {
   // Auth
-  rpc Signup(SignupRequest) returns (SignupResponse);
   rpc Signin(SigninRequest) returns (SigninResponse);
-  rpc Logout(LogoutRequest) returns (LogoutResponse);
-  // Contact with email service
-  rpc SendUserCode(SendUserCodeRequest) returns (SendUserCodeResponse);
-  rpc VerifyUserCode(VerifyUserCodeRequest) returns (VerifyUserCodeResponse);
-  // Token verifying & renewing
-  rpc VerifyAccessToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+  rpc Signup(SignupRequest) returns (google.protobuf.Empty);
+  rpc Logout(LogoutRequest) returns (google.protobuf.Empty);
+  // Token
   rpc RenewAccessToken(RenewAccessTokenRequest) returns (RenewAccessTokenResponse);
+  // Sessions
+  rpc GetUserDevices(GetUserDevicesRequest) returns (GetUserDevicesResponse);
+  // Roles
+  rpc CreateRole(CreateRoleRequest) returns (google.protobuf.Empty);
+  rpc GrantRole(GrantRoleRequest) returns (google.protobuf.Empty);
+  rpc RevokeRole(RevokeRoleRequest) returns (google.protobuf.Empty);
 }
