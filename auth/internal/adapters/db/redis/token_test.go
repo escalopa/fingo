@@ -14,29 +14,32 @@ import (
 func TestTokenRepository_Store(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	tokenDuration := 2 * time.Second
-	tr := NewTokenRepository(testRedis, WithTokenDuration(tokenDuration))
+	exp := 5 * time.Second
+	tr := NewTokenRepository(testRedis, WithTokenDuration(exp))
 	// Test cases
 	testCases := []struct {
 		name      string
 		token     string
-		arg       core.TokenCache
+		arg       core.TokenPayload
 		wantError bool
 	}{
 		{
 			name:  "success",
 			token: gofakeit.UUID(),
-			arg: core.TokenCache{
-				UserID: uuid.New().String(),
-				Roles:  []string{"admin"},
+			arg: core.TokenPayload{
+				UserID:    uuid.New(),
+				SessionID: uuid.New(),
+				IssuedAt:  time.Now(),
+				ExpiresAt: time.Now().Add(exp),
+				Roles:     []string{"admin"},
 			},
 			wantError: false,
 		},
 		{
 			name:  "empty token",
 			token: "",
-			arg: core.TokenCache{
-				UserID: uuid.New().String(),
+			arg: core.TokenPayload{
+				UserID: uuid.New(),
 				Roles:  []string{"admin"},
 			},
 			wantError: true,
@@ -59,7 +62,7 @@ func TestTokenRepository_Store(t *testing.T) {
 		})
 	}
 	// Wait for token to expire
-	time.Sleep(tokenDuration)
+	time.Sleep(exp)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := tr.r.Get(ctx, tc.token).Result()
@@ -71,27 +74,31 @@ func TestTokenRepository_Store(t *testing.T) {
 func TestTokenRepository_Delete(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	tr := NewTokenRepository(testRedis, WithTokenDuration(1*time.Minute))
+	exp := 1 * time.Minute
+	tr := NewTokenRepository(testRedis, WithTokenDuration(exp))
 	// Test cases
 	testCases := []struct {
 		name      string
 		token     string
-		arg       core.TokenCache
+		arg       core.TokenPayload
 		wantError bool
 	}{
 		{
 			name:  "success",
 			token: gofakeit.UUID(),
-			arg: core.TokenCache{
-				UserID: uuid.New().String(),
-				Roles:  []string{"admin"},
+			arg: core.TokenPayload{
+				UserID:    uuid.New(),
+				SessionID: uuid.New(),
+				IssuedAt:  time.Now(),
+				ExpiresAt: time.Now().Add(exp),
+				Roles:     []string{"admin"},
 			},
 			wantError: false,
 		},
 		{
 			name:      "empty token",
 			token:     "",
-			arg:       core.TokenCache{},
+			arg:       core.TokenPayload{},
 			wantError: true,
 		},
 	}

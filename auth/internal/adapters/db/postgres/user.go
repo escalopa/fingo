@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
@@ -28,7 +29,6 @@ func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserPar
 		Email:          arg.Email,
 		PhoneNumber:    arg.Phone,
 		HashedPassword: arg.HashedPassword,
-		Birthday:       arg.BirthDate,
 	})
 	if err != nil {
 		if isUniqueViolationError(err) {
@@ -87,7 +87,6 @@ func fromDbUserToCore(user db.User) (core.User, error) {
 		Email:           user.Email,
 		IsEmailVerified: user.IsVerifiedEmail,
 		IsPhoneVerified: user.IsVerifiedPhone,
-		BirthDate:       user.Birthday,
 		CreatedAt:       user.CreatedAt,
 	}, nil
 }

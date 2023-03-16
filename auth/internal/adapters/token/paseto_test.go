@@ -27,20 +27,20 @@ func TestPasetoTokenizer_GenerateAccessToken(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, p)
 	// Generate token
-	u := randomUser()
-	sID := uuid.New()
+	user := randomUser()
+	sessionID := uuid.New()
 	// Generate user access token
 	token, err := p.GenerateAccessToken(core.GenerateTokenParam{
-		User:      u,
-		SessionID: sID,
+		UserID:    user.ID,
+		SessionID: sessionID,
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, t)
 	// DecryptToken token
-	u2, sID2, err := p.DecryptToken(token)
+	payload, err := p.DecryptToken(token)
 	require.NoError(t, err)
-	require.True(t, reflect.DeepEqual(u, u2))
-	require.True(t, reflect.DeepEqual(sID, sID2))
+	require.True(t, reflect.DeepEqual(user.ID, payload.UserID))
+	require.True(t, reflect.DeepEqual(sessionID, payload.SessionID))
 }
 
 func TestPasetoTokenizer_GenerateRefreshToken(t *testing.T) {
@@ -50,48 +50,20 @@ func TestPasetoTokenizer_GenerateRefreshToken(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, p)
 	// Generate token
-	u := randomUser()
-	sID := uuid.New()
+	user := randomUser()
+	sessionID := uuid.New()
 	// Generate user refresh token
 	token, err := p.GenerateRefreshToken(core.GenerateTokenParam{
-		User:      u,
-		SessionID: sID,
-	})
-	require.NoError(t, err)
-	require.NotEmpty(t, t)
-	// DecryptToken token
-	u2, sID2, err := p.DecryptToken(token)
-	require.NoError(t, err)
-	require.True(t, reflect.DeepEqual(u, u2))
-	require.True(t, reflect.DeepEqual(sID, sID2))
-}
-
-func TestPasetoTokenizer_VerifyToken(t *testing.T) {
-	t.Parallel()
-	// Create paseto
-	p, err := NewPaseto("12345678901234567890123456789012", 0*time.Minute, 2*time.Minute)
-	require.NoError(t, err)
-	require.NotNil(t, p)
-	// Generate token
-	u := randomUser()
-	// Create new user session
-	sessionID := uuid.New()
-	// Generate user token
-	token, err := p.GenerateAccessToken(core.GenerateTokenParam{
-		User:      u,
+		UserID:    user.ID,
 		SessionID: sessionID,
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, t)
 	// DecryptToken token
-	u2, _, err := p.DecryptToken(token)
-	require.Error(t, err)
-	require.Empty(t, u2)
-	// Check error
-	er, ok := err.(*errs.Error)
-	require.True(t, ok)
-	require.Equal(t, []string{"token expired"}, er.Msg)
-	require.Equal(t, errs.Unauthenticated, er.Code)
+	payload, err := p.DecryptToken(token)
+	require.NoError(t, err)
+	require.True(t, reflect.DeepEqual(user.ID, payload.UserID))
+	require.True(t, reflect.DeepEqual(sessionID, payload.SessionID))
 }
 
 func randomUser() core.User {

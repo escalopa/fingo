@@ -2,13 +2,14 @@ package mypostgres
 
 import (
 	"context"
+	"sort"
+	"strings"
+	"testing"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"sort"
-	"strings"
-	"testing"
 )
 
 func TestRolesRepository_CreateRole(t *testing.T) {
@@ -136,10 +137,9 @@ func TestRolesRepository_GetUserRoles(t *testing.T) {
 	}
 	// Add user to roles
 	for _, rn := range roleNames {
-		r, err := rr.GetRoleByName(ctx, rn)
 		err = rr.GrantRole(ctx, core.GrantRoleToUserParams{
-			RoleID: r.ID,
-			UserID: user.ID,
+			RoleName: rn,
+			UserID:   user.ID,
 		})
 		require.NoError(t, err)
 	}
@@ -226,13 +226,9 @@ func TestRolesRepository_GrantRole(t *testing.T) {
 	// Run add user to roles test
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r, err := rr.GetRoleByName(ctx, tc.role)
-			if err != nil && !tc.wantError {
-				t.Errorf("unexpected error: %v", err)
-			}
 			err = rr.GrantRole(ctx, core.GrantRoleToUserParams{
-				RoleID: r.ID,
-				UserID: tc.userID,
+				RoleName: tc.role,
+				UserID:   tc.userID,
 			})
 			if err != nil && !tc.wantError {
 				t.Errorf("unexpected error: %v", err)
@@ -293,23 +289,18 @@ func TestRolesRepository_RevokeRole(t *testing.T) {
 	}
 	// Add user to roles
 	for _, rn := range roleNames {
-		r, err := rr.GetRoleByName(ctx, rn)
 		err = rr.GrantRole(ctx, core.GrantRoleToUserParams{
-			RoleID: r.ID,
-			UserID: user.ID,
+			RoleName: rn,
+			UserID:   user.ID,
 		})
 		require.NoError(t, err)
 	}
 	// Run add user to roles test
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			r, err := rr.GetRoleByName(ctx, tc.role)
-			if err != nil && !tc.wantError {
-				t.Errorf("unexpected error: %v", err)
-			}
 			err = rr.RevokeRole(ctx, core.RevokeRoleFromUserParams{
-				RoleID: r.ID,
-				UserID: tc.userID,
+				RoleName: tc.role,
+				UserID:   tc.userID,
 			})
 			if err != nil && !tc.wantError {
 				t.Errorf("unexpected error: %v", err)

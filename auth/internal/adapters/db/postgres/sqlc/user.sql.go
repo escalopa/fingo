@@ -7,7 +7,6 @@ package db
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,11 +17,10 @@ INSERT INTO users (id,
                    last_name,
                    username,
                    gender,
-                   birthday,
                    email,
                    phone_number,
                    hashed_password)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 `
 
 type CreateUserParams struct {
@@ -31,7 +29,6 @@ type CreateUserParams struct {
 	LastName       string      `db:"last_name" json:"last_name"`
 	Username       string      `db:"username" json:"username"`
 	Gender         interface{} `db:"gender" json:"gender"`
-	Birthday       time.Time   `db:"birthday" json:"birthday"`
 	Email          string      `db:"email" json:"email"`
 	PhoneNumber    string      `db:"phone_number" json:"phone_number"`
 	HashedPassword string      `db:"hashed_password" json:"hashed_password"`
@@ -44,7 +41,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 		arg.LastName,
 		arg.Username,
 		arg.Gender,
-		arg.Birthday,
 		arg.Email,
 		arg.PhoneNumber,
 		arg.HashedPassword,
@@ -67,7 +63,7 @@ func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) (int64, erro
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, birthday, created_at
+SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, created_at
 FROM users
 WHERE email = $1
 LIMIT 1
@@ -88,14 +84,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.PasswordChangedAt,
 		&i.IsVerifiedEmail,
 		&i.IsVerifiedPhone,
-		&i.Birthday,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, birthday, created_at
+SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, created_at
 FROM users
 WHERE id = $1
 LIMIT 1
@@ -116,7 +111,6 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PasswordChangedAt,
 		&i.IsVerifiedEmail,
 		&i.IsVerifiedPhone,
-		&i.Birthday,
 		&i.CreatedAt,
 	)
 	return i, err

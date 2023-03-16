@@ -44,7 +44,7 @@ func (rr *RolesRepository) GetRoleByName(ctx context.Context, name string) (core
 		}
 		return core.Role{}, errs.B(err).Code(errs.Internal).Msg("failed to get role by name").Err()
 	}
-	return core.Role{ID: role.ID, Name: role.Name}, nil
+	return core.Role{Name: role.Name}, nil
 }
 
 // GetUserRoles returns the roles of a user
@@ -63,9 +63,13 @@ func (rr *RolesRepository) GetUserRoles(ctx context.Context, userID uuid.UUID) (
 
 // GrantRole grants a role to a user
 func (rr *RolesRepository) GrantRole(ctx context.Context, params core.GrantRoleToUserParams) error {
+	role, err := rr.q.GetRoleByName(ctx, params.RoleName)
+	if err != nil {
+		return err
+	}
 	rows, err := rr.q.GrantRoleToUser(ctx, db.GrantRoleToUserParams{
 		UserID: params.UserID,
-		RoleID: params.RoleID,
+		RoleID: role.ID,
 	})
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("failed to grant role to user").Err()
@@ -78,9 +82,13 @@ func (rr *RolesRepository) GrantRole(ctx context.Context, params core.GrantRoleT
 
 // RevokeRole revokes a role from a user
 func (rr *RolesRepository) RevokeRole(ctx context.Context, params core.RevokeRoleFromUserParams) error {
+	role, err := rr.q.GetRoleByName(ctx, params.RoleName)
+	if err != nil {
+		return err
+	}
 	rows, err := rr.q.RevokeRoleFromUser(ctx, db.RevokeRoleFromUserParams{
 		UserID: params.UserID,
-		RoleID: params.RoleID,
+		RoleID: role.ID,
 	})
 	if err != nil {
 		return errs.B(err).Code(errs.NotFound).Msg("failed to grant role to user, no rows affected").Err()
@@ -89,4 +97,15 @@ func (rr *RolesRepository) RevokeRole(ctx context.Context, params core.RevokeRol
 		return errs.B(err).Code(errs.Internal).Msg("failed to revoke role from user, no rows affected").Err()
 	}
 	return nil
+}
+
+func (rr *RolesRepository) HasPrivillage(ctx context.Context, params core.HasPrivillageParams) (bool, error) {
+	rows, err := rr.q.HasPrivillage(ctx, db.HasPrivillageParams{
+		UserID: params.UserID,
+		Name:   params.RoleName,
+	})
+	if err != nil {
+		return false, errs.B(err).Code(errs.NotFound).Msg("couldn't check for user privillage").Err()
+	}
+	return rows == 1, nil
 }

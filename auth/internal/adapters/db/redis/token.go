@@ -32,7 +32,7 @@ func WithTokenDuration(td time.Duration) func(*TokenRepository) {
 }
 
 // Store stores a token mapped to a session id
-func (tr *TokenRepository) Store(ctx context.Context, token string, params core.TokenCache) error {
+func (tr *TokenRepository) Store(ctx context.Context, token string, params core.TokenPayload) error {
 	if token == "" {
 		return errs.B(nil).Code(errs.InvalidArgument).Msg("token cannot be empty").Err()
 	}

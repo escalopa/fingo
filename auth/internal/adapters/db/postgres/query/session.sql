@@ -11,25 +11,23 @@ LIMIT 1;
 -- name: GetUserSessions :many
 SELECT *
 FROM sessions
-WHERE user_id = $1;
+WHERE user_id = $1
+  AND expires_at > now();
 
 -- name: UpdateSessionTokens :execrows
 UPDATE sessions
 SET access_token  = $2,
     refresh_token = $3,
-    expires_at    = $4
-WHERE id = $1;
-
--- name: SetSessionIsBlocked :execrows
-UPDATE sessions
-SET is_blocked = $2
+    expires_at    = $4,
+    updated_at    = now()
 WHERE id = $1;
 
 -- name: GetUserDevices :many
 SELECT user_agent, client_ip
 FROM sessions
 WHERE user_id = $1
-ORDER BY created_at DESC;
+  AND now() > expires_at
+ORDER BY updated_at DESC;
 
 -- name: DeleteSessionByID :execrows
 DELETE

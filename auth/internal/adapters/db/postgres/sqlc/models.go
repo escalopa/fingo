@@ -20,11 +20,10 @@ type Session struct {
 	UserID       uuid.UUID `db:"user_id" json:"user_id"`
 	AccessToken  string    `db:"access_token" json:"access_token"`
 	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
-	IsBlocked    bool      `db:"is_blocked" json:"is_blocked"`
 	UserAgent    string    `db:"user_agent" json:"user_agent"`
 	ClientIp     string    `db:"client_ip" json:"client_ip"`
 	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type User struct {
@@ -39,7 +38,6 @@ type User struct {
 	PasswordChangedAt time.Time   `db:"password_changed_at" json:"password_changed_at"`
 	IsVerifiedEmail   bool        `db:"is_verified_email" json:"is_verified_email"`
 	IsVerifiedPhone   bool        `db:"is_verified_phone" json:"is_verified_phone"`
-	Birthday          time.Time   `db:"birthday" json:"birthday"`
 	CreatedAt         time.Time   `db:"created_at" json:"created_at"`
 }
 

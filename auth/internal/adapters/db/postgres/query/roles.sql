@@ -23,3 +23,10 @@ DELETE
 FROM user_roles
 WHERE user_id = $1
   AND role_id = $2;
+
+-- name: HasPrivillage :one
+SELECT COUNT(*)
+FROM user_roles ur
+       JOIN roles r on r.id = ur.id
+WHERE user_id = $1
+  AND r.name = $2;

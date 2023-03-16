@@ -39,23 +39,24 @@ func NewPaseto(secretKey string, atd, rtd time.Duration) (*PasetoTokenizer, erro
 }
 
 // GenerateAccessToken Creates a new access token
-func (pt *PasetoTokenizer) GenerateAccessToken(gtp core.GenerateTokenParam) (string, error) {
-	return pt.generateToken(gtp.User, gtp.SessionID, pt.atd)
+func (pt *PasetoTokenizer) GenerateAccessToken(params core.GenerateTokenParam) (string, error) {
+	return pt.generateToken(params.UserID, params.SessionID, params.Roles, pt.atd)
 }
 
 // GenerateRefreshToken Creates a new refresh token
-func (pt *PasetoTokenizer) GenerateRefreshToken(gtp core.GenerateTokenParam) (string, error) {
-	return pt.generateToken(gtp.User, gtp.SessionID, pt.rtd)
+func (pt *PasetoTokenizer) GenerateRefreshToken(params core.GenerateTokenParam) (string, error) {
+	return pt.generateToken(params.UserID, params.SessionID, params.Roles, pt.rtd)
 }
 
 // generateToken Create a new token with user, sessionID, exp(Token life duration)
-func (pt *PasetoTokenizer) generateToken(u core.User, sID uuid.UUID, exp time.Duration) (string, error) {
+func (pt *PasetoTokenizer) generateToken(userID uuid.UUID, sessionID uuid.UUID, roles []string, exp time.Duration) (string, error) {
 	// Create userToken struct instance
-	ut := core.UserToken{
-		User:      u,
-		SessionID: sID,
+	ut := core.TokenPayload{
+		UserID:    userID,
+		SessionID: sessionID,
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(exp),
+		Roles:     roles,
 	}
 	// Encrypt userToken
 	token, err := pt.p.Encrypt(pt.sk, ut, nil)
@@ -65,18 +66,14 @@ func (pt *PasetoTokenizer) generateToken(u core.User, sID uuid.UUID, exp time.Du
 	return token, nil
 }
 
-// DecryptToken decrypts the token to get `UserToken` & verifies that token hasn't expired
-func (pt *PasetoTokenizer) DecryptToken(token string) (core.User, uuid.UUID, error) {
+// DecryptToken decrypts the token to get `TokenPayload` & verifies that token hasn't expired
+func (pt *PasetoTokenizer) DecryptToken(token string) (core.TokenPayload, error) {
 	// Decrypt token
-	var ut core.UserToken
-	err := pt.p.Decrypt(token, pt.sk, &ut, nil)
+	var payload core.TokenPayload
+	err := pt.p.Decrypt(token, pt.sk, &payload, nil)
 	if err != nil {
-		return core.User{}, uuid.UUID{}, errs.B(err).Code(errs.InvalidArgument).
+		return core.TokenPayload{}, errs.B(err).Code(errs.InvalidArgument).
 			Msg("failed to decrypt token, invalid token").Err()
 	}
-	// Check whether the token has expired
-	if time.Now().After(ut.ExpiresAt) {
-		return core.User{}, uuid.UUID{}, errs.B().Code(errs.Unauthenticated).Msg("token expired").Err()
-	}
-	return ut.User, ut.SessionID, nil
+	return payload, nil
 }

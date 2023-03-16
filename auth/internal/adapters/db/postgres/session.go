@@ -3,11 +3,12 @@ package mypostgres
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
-	"time"
 )
 
 type SessionRepository struct {
@@ -83,8 +84,8 @@ func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UU
 	return coreSessions, nil
 }
 
-// UpdateSessionRefreshToken returns a sessions by its refresh token value
-func (sr *SessionRepository) UpdateSessionRefreshToken(ctx context.Context, params core.UpdateSessionRefreshTokenParams) error {
+// UpdateSessionTokens returns a sessions by its refresh token value
+func (sr *SessionRepository) UpdateSessionTokens(ctx context.Context, params core.UpdateSessionTokenParams) error {
 	rows, err := sr.q.UpdateSessionTokens(ctx, db.UpdateSessionTokensParams{
 		ID:           params.ID,
 		AccessToken:  params.AccessToken,
@@ -93,22 +94,6 @@ func (sr *SessionRepository) UpdateSessionRefreshToken(ctx context.Context, para
 	})
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("failed to set sessions refresh token").Err()
-	}
-	if rows == 0 {
-		return errs.B().Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", params.ID.String()).Err()
-	}
-	return nil
-}
-
-// SetSessionIsBlocked sets the IsBlocked value of a sessions to true or false
-func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, params core.SetSessionIsBlockedParams) error {
-	// Update sessions value by setting IsBlocked value
-	rows, err := sr.q.SetSessionIsBlocked(ctx, db.SetSessionIsBlockedParams{
-		ID:        params.ID,
-		IsBlocked: params.IsBlocked,
-	})
-	if err != nil {
-		return errs.B(err).Code(errs.Internal).Msg("failed to set sessions is_blocked value").Err()
 	}
 	if rows == 0 {
 		return errs.B().Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", params.ID.String()).Err()
@@ -135,8 +120,7 @@ func fromDbSessionToCore(session db.Session) core.Session {
 		AccessToken:  session.AccessToken,
 		RefreshToken: session.RefreshToken,
 		UserDevice:   core.UserDevice{ClientIP: session.ClientIp, UserAgent: session.UserAgent},
-		IsBlocked:    session.IsBlocked,
 		ExpiresAt:    session.ExpiresAt,
-		CreatedAt:    session.CreatedAt,
+		UpdatedAt:    session.UpdatedAt,
 	}
 }

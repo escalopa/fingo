@@ -2,10 +2,11 @@ package mypostgres
 
 import (
 	"context"
-	"github.com/brianvoe/gofakeit/v6"
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/stretchr/testify/require"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
@@ -174,69 +175,6 @@ func TestSessionRepository_GetUserSessions(t *testing.T) {
 	}
 }
 
-func TestSessionRepository_SetSessionIsBlocked(t *testing.T) {
-	t.Parallel()
-	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
-	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
-	if err != nil {
-		t.Errorf("unexpected error, got %s", err)
-	}
-	// Create user
-	user := randomUser()
-	session := randomSession(user.ID)
-	// Create test cases
-	testCases := []struct {
-		name      string
-		arg       core.SetSessionIsBlockedParams
-		wantError bool
-	}{
-		{
-			name: "valid sessions id",
-			arg: core.SetSessionIsBlockedParams{
-				ID:        session.ID,
-				IsBlocked: true,
-			},
-			wantError: false,
-		},
-		{
-			name: "invalid sessions id",
-			arg: core.SetSessionIsBlockedParams{
-				ID:        uuid.New(),
-				IsBlocked: true,
-			},
-			wantError: true,
-		},
-	}
-	// Create user to bind sessions to
-	err = ur.CreateUser(ctx, user)
-	if err != nil {
-		t.Errorf("unexpected error, got %s", err)
-	}
-	// Create sessions
-	err = sr.CreateSession(ctx, session)
-	if err != nil {
-		t.Errorf("unexpected error, got %s", err)
-	}
-	// Run tests
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			err = sr.SetSessionIsBlocked(ctx, tc.arg)
-			if err != nil && !tc.wantError {
-				t.Errorf("unexpected error, got %s", err)
-			}
-			if err == nil && tc.wantError {
-				t.Errorf("expected error, got nil")
-			}
-			if err == nil {
-				s, err := sr.GetSessionByID(ctx, tc.arg.ID)
-				require.NoError(t, err)
-				require.Equal(t, tc.arg.IsBlocked, s.IsBlocked)
-			}
-		})
-	}
-}
-
 func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -251,12 +189,12 @@ func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
 	// Create test cases
 	testCases := []struct {
 		name      string
-		arg       core.UpdateSessionRefreshTokenParams
+		arg       core.UpdateSessionTokenParams
 		wantError bool
 	}{
 		{
 			name: "success",
-			arg: core.UpdateSessionRefreshTokenParams{
+			arg: core.UpdateSessionTokenParams{
 				ID:           session.ID,
 				RefreshToken: "new-refresh-token",
 			},
@@ -264,7 +202,7 @@ func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
 		},
 		{
 			name: "invalid sessions id",
-			arg: core.UpdateSessionRefreshTokenParams{
+			arg: core.UpdateSessionTokenParams{
 				ID:           uuid.New(),
 				RefreshToken: "new-refresh-token",
 			},
@@ -284,7 +222,7 @@ func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
 	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err = sr.UpdateSessionRefreshToken(ctx, tc.arg)
+			err = sr.UpdateSessionTokens(ctx, tc.arg)
 			if err != nil && !tc.wantError {
 				t.Errorf("unexpected error, got %s", err)
 

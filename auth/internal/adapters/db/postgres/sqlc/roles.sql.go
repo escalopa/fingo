@@ -83,6 +83,26 @@ func (q *Queries) GrantRoleToUser(ctx context.Context, arg GrantRoleToUserParams
 	return result.RowsAffected()
 }
 
+const hasPrivillage = `-- name: HasPrivillage :one
+SELECT COUNT(*)
+FROM user_roles ur
+       JOIN roles r on r.id = ur.id
+WHERE user_id = $1
+  AND r.name = $2
+`
+
+type HasPrivillageParams struct {
+	UserID uuid.UUID `db:"user_id" json:"user_id"`
+	Name   string    `db:"name" json:"name"`
+}
+
+func (q *Queries) HasPrivillage(ctx context.Context, arg HasPrivillageParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, hasPrivillage, arg.UserID, arg.Name)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const revokeRoleFromUser = `-- name: RevokeRoleFromUser :execrows
 DELETE
 FROM user_roles

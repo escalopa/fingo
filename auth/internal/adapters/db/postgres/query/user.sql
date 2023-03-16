@@ -4,11 +4,10 @@ INSERT INTO users (id,
                    last_name,
                    username,
                    gender,
-                   birthday,
                    email,
                    phone_number,
                    hashed_password)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 
 -- name: GetUserByID :one
 SELECT *

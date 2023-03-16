@@ -55,7 +55,7 @@ func (q *Queries) DeleteSessionByID(ctx context.Context, id uuid.UUID) (int64, e
 }
 
 const getSessionByID = `-- name: GetSessionByID :one
-SELECT id, user_id, access_token, refresh_token, is_blocked, user_agent, client_ip, expires_at, created_at
+SELECT id, user_id, access_token, refresh_token, user_agent, client_ip, expires_at, updated_at
 FROM sessions
 WHERE id = $1
 LIMIT 1
@@ -69,11 +69,10 @@ func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, er
 		&i.UserID,
 		&i.AccessToken,
 		&i.RefreshToken,
-		&i.IsBlocked,
 		&i.UserAgent,
 		&i.ClientIp,
 		&i.ExpiresAt,
-		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -82,7 +81,8 @@ const getUserDevices = `-- name: GetUserDevices :many
 SELECT user_agent, client_ip
 FROM sessions
 WHERE user_id = $1
-ORDER BY created_at DESC
+  AND now() > expires_at
+ORDER BY updated_at DESC
 `
 
 type GetUserDevicesRow struct {
@@ -114,9 +114,10 @@ func (q *Queries) GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUs
 }
 
 const getUserSessions = `-- name: GetUserSessions :many
-SELECT id, user_id, access_token, refresh_token, is_blocked, user_agent, client_ip, expires_at, created_at
+SELECT id, user_id, access_token, refresh_token, user_agent, client_ip, expires_at, updated_at
 FROM sessions
 WHERE user_id = $1
+  AND expires_at > now()
 `
 
 func (q *Queries) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Session, error) {
@@ -133,11 +134,10 @@ func (q *Queries) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Sess
 			&i.UserID,
 			&i.AccessToken,
 			&i.RefreshToken,
-			&i.IsBlocked,
 			&i.UserAgent,
 			&i.ClientIp,
 			&i.ExpiresAt,
-			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -152,30 +152,12 @@ func (q *Queries) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Sess
 	return items, nil
 }
 
-const setSessionIsBlocked = `-- name: SetSessionIsBlocked :execrows
-UPDATE sessions
-SET is_blocked = $2
-WHERE id = $1
-`
-
-type SetSessionIsBlockedParams struct {
-	ID        uuid.UUID `db:"id" json:"id"`
-	IsBlocked bool      `db:"is_blocked" json:"is_blocked"`
-}
-
-func (q *Queries) SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, setSessionIsBlocked, arg.ID, arg.IsBlocked)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected()
-}
-
 const updateSessionTokens = `-- name: UpdateSessionTokens :execrows
 UPDATE sessions
 SET access_token  = $2,
     refresh_token = $3,
-    expires_at    = $4
+    expires_at    = $4,
+    updated_at    = now()
 WHERE id = $1
 `
 
