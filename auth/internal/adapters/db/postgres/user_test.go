@@ -13,7 +13,8 @@ import (
 func TestUserRepository_CreateUser(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user
 	user := randomUser()
 	// Create test cases
@@ -36,7 +37,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := ur.CreateUser(ctx, tc.arg)
+			err = ur.CreateUser(ctx, tc.arg)
 			if err != nil && !tc.wantError {
 				t.Errorf("unexpected error, got %s", err)
 			}
@@ -60,7 +61,8 @@ func TestUserRepository_CreateUser(t *testing.T) {
 func TestUserRepository_GetUserByID(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user
 	user := randomUser()
 	// Create test cases
@@ -80,7 +82,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 		},
 	}
 	// Create user
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	if err != nil {
 		t.Errorf("unexcpected error, got %s", err)
 	}
@@ -104,7 +106,8 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 func TestUserRepository_GetUserByEmail(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user
 	user := randomUser()
 	// Create test cases
@@ -125,7 +128,7 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 		},
 	}
 	// Create user
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	if err != nil {
 		t.Errorf("unexcpected error, got %s", err)
 	}
@@ -148,7 +151,8 @@ func TestUserRepository_GetUserByEmail(t *testing.T) {
 func TestUserRepository_DeleteUserByID(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user
 	user := randomUser()
 	// Create test cases
@@ -169,7 +173,7 @@ func TestUserRepository_DeleteUserByID(t *testing.T) {
 		},
 	}
 	// Create user
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	if err != nil {
 		t.Errorf("unexcpected error, got %s", err)
 	}

@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"google.golang.org/grpc/metadata"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,7 +32,7 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 		GetUserDevices: NewGetUserDevicesCommand(u.v, u.sr),
 	}
 	u.Command = Command{
-		Signin:     NewSigninCommand(u.v, u.h, u.tg, u.ur, u.sr, u.mp),
+		Signin:     NewSigninCommand(u.v, u.h, u.tg, u.ur, u.sr, u.tr, u.rr, u.mp),
 		Signup:     NewSignupCommand(u.v, u.h, u.ur),
 		Logout:     NewLogoutCommand(u.v, u.sr, u.rr, u.tr),
 		RenewToken: NewRenewTokenCommand(u.v, u.tg, u.sr, u.rr, u.tr),
@@ -111,18 +112,15 @@ func executeWithContextTimeout(ctx context.Context, timeout time.Duration, handl
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	errChan := make(chan error)
-	defer close(errChan)
 	// Execute logic
 	go func() {
+		//defer close(errChan)
 		// Check if the context has closed already before calling handler
-		if ctx.Err() != nil {
+		if ctxWithTimeout.Err() != nil {
 			errChan <- ctx.Err()
+			return
 		}
-		err := handler()
-		// Send error if the channel is NOT closed
-		if _, ok := <-errChan; ok {
-			errChan <- err
-		}
+		errChan <- handler()
 	}()
 	// Wait for response
 	select {
@@ -137,13 +135,26 @@ func executeWithContextTimeout(ctx context.Context, timeout time.Duration, handl
 }
 
 func parseUserIDFromContext(ctx context.Context) (uuid.UUID, error) {
-	userIDVal, ok := ctx.Value("user-id").(string)
-	if !ok {
-		return uuid.UUID{}, errs.B().Code(errs.Unauthenticated).Msg("user id not passed in headers").Err()
+	if meta, ok := metadata.FromIncomingContext(ctx); ok {
+		shard := meta.Get("user-id")
+		if len(shard) != 1 {
+			return uuid.UUID{}, errs.B().Code(errs.Unauthenticated).Msg("user id not passed in headers").Err()
+		}
+		id := shard[0]
+		userID, err := uuid.Parse(id)
+		if err != nil {
+			return uuid.UUID{}, errs.B(err).Code(errs.Internal).Msg("failed to parse user id from headers").Err()
+		}
+		return userID, nil
+	} else {
+		userIDVal, ok := ctx.Value("user-id").(string)
+		if !ok {
+			return uuid.UUID{}, errs.B().Code(errs.Unauthenticated).Msg("user id not passed in headers").Err()
+		}
+		userID, err := uuid.Parse(userIDVal)
+		if err != nil {
+			return uuid.UUID{}, errs.B(err).Code(errs.Internal).Msg("failed to parse user id from headers").Err()
+		}
+		return userID, nil
 	}
-	userID, err := uuid.Parse(userIDVal)
-	if err != nil {
-		return uuid.UUID{}, errs.B(err).Code(errs.Internal).Msg("failed to parse user id from headers").Err()
-	}
-	return userID, nil
 }

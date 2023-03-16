@@ -15,8 +15,11 @@ type UserRepository struct {
 	q db.Querier
 }
 
-func NewUserRepository(conn *sql.DB) *UserRepository {
-	return &UserRepository{q: db.New(conn)}
+func NewUserRepository(conn *sql.DB) (*UserRepository, error) {
+	if conn == nil {
+		return nil, errs.B().Msg("passed connection is nil").Err()
+	}
+	return &UserRepository{q: db.New(conn)}, nil
 }
 
 func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserParams) error {
@@ -85,6 +88,7 @@ func fromDbUserToCore(user db.User) (core.User, error) {
 		Username:        user.Username,
 		Gender:          gender,
 		Email:           user.Email,
+		HashedPassword:  user.HashedPassword,
 		IsEmailVerified: user.IsVerifiedEmail,
 		IsPhoneVerified: user.IsVerifiedPhone,
 		CreatedAt:       user.CreatedAt,

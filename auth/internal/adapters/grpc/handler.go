@@ -2,11 +2,12 @@ package grpc
 
 import (
 	"context"
-
 	"github.com/escalopa/fingo/auth/internal/core"
-	"github.com/lordvidex/errs"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 
 	"github.com/escalopa/fingo/auth/internal/application"
 	"github.com/escalopa/fingo/pb"
@@ -38,15 +39,7 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*empty
 }
 
 func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.SigninResponse, error) {
-	// Extract the client ip &user agent from the context metadata
-	clientIP, ok := ctx.Value("client-ip").(string)
-	if !ok {
-		return nil, errs.B().Code(errs.InvalidArgument).Msg("failed to extract client ip from context").Err()
-	}
-	userAgent, ok := ctx.Value("user-agent").(string)
-	if !ok {
-		return nil, errs.B().Code(errs.InvalidArgument).Msg("failed to extract user agent from context").Err()
-	}
+	clientIP, userAgent := extractMetadataFromContext(ctx)
 	response, err := h.uc.Signin.Execute(ctx, application.SigninParams{
 		Email:     req.Email,
 		Password:  req.Password,
@@ -136,4 +129,43 @@ func fromCoreToPbSession(session core.Session) *pb.Session {
 		UpdatedAt: timestamppb.New(session.UpdatedAt),
 		ExpiresAt: timestamppb.New(session.ExpiresAt),
 	}
+}
+
+const (
+	grpcGatewayUserAgentHeader = "grpcgateway-user-agent"
+	userAgentHeader            = "user-agent"
+	xForwardedForHeader        = "x-forwarded-for"
+)
+
+func extractMetadataFromContext(ctx context.Context) (clientIP, userAgent string) {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if userAgents := md.Get(grpcGatewayUserAgentHeader); len(userAgents) > 0 {
+			userAgent = userAgents[0]
+		}
+
+		if userAgents := md.Get(userAgentHeader); len(userAgents) > 0 {
+			userAgent = userAgents[0]
+		}
+
+		if clientIPs := md.Get(xForwardedForHeader); len(clientIPs) > 0 {
+			clientIP = clientIPs[0]
+		}
+	}
+	if p, ok := peer.FromContext(ctx); ok {
+		clientIP = p.Addr.String()
+	}
+	// Remove port from ip address
+	// Example client ip `192.168.176.6:36234` will become `192.168.176.6`
+	twoDotsCount := strings.Count(clientIP, ":")
+	if len(clientIP) > 4 {
+		if twoDotsCount == 1 { // ipv4
+			shard := strings.Split(clientIP, ":")
+			clientIP = shard[0]
+		} else {
+			clientIP = clientIP[1:]
+			shard := strings.Split(clientIP, "]")
+			clientIP = shard[0]
+		}
+	}
+	return
 }

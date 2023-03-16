@@ -30,7 +30,7 @@ type SignupCommandImpl struct {
 }
 
 func (c *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
-	return executeWithContextTimeout(ctx, 5*time.Second, func() error {
+	return executeWithContextTimeout(ctx, 10*time.Second, func() error {
 		if err := c.v.Validate(params); err != nil {
 			return err
 		}

@@ -15,12 +15,15 @@ type RolesRepository struct {
 }
 
 // NewRolesRepository returns a new RolesRepository
-func NewRolesRepository(conn *sql.DB, opts ...func(*RolesRepository)) *RolesRepository {
+func NewRolesRepository(conn *sql.DB, opts ...func(*RolesRepository)) (*RolesRepository, error) {
+	if conn == nil {
+		return nil, errs.B().Msg("passed connection is nil").Err()
+	}
 	rr := &RolesRepository{q: db.New(conn)}
 	for _, opt := range opts {
 		opt(rr)
 	}
-	return rr
+	return rr, nil
 }
 
 // CreateRole creates a new role with a given name

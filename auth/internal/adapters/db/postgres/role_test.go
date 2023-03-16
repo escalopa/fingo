@@ -15,7 +15,8 @@ import (
 func TestRolesRepository_CreateRole(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	rr := NewRolesRepository(testPGConn)
+	rr, err := NewRolesRepository(testPGConn)
+	require.NoError(t, err)
 	testCases := []struct {
 		name      string
 		role      string
@@ -54,13 +55,15 @@ func TestRolesRepository_CreateRole(t *testing.T) {
 func TestRolesRepository_GetRoleByName(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
-	rr := NewRolesRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	rr, err := NewRolesRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user roles
 	roleNames := []string{gofakeit.Name(), gofakeit.Name()}
 	// Create user for test
 	user := randomUser()
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 	testCases := []struct {
 		name      string
@@ -108,14 +111,16 @@ func TestRolesRepository_GetRoleByName(t *testing.T) {
 func TestRolesRepository_GetUserRoles(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
-	rr := NewRolesRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	rr, err := NewRolesRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user roles
 	roleNames := []string{gofakeit.Name(), gofakeit.Name(), gofakeit.Name()}
 	sort.Strings(roleNames)
 	// Create user for test
 	user := randomUser()
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 	testCases := []struct {
 		name      string
@@ -173,13 +178,15 @@ func TestRolesRepository_GetUserRoles(t *testing.T) {
 func TestRolesRepository_GrantRole(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
-	rr := NewRolesRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	rr, err := NewRolesRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user roles
 	roleNames := []string{gofakeit.Name(), gofakeit.Name()}
 	// Create user for test
 	user := randomUser()
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 	testCases := []struct {
 		name      string
@@ -243,13 +250,15 @@ func TestRolesRepository_GrantRole(t *testing.T) {
 func TestRolesRepository_RevokeRole(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
-	rr := NewRolesRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	rr, err := NewRolesRepository(testPGConn)
+	require.NoError(t, err)
 	// Create user roles
 	roleNames := []string{gofakeit.Name(), gofakeit.Name()}
 	// Create user for test
 	user := randomUser()
-	err := ur.CreateUser(ctx, user)
+	err = ur.CreateUser(ctx, user)
 	require.NoError(t, err)
 	testCases := []struct {
 		name      string

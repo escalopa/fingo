@@ -49,7 +49,8 @@ func main() {
 	log.Println("successfully migrated postgres db")
 
 	// Create user repository
-	ur := mypostgres.NewUserRepository(pgConn)
+	ur, err := mypostgres.NewUserRepository(pgConn)
+	checkError(err, "failed to create user repository")
 	log.Println("successfully created user repository")
 
 	// Create session repository
@@ -61,7 +62,8 @@ func main() {
 	log.Println("successfully created session repository")
 
 	// Create role repository
-	rr := mypostgres.NewRolesRepository(pgConn)
+	rr, err := mypostgres.NewRolesRepository(pgConn)
+	checkError(err, "failed to create role repository")
 	log.Println("successfully created role repository")
 
 	// Connect to redis cache
@@ -75,7 +77,7 @@ func main() {
 
 	// Connect to rabbitmq & Create a new message producer
 	rbp, err := rabbitmq.NewProducer(c.Get("AUTH_RABBITMQ_URL"),
-		rabbitmq.WithNewSignInSessionQueue(c.Get("AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE")),
+		rabbitmq.WithNewSignInSessionQueue(c.Get("AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME")),
 	)
 	checkError(err, "failed to connect to rabbitmq")
 	log.Println("successfully connected to rabbitmq")

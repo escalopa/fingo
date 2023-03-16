@@ -15,7 +15,8 @@ import (
 func TestSessionRepository_CreateSession(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
 	if err != nil {
 		t.Errorf("unexpected error, got %s", err)
@@ -61,7 +62,8 @@ func TestSessionRepository_CreateSession(t *testing.T) {
 func TestSessionRepository_GetSessionByID(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
 	if err != nil {
 		t.Errorf("unexpected error, got %s", err)
@@ -116,7 +118,8 @@ func TestSessionRepository_GetSessionByID(t *testing.T) {
 func TestSessionRepository_GetUserSessions(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
 	if err != nil {
 		t.Errorf("unexpected error, got %s", err)
@@ -178,7 +181,8 @@ func TestSessionRepository_GetUserSessions(t *testing.T) {
 func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
 	if err != nil {
 		t.Errorf("unexpected error, got %s", err)
@@ -242,7 +246,8 @@ func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
 func TestSessionRepository_DeleteSessionByID(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	ur := NewUserRepository(testPGConn)
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
 	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
 	if err != nil {
 		t.Errorf("unexpected error, got %s", err)
