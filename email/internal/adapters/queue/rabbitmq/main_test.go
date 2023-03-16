@@ -17,7 +17,6 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err, "failed to start rabbitmq container")
 	}
-	log.Println(url)
 	// Stop the container
 	defer func() {
 		if err = terminate(); err != nil {

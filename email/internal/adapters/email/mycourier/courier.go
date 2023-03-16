@@ -88,7 +88,7 @@ func (c *Sender) SendVerificationCode(ctx context.Context, params core.SendVerif
 		},
 	)
 	if err != nil {
-		return errs.B(err).Code(errs.Unknown).Msgf("Failed to send verification code email, request ID: %s", requestID).Err()
+		return errs.B(err).Code(errs.Unknown).Msgf("failed to send verification code email, request ID: %s", requestID).Err()
 	}
 	return err
 }
@@ -110,7 +110,7 @@ func (c *Sender) SendResetPasswordToken(ctx context.Context, params core.SendRes
 		},
 	)
 	if err != nil {
-		return errs.B(err).Code(errs.Unknown).Msgf("Failed to send reset password token email, request ID: %s", requestID).Err()
+		return errs.B(err).Code(errs.Unknown).Msgf("failed to send reset password token email, request ID: %s", requestID).Err()
 	}
 	return err
 }
@@ -131,7 +131,7 @@ func (c *Sender) SendNewSignInSession(ctx context.Context, params core.SendNewSi
 		},
 	)
 	if err != nil {
-		return errs.B(err).Code(errs.Unknown).Msgf("Failed to send new signin session email, request ID: %s", requestID).Err()
+		return errs.B(err).Code(errs.Unknown).Msgf("failed to send new signin session email, request ID: %s", requestID).Err()
 	}
 	return err
 }

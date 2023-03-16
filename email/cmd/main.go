@@ -2,9 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/escalopa/fingo/email/internal/adapters/server"
@@ -19,11 +16,10 @@ import (
 func main() {
 	// Create a new config instance
 	c := goconfig.New()
-
 	// Parse code expiration from config
 	exp, err := time.ParseDuration(c.Get("EMAIL_CODES_EXPIRATION"))
-	checkError(err, "Failed to parse code expiration")
-	log.Println("Using codes-expiration:", exp)
+	checkError(err, "failed to parse code expiration")
+	log.Println("using codes-expiration:", exp)
 
 	// Create a courier sender
 	cs, err := mycourier.New(c.Get("EMAIL_COURIER_TOKEN"),
@@ -32,12 +28,12 @@ func main() {
 		mycourier.WithResetPasswordTemplate(c.Get("EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID")),
 		mycourier.WithNewSignInSessionTemplate(c.Get("EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID")),
 	)
-	checkError(err, "Failed to create courier sender")
+	checkError(err, "failed to create courier sender")
 	defer func() {
-		log.Println("Closing courier-sender")
+		log.Println("closing courier-sender")
 		_ = cs.Close()
 	}()
-	log.Println("Created courier-sender")
+	log.Println("created courier-sender")
 
 	// Create a rabbitmq consumer
 	rbc, err := rabbitmq.NewConsumer(c.Get("EMAIL_RABBITMQ_URL"),
@@ -45,24 +41,25 @@ func main() {
 		rabbitmq.WithResetPasswordTokenQueue(c.Get("EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME")),
 		rabbitmq.WithNewSignInSessionQueue(c.Get("EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME")),
 	)
-	checkError(err, "Failed to create rabbitmq consumer")
+	checkError(err, "failed to create rabbitmq consumer")
 	defer func() {
-		log.Println("Closing rabbitmq consumer")
+		log.Println("closing rabbitmq consumer")
 		_ = rbc.Close()
 	}()
+	log.Println("connected to rabbitmq")
 
 	// Parse send code min interval from config
 	smi, err := time.ParseDuration(c.Get("EMAIL_SEND_CODE_MIN_INTERVAL"))
-	checkError(err, "Failed to parse send code min interval")
-	log.Println("Using send-min-interval:", smi)
+	checkError(err, "failed to parse send code min interval")
+	log.Println("using send-min-interval:", smi)
 	// Parse send reset password token min interval from config
 	spi, err := time.ParseDuration(c.Get("EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL"))
-	checkError(err, "Failed to parse send reset password token min interval")
-	log.Println("Using send-min-interval:", spi)
+	checkError(err, "failed to parse send reset password token min interval")
+	log.Println("using send-min-interval:", spi)
 
 	// Create a validator
 	v := validator.NewValidator()
-	log.Println("Created validator")
+	log.Println("created validator")
 
 	// Create use cases
 	uc := application.NewUseCases(
@@ -74,29 +71,15 @@ func main() {
 
 	// Create server
 	s := server.NewServer(uc, rbc)
-	log.Println("Created server")
-
-	// Handle SIGINT and SIGTERM.
-	signalChannel := make(chan os.Signal, 2)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		sig := <-signalChannel
-		switch sig {
-		case os.Interrupt, syscall.SIGTERM:
-			log.Println("Gracefully Stopping server")
-			s.Stop()
-		}
-	}()
+	log.Println("created server")
 
 	// Start server
-	log.Println("Starting server")
-	if err = s.Start(); err != nil {
-		log.Fatal(err, "Failed to start server")
-	}
+	log.Println("starting server")
+	checkError(s.Start(), "failed to start server")
 }
 
 func checkError(err error, msg string) {
 	if err != nil {
-		log.Fatal(err, msg)
+		log.Fatalf("%s: %s", msg, err)
 	}
 }

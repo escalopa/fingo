@@ -10,14 +10,14 @@ import (
 
 type Server struct {
 	uc      *application.UseCases
-	mqc     application.MessageConsumer
+	cons    application.MessageConsumer
 	errChan chan error
 }
 
-func NewServer(uc *application.UseCases, mqc application.MessageConsumer) *Server {
+func NewServer(uc *application.UseCases, cons application.MessageConsumer) *Server {
 	return &Server{
-		uc:  uc,
-		mqc: mqc,
+		uc:   uc,
+		cons: cons,
 	}
 }
 
@@ -34,7 +34,7 @@ func (s *Server) Stop() {
 }
 
 func (s *Server) handleSendEmailVerificationCode() error {
-	err := s.mqc.HandleSendVerificationsCode(func(ctx context.Context, params core.SendVerificationCodeMessage) error {
+	err := s.cons.HandleSendVerificationsCode(func(ctx context.Context, params core.SendVerificationCodeMessage) error {
 		return s.uc.SendVerificationCode.Execute(ctx, application.SendVerificationCodeCommandParam{
 			Name:  params.Name,
 			Email: params.Email,
@@ -45,7 +45,7 @@ func (s *Server) handleSendEmailVerificationCode() error {
 }
 
 func (s *Server) handleSendResetPasswordToken() error {
-	err := s.mqc.HandleSendResetPasswordToken(func(ctx context.Context, params core.SendResetPasswordTokenMessage) error {
+	err := s.cons.HandleSendResetPasswordToken(func(ctx context.Context, params core.SendResetPasswordTokenMessage) error {
 		return s.uc.SendResetPasswordToken.Execute(ctx, application.SendResetPasswordTokenCommandParam{
 			Name:  params.Name,
 			Email: params.Email,
@@ -56,7 +56,7 @@ func (s *Server) handleSendResetPasswordToken() error {
 }
 
 func (s *Server) handleSendNewSignInSessionCode() error {
-	err := s.mqc.HandleSendNewSignInSession(func(ctx context.Context, params core.SendNewSignInSessionMessage) error {
+	err := s.cons.HandleSendNewSignInSession(func(ctx context.Context, params core.SendNewSignInSessionMessage) error {
 		return s.uc.SendNewSignInSession.Execute(ctx, application.SendNewSingInSessionCommandParam{
 			Name:      params.Name,
 			Email:     params.Email,

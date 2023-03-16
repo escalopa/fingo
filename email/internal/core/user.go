@@ -17,6 +17,6 @@ type SendResetPasswordTokenMessage struct {
 type SendNewSignInSessionMessage struct {
 	Name      string `json:"name"`
 	Email     string `json:"email"`
-	ClientIP  string `json:"client_ip"`
-	UserAgent string `json:"user_agent"`
+	ClientIP  string `json:"client-ip"`
+	UserAgent string `json:"user-agent"`
 }

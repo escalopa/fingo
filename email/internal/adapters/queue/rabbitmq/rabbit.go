@@ -121,7 +121,7 @@ func (r *Consumer) handleMessage(msg amqp.Delivery, body interface{}, handle fun
 		cancel()
 	}()
 	// Read message from queue
-	err := json.Unmarshal(msg.Body, body)
+	err := json.Unmarshal(msg.Body, &body)
 	if err != nil {
 		log.Println(err, "failed to unmarshal message: ", err)
 		if err = msg.Nack(false, true); err != nil {
