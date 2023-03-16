@@ -1,9 +1,10 @@
 package validator
 
 import (
+	"testing"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestValidator(t *testing.T) {
@@ -17,7 +18,7 @@ func TestValidator(t *testing.T) {
 		{
 			name: "valid",
 			tv: TestValidatorStruct{
-				Name:     gofakeit.Name(),
+				Name:     gofakeit.FirstName(),
 				Email:    gofakeit.Email(),
 				Password: gofakeit.Password(true, true, true, true, false, 8),
 			},
@@ -33,7 +34,7 @@ func TestValidator(t *testing.T) {
 		}, {
 			name: "invalid email 1",
 			tv: TestValidatorStruct{
-				Name:     gofakeit.Name(),
+				Name:     gofakeit.FirstName(),
 				Email:    "ahmad@gmail",
 				Password: gofakeit.Password(true, true, true, true, false, 8),
 			},
@@ -41,7 +42,7 @@ func TestValidator(t *testing.T) {
 		}, {
 			name: "invalid email 2",
 			tv: TestValidatorStruct{
-				Name:     gofakeit.Name(),
+				Name:     gofakeit.FirstName(),
 				Email:    "ahmad@.com",
 				Password: gofakeit.Password(true, true, true, true, false, 8),
 			},
@@ -49,7 +50,7 @@ func TestValidator(t *testing.T) {
 		}, {
 			name: "invalid email 3",
 			tv: TestValidatorStruct{
-				Name:     gofakeit.Name(),
+				Name:     gofakeit.FirstName(),
 				Email:    "@gmail.com",
 				Password: gofakeit.Password(true, true, true, true, false, 8),
 			},
@@ -57,7 +58,7 @@ func TestValidator(t *testing.T) {
 		}, {
 			name: "invalid password",
 			tv: TestValidatorStruct{
-				Name:     gofakeit.Name(),
+				Name:     gofakeit.FirstName(),
 				Email:    gofakeit.Email(),
 				Password: gofakeit.Password(true, true, true, true, false, 7),
 			},

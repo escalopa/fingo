@@ -46,7 +46,7 @@ func NewProducer(url string, opts ...func(*Producer)) (*Producer, error) {
 		nil,
 	)
 	if err != nil {
-		return nil, errs.B(err).Msg("failed to declare a queue for producer").Err()
+		return nil, errs.B(err).Code(errs.Internal).Msg("failed to declare a queue for producer").Err()
 	}
 	return p, nil
 }

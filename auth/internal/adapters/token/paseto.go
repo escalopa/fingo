@@ -3,8 +3,6 @@ package token
 import (
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
 
@@ -40,23 +38,25 @@ func NewPaseto(secretKey string, atd, rtd time.Duration) (*PasetoTokenizer, erro
 
 // GenerateAccessToken Creates a new access token
 func (pt *PasetoTokenizer) GenerateAccessToken(params core.GenerateTokenParam) (string, error) {
-	return pt.generateToken(params.UserID, params.SessionID, params.Roles, pt.atd)
+	return pt.generateToken(params, pt.atd)
 }
 
 // GenerateRefreshToken Creates a new refresh token
 func (pt *PasetoTokenizer) GenerateRefreshToken(params core.GenerateTokenParam) (string, error) {
-	return pt.generateToken(params.UserID, params.SessionID, params.Roles, pt.rtd)
+	return pt.generateToken(params, pt.rtd)
 }
 
 // generateToken Create a new token with user, sessionID, exp(Token life duration)
-func (pt *PasetoTokenizer) generateToken(userID uuid.UUID, sessionID uuid.UUID, roles []string, exp time.Duration) (string, error) {
+func (pt *PasetoTokenizer) generateToken(params core.GenerateTokenParam, exp time.Duration) (string, error) {
 	// Create userToken struct instance
 	ut := core.TokenPayload{
-		UserID:    userID,
-		SessionID: sessionID,
+		UserID:    params.UserID,
+		SessionID: params.SessionID,
+		ClientIP:  params.ClientIP,
+		UserAgent: params.UserAgent,
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(exp),
-		Roles:     roles,
+		Roles:     params.Roles,
 	}
 	// Encrypt userToken
 	token, err := pt.p.Encrypt(pt.sk, ut, nil)
