@@ -43,60 +43,50 @@ func TestProducer_SendNewSignInSessionMessage(t *testing.T) {
 		{
 			name: "valid",
 			params: core.SendNewSignInSessionParams{
-				Name:  gofakeit.FirstName(),
-				Email: gofakeit.Email(),
-				UserDevice: core.UserDevice{
-					ClientIP:  gofakeit.IPv4Address(),
-					UserAgent: gofakeit.UserAgent(),
-				},
+				Name:      gofakeit.FirstName(),
+				Email:     gofakeit.Email(),
+				ClientIP:  gofakeit.IPv4Address(),
+				UserAgent: gofakeit.UserAgent(),
 			},
 			expectError: false,
 		},
 		{
 			name: "invalid name",
 			params: core.SendNewSignInSessionParams{
-				Name:  "",
-				Email: gofakeit.Email(),
-				UserDevice: core.UserDevice{
-					ClientIP:  gofakeit.IPv4Address(),
-					UserAgent: gofakeit.UserAgent(),
-				},
+				Name:      "",
+				Email:     gofakeit.Email(),
+				ClientIP:  gofakeit.IPv4Address(),
+				UserAgent: gofakeit.UserAgent(),
 			},
 			expectError: true,
 		},
 		{
 			name: "invalid email",
 			params: core.SendNewSignInSessionParams{
-				Name:  gofakeit.FirstName(),
-				Email: "invalid",
-				UserDevice: core.UserDevice{
-					ClientIP:  gofakeit.IPv4Address(),
-					UserAgent: gofakeit.UserAgent(),
-				},
+				Name:      gofakeit.FirstName(),
+				Email:     "invalid",
+				ClientIP:  gofakeit.IPv4Address(),
+				UserAgent: gofakeit.UserAgent(),
 			},
 			expectError: true,
 		},
 		{
 			name: "invalid client ip",
 			params: core.SendNewSignInSessionParams{
-				Name:  gofakeit.FirstName(),
-				Email: gofakeit.Email(),
-				UserDevice: core.UserDevice{
-					ClientIP:  "invalid",
-					UserAgent: gofakeit.UserAgent(),
-				},
+				Name:      gofakeit.FirstName(),
+				Email:     gofakeit.Email(),
+				ClientIP:  "invalid",
+				UserAgent: gofakeit.UserAgent(),
 			},
 			expectError: true,
 		},
 		{
 			name: "invalid user agent",
 			params: core.SendNewSignInSessionParams{
-				Name:  gofakeit.FirstName(),
-				Email: gofakeit.Email(),
-				UserDevice: core.UserDevice{
-					ClientIP:  gofakeit.IPv4Address(),
-					UserAgent: "",
-				},
+				Name:      gofakeit.FirstName(),
+				Email:     gofakeit.Email(),
+				ClientIP:  gofakeit.IPv4Address(),
+				UserAgent: "",
 			},
 			expectError: true,
 		},

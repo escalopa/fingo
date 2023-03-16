@@ -42,7 +42,8 @@ type SetSessionIsBlockedParams struct {
 }
 
 type SendNewSignInSessionParams struct {
-	Name       string
-	Email      string
-	UserDevice UserDevice
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	ClientIP  string `json:"client-ip"`
+	UserAgent string `json:"user-agent"`
 }

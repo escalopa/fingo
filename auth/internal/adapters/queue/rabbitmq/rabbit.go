@@ -39,7 +39,7 @@ func NewProducer(url string, opts ...func(*Producer)) (*Producer, error) {
 	}
 	p.ssqQueue, err = p.msgChan.QueueDeclare(
 		p.ssq, // name
-		false,
+		true,
 		false,
 		false,
 		false,
