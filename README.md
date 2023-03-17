@@ -42,14 +42,13 @@ ensure that the system is scalable and reliable.
 In fingo we have the following services, Where each one is responsible for a specific set of tasks,
 Click on each service to see its documentation and how it works.
 
-1. [**API**](./api) (Under development)
-2. [**Auth**](./auth) (Done)
-3. [**User**](./user) (Under development)
-4. [**Chat**](./chat) (Under development)
-5. [**Wallet**](./wallet) (Under development)
-6. [**Payment**](./payment) (Under development)
-7. [**Email**](./email) (Done)
-8. [**Phone**](./phone) (Under development)
+1. [**API**](./api) ==> Exposing the fingo API
+2. [**Auth**](./auth) ==> Signing up, Signing in, Signing out
+3. [**Token**](./token) ==> Validating access tokens
+4. [**User**](./user) ==> Managing users data changes
+5. [**Wallet**](./wallet) ==> Managing wallets CRUD with different currencies
+6. [**Payment**](./payment) ==> Managing payments between users
+7. [**Contact**](./contact) ==> Sending emails & SMS
 
 
 Each service is built using the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
