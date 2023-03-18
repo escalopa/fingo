@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/escalopa/fingo)](https://goreportcard.com/report/github.com/escalopa/fingo)
 [![wakatime](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21.svg)](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21)
-[![codecov](https://codecov.io/gh/escalopa/fingo/branch/master/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/escalopa/fingo)
+[![codecov](https://codecov.io/github/escalopa/fingo/branch/main/graph/badge.svg?token=1D11YHAJN8)](https://codecov.io/github/escalopa/fingo)
 [![Build Status](https://travis-ci.com/escalopa/fingo.svg?branch=master)](https://travis-ci.com/escalopa/fingo)
 
 [![GitHub issues](https://img.shields.io/github/issues/escalopa/fingo.svg)](https://github.com/escalopa/fingo/issues)
