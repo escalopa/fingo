@@ -61,6 +61,9 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 			ClientIP:  payload.ClientIP,
 			UserAgent: payload.UserAgent,
 		})
+		if err != nil {
+			return errs.B(err).Code(errs.Internal).Msg("failed to create access token").Err()
+		}
 		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
 			UserID:    payload.UserID,
 			SessionID: payload.SessionID,
@@ -68,7 +71,7 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 			UserAgent: payload.UserAgent,
 		})
 		if err != nil {
-			return errs.B(err).Code(errs.Internal).Msg("failed to create access token").Err()
+			return errs.B(err).Code(errs.Internal).Msg("failed to create refresh token").Err()
 		}
 		// Update session in database
 		err = c.sr.UpdateSessionTokens(ctx, core.UpdateSessionTokenParams{
@@ -89,6 +92,9 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		response = RenewTokenResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
+		}
+		if err != nil {
+			return err
 		}
 		return nil
 	})

@@ -2,11 +2,12 @@ package application
 
 import (
 	"context"
+	"time"
+
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/escalopa/fingo/pkg/pkgCore"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
-	"time"
 )
 
 type LogoutParams struct {
@@ -55,7 +56,6 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 				if errErrs.Code != errs.NotFound {
 					return err
 				}
-				err = nil
 			} else {
 				return err
 			}

@@ -2,10 +2,10 @@ package mypostgres
 
 import (
 	"database/sql"
-	"fmt"
-	"github.com/escalopa/fingo/utils/testcontainer"
 	"log"
 	"testing"
+
+	"github.com/escalopa/fingo/utils/testcontainer"
 )
 
 var (
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 	// Migrate database
 	err = Migrate(conn, "file://./migrations")
 	if err != nil {
-		log.Fatal(fmt.Sprintf("failed to migrate database for tests: %s", err))
+		log.Fatalf("failed to migrate database for tests: %s", err)
 	}
 	// Run tests
 	m.Run()

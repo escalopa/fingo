@@ -3,10 +3,11 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"github.com/escalopa/fingo/email/internal/core"
+	"time"
+
+	"github.com/escalopa/fingo/user/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"
-	"time"
 )
 
 type CodeRepository struct {

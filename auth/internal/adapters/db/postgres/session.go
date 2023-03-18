@@ -67,9 +67,6 @@ func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (
 		}
 		return core.Session{}, errs.B(err).Code(errs.Internal).Msgf("failed to get user sessions with id, id: %s", id).Err()
 	}
-	if session.ID == uuid.Nil {
-
-	}
 	return fromDbSessionToCore(session), nil
 }
 

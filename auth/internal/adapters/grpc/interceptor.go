@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/pkg/pkgCore"
 	"github.com/lordvidex/errs"
@@ -53,7 +54,7 @@ func (ai *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 			return nil, errs.B(err).Code(errs.Unauthenticated).Msg("failed to validate token").Err()
 		}
 		// Set user-id in context
-		out = context.WithValue(out, pkgCore.ContextKeyUserID, userID.UserId)
+		out = context.WithValue(out, pkgCore.ContextKeyUserID, userID.UserId) // nolint:all
 		return handler(out, req)
 	}
 }

@@ -40,7 +40,7 @@ func main() {
 	log.Println("successfully parsed refresh token duration: ", rtd)
 	tg, err := token.NewPaseto(c.Get("AUTH_TOKEN_SECRET"), atd, rtd)
 	pkgError.CheckError(err, "failed to create token generator")
-	log.Println(fmt.Sprintf("successfully create token generator"))
+	log.Println("successfully create token generator")
 
 	// Create postgres conn
 	pgConn, err := mypostgres.New(c.Get("AUTH_DATABASE_URL"))
