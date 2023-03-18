@@ -3,7 +3,6 @@ package mypostgres
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
@@ -28,9 +27,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserPar
 		FirstName:      arg.FirstName,
 		LastName:       arg.LastName,
 		Username:       arg.Username,
-		Gender:         arg.Gender,
 		Email:          arg.Email,
-		PhoneNumber:    arg.Phone,
 		HashedPassword: arg.HashedPassword,
 	})
 	if err != nil {
@@ -76,43 +73,14 @@ func (ur *UserRepository) DeleteUserByID(ctx context.Context, id uuid.UUID) erro
 }
 
 func fromDbUserToCore(user db.User) (core.User, error) {
-	gender, err := parseGender(user.Gender)
-	if err != nil {
-		return core.User{}, err
-	}
 	return core.User{
 		ID:              user.ID,
 		FirstName:       user.FirstName,
 		LastName:        user.LastName,
-		Phone:           user.PhoneNumber,
 		Username:        user.Username,
-		Gender:          gender,
 		Email:           user.Email,
 		HashedPassword:  user.HashedPassword,
 		IsEmailVerified: user.IsVerifiedEmail,
-		IsPhoneVerified: user.IsVerifiedPhone,
 		CreatedAt:       user.CreatedAt,
 	}, nil
-}
-
-func parseGender(gender interface{}) (string, error) {
-	// Read gender as bytes
-	byteValue, ok := gender.([]uint8)
-	if !ok {
-		return "", errs.B().Msg(fmt.Sprintf("invalid gender type: %v", gender)).Err()
-	}
-	// Convert gender to string
-	var strValue string
-	for _, v := range byteValue {
-		strValue += string(rune(v))
-	}
-	// Check gender acceptable values
-	switch strValue {
-	case "MALE":
-		return "MALE", nil
-	case "FEMALE":
-		return "FEMALE", nil
-	default:
-		return "", errs.B().Msg("unknown gender type").Err()
-	}
 }

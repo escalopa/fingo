@@ -16,22 +16,18 @@ INSERT INTO users (id,
                    first_name,
                    last_name,
                    username,
-                   gender,
                    email,
-                   phone_number,
                    hashed_password)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
 type CreateUserParams struct {
-	ID             uuid.UUID   `db:"id" json:"id"`
-	FirstName      string      `db:"first_name" json:"first_name"`
-	LastName       string      `db:"last_name" json:"last_name"`
-	Username       string      `db:"username" json:"username"`
-	Gender         interface{} `db:"gender" json:"gender"`
-	Email          string      `db:"email" json:"email"`
-	PhoneNumber    string      `db:"phone_number" json:"phone_number"`
-	HashedPassword string      `db:"hashed_password" json:"hashed_password"`
+	ID             uuid.UUID `db:"id" json:"id"`
+	FirstName      string    `db:"first_name" json:"first_name"`
+	LastName       string    `db:"last_name" json:"last_name"`
+	Username       string    `db:"username" json:"username"`
+	Email          string    `db:"email" json:"email"`
+	HashedPassword string    `db:"hashed_password" json:"hashed_password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
@@ -40,9 +36,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
 		arg.FirstName,
 		arg.LastName,
 		arg.Username,
-		arg.Gender,
 		arg.Email,
-		arg.PhoneNumber,
 		arg.HashedPassword,
 	)
 	return err
@@ -63,7 +57,7 @@ func (q *Queries) DeleteUserByID(ctx context.Context, id uuid.UUID) (int64, erro
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, created_at
+SELECT id, first_name, last_name, username, email, hashed_password, password_changed_at, is_verified_email, created_at
 FROM users
 WHERE email = $1
 LIMIT 1
@@ -77,20 +71,17 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.FirstName,
 		&i.LastName,
 		&i.Username,
-		&i.Gender,
 		&i.Email,
-		&i.PhoneNumber,
 		&i.HashedPassword,
 		&i.PasswordChangedAt,
 		&i.IsVerifiedEmail,
-		&i.IsVerifiedPhone,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, first_name, last_name, username, gender, email, phone_number, hashed_password, password_changed_at, is_verified_email, is_verified_phone, created_at
+SELECT id, first_name, last_name, username, email, hashed_password, password_changed_at, is_verified_email, created_at
 FROM users
 WHERE id = $1
 LIMIT 1
@@ -104,13 +95,10 @@ func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.FirstName,
 		&i.LastName,
 		&i.Username,
-		&i.Gender,
 		&i.Email,
-		&i.PhoneNumber,
 		&i.HashedPassword,
 		&i.PasswordChangedAt,
 		&i.IsVerifiedEmail,
-		&i.IsVerifiedPhone,
 		&i.CreatedAt,
 	)
 	return i, err

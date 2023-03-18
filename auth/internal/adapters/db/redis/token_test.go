@@ -31,7 +31,6 @@ func TestTokenRepository_Store(t *testing.T) {
 				SessionID: uuid.New(),
 				IssuedAt:  time.Now(),
 				ExpiresAt: time.Now().Add(exp),
-				Roles:     []string{"admin"},
 			},
 			wantError: false,
 		},
@@ -40,7 +39,6 @@ func TestTokenRepository_Store(t *testing.T) {
 			token: "",
 			arg: core.TokenPayload{
 				UserID: uuid.New(),
-				Roles:  []string{"admin"},
 			},
 			wantError: true,
 		},
@@ -49,11 +47,10 @@ func TestTokenRepository_Store(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tr.Store(ctx, tc.token, tc.arg)
-			if err != nil && !tc.wantError {
-				t.Errorf("unexpected error: %v", err)
-			}
-			if err == nil && tc.wantError {
-				t.Error("expected error but got nil")
+			if tc.wantError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 			}
 			if err == nil {
 				_, err = tr.r.Get(ctx, tc.token).Result()
@@ -91,7 +88,6 @@ func TestTokenRepository_Delete(t *testing.T) {
 				SessionID: uuid.New(),
 				IssuedAt:  time.Now(),
 				ExpiresAt: time.Now().Add(exp),
-				Roles:     []string{"admin"},
 			},
 			wantError: false,
 		},
@@ -106,11 +102,10 @@ func TestTokenRepository_Delete(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tr.Store(ctx, tc.token, tc.arg)
-			if err != nil && !tc.wantError {
-				t.Errorf("unexpected error: %v", err)
-			}
-			if err == nil && tc.wantError {
-				t.Error("expected error but got nil")
+			if tc.wantError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 			}
 			if err == nil {
 				_, err = tr.r.Get(ctx, tc.token).Result()

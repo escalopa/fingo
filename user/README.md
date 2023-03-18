@@ -7,14 +7,13 @@ This service is responsible for storing and managing user’s information & upda
 ### User
 
 - Get user information
-- Update user’s email, password, phone
+- Update user’s email, password
 - Restore forgotten password
 - User’s Info
+  - First name
+  - Last name
   - Username
   - Email
-  - Phone
-  - Full name
-  - Country
 
 ## Flow 🌊
 
@@ -39,20 +38,20 @@ sequenceDiagram
 sequenceDiagram
   autonumber
   API->>+User Service: Send user's ID & info
-  Note over API, User Service: Info is not email, phone or password
+  Note over API, User Service: Info is not email or password
   User Service->>+Database: Update user's info
   Database-->>-User Service: User's info updated
   User Service-->>-API: Success response
 ```
 
-* **Update User Email & Phone**
-  - User's email/phone is NOT updated right away.
-  - User must confirm his new email/phone first so that changes take place.
+* **Update User Email**
+  - User's email is NOT updated right away.
+  - User must confirm his new email first so that changes take place.
 
 ```mermaid
 sequenceDiagram
   autonumber
-  API->>+User Service: Send user's ID & new email/phone
+  API->>+User Service: Send user's ID & new email
   User Service->>+Database: Get user's account
   Database-->>-User Service: User's account
   User Service->>User Service: Generate confirmation code
@@ -62,10 +61,10 @@ sequenceDiagram
   User Service->>API: Success response
 ```
 
-* **Verify User Email & Phone**
+* **Verify User Email**
 
-- User's email/phone is updated after verifying the confirmation code.
-- User's email/phone is update in the database.
+- User's email is updated after verifying the confirmation code.
+- User's email is update in the database.
 
 ```mermaid
 sequenceDiagram

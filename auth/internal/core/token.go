@@ -13,7 +13,6 @@ type TokenPayload struct {
 	UserAgent string
 	IssuedAt  time.Time
 	ExpiresAt time.Time
-	Roles     []string
 }
 
 func (t TokenPayload) MarshalBinary() ([]byte, error) {
@@ -31,5 +30,4 @@ type GenerateTokenParam struct {
 	SessionID uuid.UUID
 	ClientIP  string
 	UserAgent string
-	Roles     []string
 }

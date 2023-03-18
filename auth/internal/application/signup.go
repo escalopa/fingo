@@ -15,8 +15,6 @@ type SignupParams struct {
 	Username  string `validate:"required,alphanum"`
 	Email     string `validate:"required,email"`
 	Password  string `validate:"required,min=8"`
-	Phone     string `validate:"required,e164"`
-	Gender    string `validate:"required,alpha,oneof=MALE FEMALE"`
 }
 
 type SignupCommand interface {
@@ -45,8 +43,6 @@ func (c *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) er
 			FirstName:      params.FirstName,
 			LastName:       params.LastName,
 			Username:       params.Username,
-			Phone:          params.Phone,
-			Gender:         params.Gender,
 			Email:          params.Email,
 			HashedPassword: hashedPassword,
 		})

@@ -1,13 +1,10 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
 
 option go_package = "github.com/escalopa/fingo/pb";
 
 package pb;
-
-
 
 message Session {
   message UserDevice {
@@ -27,8 +24,9 @@ message SignupRequest {
   string username = 3;
   string email = 4;
   string password = 5;
-  string phone = 6;
-  string gender = 7;
+}
+message SignupResponse {
+  string message = 1;
 }
 
 // Signin
@@ -45,6 +43,9 @@ message SigninResponse {
 message LogoutRequest {
   string session_id = 1;
 }
+message LogoutResponse {
+  string message = 1;
+}
 
 // RenewAccessToken
 message RenewAccessTokenRequest {
@@ -57,41 +58,18 @@ message RenewAccessTokenResponse {
 }
 
 // GetUserDevices
-message GetUserDevicesRequest {
-  string user_id = 1;
-}
+message GetUserDevicesRequest {}
 message GetUserDevicesResponse {
   repeated Session devices_sessions = 1;
-}
-
-// CreateRole
-message CreateRoleRequest {
-  string name = 1;
-}
-
-// GrantRole
-message GrantRoleRequest {
-  string user_id = 1;
-  string role_name = 2;
-}
-
-// RevokeRole
-message RevokeRoleRequest {
-  string user_id = 1;
-  string role_name = 2;
 }
 
 service AuthService {
   // Auth
   rpc Signin(SigninRequest) returns (SigninResponse);
-  rpc Signup(SignupRequest) returns (google.protobuf.Empty);
-  rpc Logout(LogoutRequest) returns (google.protobuf.Empty);
+  rpc Signup(SignupRequest) returns (SignupResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
   // Token
   rpc RenewAccessToken(RenewAccessTokenRequest) returns (RenewAccessTokenResponse);
   // Sessions
   rpc GetUserDevices(GetUserDevicesRequest) returns (GetUserDevicesResponse);
-  // Roles
-  rpc CreateRole(CreateRoleRequest) returns (google.protobuf.Empty);
-  rpc GrantRole(GrantRoleRequest) returns (google.protobuf.Empty);
-  rpc RevokeRole(RevokeRoleRequest) returns (google.protobuf.Empty);
 }

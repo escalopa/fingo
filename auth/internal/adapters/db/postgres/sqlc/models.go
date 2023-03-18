@@ -10,11 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type Role struct {
-	ID   int32  `db:"id" json:"id"`
-	Name string `db:"name" json:"name"`
-}
-
 type Session struct {
 	ID           uuid.UUID `db:"id" json:"id"`
 	UserID       uuid.UUID `db:"user_id" json:"user_id"`
@@ -27,23 +22,13 @@ type Session struct {
 }
 
 type User struct {
-	ID                uuid.UUID   `db:"id" json:"id"`
-	FirstName         string      `db:"first_name" json:"first_name"`
-	LastName          string      `db:"last_name" json:"last_name"`
-	Username          string      `db:"username" json:"username"`
-	Gender            interface{} `db:"gender" json:"gender"`
-	Email             string      `db:"email" json:"email"`
-	PhoneNumber       string      `db:"phone_number" json:"phone_number"`
-	HashedPassword    string      `db:"hashed_password" json:"hashed_password"`
-	PasswordChangedAt time.Time   `db:"password_changed_at" json:"password_changed_at"`
-	IsVerifiedEmail   bool        `db:"is_verified_email" json:"is_verified_email"`
-	IsVerifiedPhone   bool        `db:"is_verified_phone" json:"is_verified_phone"`
-	CreatedAt         time.Time   `db:"created_at" json:"created_at"`
-}
-
-type UserRole struct {
-	ID        int32     `db:"id" json:"id"`
-	UserID    uuid.UUID `db:"user_id" json:"user_id"`
-	RoleID    int32     `db:"role_id" json:"role_id"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	ID                uuid.UUID `db:"id" json:"id"`
+	FirstName         string    `db:"first_name" json:"first_name"`
+	LastName          string    `db:"last_name" json:"last_name"`
+	Username          string    `db:"username" json:"username"`
+	Email             string    `db:"email" json:"email"`
+	HashedPassword    string    `db:"hashed_password" json:"hashed_password"`
+	PasswordChangedAt time.Time `db:"password_changed_at" json:"password_changed_at"`
+	IsVerifiedEmail   bool      `db:"is_verified_email" json:"is_verified_email"`
+	CreatedAt         time.Time `db:"created_at" json:"created_at"`
 }

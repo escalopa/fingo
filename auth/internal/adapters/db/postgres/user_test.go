@@ -50,7 +50,6 @@ func TestUserRepository_CreateUser(t *testing.T) {
 					t.Errorf("unexcpected error, got %s", err)
 				}
 				require.Equal(t, tc.arg.Email, u.Email)
-				require.Equal(t, tc.arg.Phone, u.Phone)
 				require.Equal(t, tc.arg.FirstName, u.FirstName)
 				require.Equal(t, tc.arg.LastName, u.LastName)
 			}

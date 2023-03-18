@@ -8,6 +8,7 @@ package pb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -25,13 +26,13 @@ type UserServiceClient interface {
 	// User
 	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error)
 	ChangeUserNames(ctx context.Context, in *ChangeUserNamesRequest, opts ...grpc.CallOption) (*ChangeUserNamesResponse, error)
-	ChangeUserEmail(ctx context.Context, in *ChangeUserEmailRequest, opts ...grpc.CallOption) (*ChangeUserEmailResponse, error)
 	ChangeUserPassword(ctx context.Context, in *ChangeUserPasswordRequest, opts ...grpc.CallOption) (*ChangeUserPasswordResponse, error)
-	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
-	// Sessions
-	GetUserSessions(ctx context.Context, in *GetUserSessionsRequest, opts ...grpc.CallOption) (*GetUserSessionsResponse, error)
-	GetUserDevices(ctx context.Context, in *GetUserDevicesRequest, opts ...grpc.CallOption) (*GetUserDevicesResponse, error)
-	DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*DeleteSessionResponse, error)
+	// Change email, phone, password (send confirmation code)
+	ChangeUserEmail(ctx context.Context, in *ChangeUserEmailRequest, opts ...grpc.CallOption) (*ChangeUserEmailResponse, error)
+	ResetUserPassword(ctx context.Context, in *ResetUserPasswordRequest, opts ...grpc.CallOption) (*ResetUserPasswordResponse, error)
+	// Verify change email, phone, password (Update email, phone, password in DB)
+	VerifyChangeUserEmail(ctx context.Context, in *VerifyChangeUserEmailRequest, opts ...grpc.CallOption) (*VerifyChangeUserEmailResponse, error)
+	VerifyResetUserPassword(ctx context.Context, in *VerifyResetUserPasswordRequest, opts ...grpc.CallOption) (*VerifyResetUserPasswordResponse, error)
 }
 
 type userServiceClient struct {
@@ -60,15 +61,6 @@ func (c *userServiceClient) ChangeUserNames(ctx context.Context, in *ChangeUserN
 	return out, nil
 }
 
-func (c *userServiceClient) ChangeUserEmail(ctx context.Context, in *ChangeUserEmailRequest, opts ...grpc.CallOption) (*ChangeUserEmailResponse, error) {
-	out := new(ChangeUserEmailResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/ChangeUserEmail", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userServiceClient) ChangeUserPassword(ctx context.Context, in *ChangeUserPasswordRequest, opts ...grpc.CallOption) (*ChangeUserPasswordResponse, error) {
 	out := new(ChangeUserPasswordResponse)
 	err := c.cc.Invoke(ctx, "/pb.UserService/ChangeUserPassword", in, out, opts...)
@@ -78,36 +70,36 @@ func (c *userServiceClient) ChangeUserPassword(ctx context.Context, in *ChangeUs
 	return out, nil
 }
 
-func (c *userServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error) {
-	out := new(DeleteUserResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/DeleteUser", in, out, opts...)
+func (c *userServiceClient) ChangeUserEmail(ctx context.Context, in *ChangeUserEmailRequest, opts ...grpc.CallOption) (*ChangeUserEmailResponse, error) {
+	out := new(ChangeUserEmailResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/ChangeUserEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) GetUserSessions(ctx context.Context, in *GetUserSessionsRequest, opts ...grpc.CallOption) (*GetUserSessionsResponse, error) {
-	out := new(GetUserSessionsResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/GetUserSessions", in, out, opts...)
+func (c *userServiceClient) ResetUserPassword(ctx context.Context, in *ResetUserPasswordRequest, opts ...grpc.CallOption) (*ResetUserPasswordResponse, error) {
+	out := new(ResetUserPasswordResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/ResetUserPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) GetUserDevices(ctx context.Context, in *GetUserDevicesRequest, opts ...grpc.CallOption) (*GetUserDevicesResponse, error) {
-	out := new(GetUserDevicesResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/GetUserDevices", in, out, opts...)
+func (c *userServiceClient) VerifyChangeUserEmail(ctx context.Context, in *VerifyChangeUserEmailRequest, opts ...grpc.CallOption) (*VerifyChangeUserEmailResponse, error) {
+	out := new(VerifyChangeUserEmailResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/VerifyChangeUserEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) DeleteSession(ctx context.Context, in *DeleteSessionRequest, opts ...grpc.CallOption) (*DeleteSessionResponse, error) {
-	out := new(DeleteSessionResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/DeleteSession", in, out, opts...)
+func (c *userServiceClient) VerifyResetUserPassword(ctx context.Context, in *VerifyResetUserPasswordRequest, opts ...grpc.CallOption) (*VerifyResetUserPasswordResponse, error) {
+	out := new(VerifyResetUserPasswordResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/VerifyResetUserPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -121,13 +113,13 @@ type UserServiceServer interface {
 	// User
 	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error)
 	ChangeUserNames(context.Context, *ChangeUserNamesRequest) (*ChangeUserNamesResponse, error)
-	ChangeUserEmail(context.Context, *ChangeUserEmailRequest) (*ChangeUserEmailResponse, error)
 	ChangeUserPassword(context.Context, *ChangeUserPasswordRequest) (*ChangeUserPasswordResponse, error)
-	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
-	// Sessions
-	GetUserSessions(context.Context, *GetUserSessionsRequest) (*GetUserSessionsResponse, error)
-	GetUserDevices(context.Context, *GetUserDevicesRequest) (*GetUserDevicesResponse, error)
-	DeleteSession(context.Context, *DeleteSessionRequest) (*DeleteSessionResponse, error)
+	// Change email, phone, password (send confirmation code)
+	ChangeUserEmail(context.Context, *ChangeUserEmailRequest) (*ChangeUserEmailResponse, error)
+	ResetUserPassword(context.Context, *ResetUserPasswordRequest) (*ResetUserPasswordResponse, error)
+	// Verify change email, phone, password (Update email, phone, password in DB)
+	VerifyChangeUserEmail(context.Context, *VerifyChangeUserEmailRequest) (*VerifyChangeUserEmailResponse, error)
+	VerifyResetUserPassword(context.Context, *VerifyResetUserPasswordRequest) (*VerifyResetUserPasswordResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -141,23 +133,20 @@ func (UnimplementedUserServiceServer) GetUserByUsername(context.Context, *GetUse
 func (UnimplementedUserServiceServer) ChangeUserNames(context.Context, *ChangeUserNamesRequest) (*ChangeUserNamesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserNames not implemented")
 }
-func (UnimplementedUserServiceServer) ChangeUserEmail(context.Context, *ChangeUserEmailRequest) (*ChangeUserEmailResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserEmail not implemented")
-}
 func (UnimplementedUserServiceServer) ChangeUserPassword(context.Context, *ChangeUserPasswordRequest) (*ChangeUserPasswordResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserPassword not implemented")
 }
-func (UnimplementedUserServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
+func (UnimplementedUserServiceServer) ChangeUserEmail(context.Context, *ChangeUserEmailRequest) (*ChangeUserEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserEmail not implemented")
 }
-func (UnimplementedUserServiceServer) GetUserSessions(context.Context, *GetUserSessionsRequest) (*GetUserSessionsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserSessions not implemented")
+func (UnimplementedUserServiceServer) ResetUserPassword(context.Context, *ResetUserPasswordRequest) (*ResetUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResetUserPassword not implemented")
 }
-func (UnimplementedUserServiceServer) GetUserDevices(context.Context, *GetUserDevicesRequest) (*GetUserDevicesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserDevices not implemented")
+func (UnimplementedUserServiceServer) VerifyChangeUserEmail(context.Context, *VerifyChangeUserEmailRequest) (*VerifyChangeUserEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyChangeUserEmail not implemented")
 }
-func (UnimplementedUserServiceServer) DeleteSession(context.Context, *DeleteSessionRequest) (*DeleteSessionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteSession not implemented")
+func (UnimplementedUserServiceServer) VerifyResetUserPassword(context.Context, *VerifyResetUserPasswordRequest) (*VerifyResetUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyResetUserPassword not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -208,24 +197,6 @@ func _UserService_ChangeUserNames_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_ChangeUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeUserEmailRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).ChangeUserEmail(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.UserService/ChangeUserEmail",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ChangeUserEmail(ctx, req.(*ChangeUserEmailRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserService_ChangeUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ChangeUserPasswordRequest)
 	if err := dec(in); err != nil {
@@ -244,74 +215,74 @@ func _UserService_ChangeUserPassword_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteUserRequest)
+func _UserService_ChangeUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChangeUserEmailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).DeleteUser(ctx, in)
+		return srv.(UserServiceServer).ChangeUserEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/DeleteUser",
+		FullMethod: "/pb.UserService/ChangeUserEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+		return srv.(UserServiceServer).ChangeUserEmail(ctx, req.(*ChangeUserEmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetUserSessions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserSessionsRequest)
+func _UserService_ResetUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResetUserPasswordRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserSessions(ctx, in)
+		return srv.(UserServiceServer).ResetUserPassword(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/GetUserSessions",
+		FullMethod: "/pb.UserService/ResetUserPassword",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserSessions(ctx, req.(*GetUserSessionsRequest))
+		return srv.(UserServiceServer).ResetUserPassword(ctx, req.(*ResetUserPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_GetUserDevices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserDevicesRequest)
+func _UserService_VerifyChangeUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyChangeUserEmailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserDevices(ctx, in)
+		return srv.(UserServiceServer).VerifyChangeUserEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/GetUserDevices",
+		FullMethod: "/pb.UserService/VerifyChangeUserEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserDevices(ctx, req.(*GetUserDevicesRequest))
+		return srv.(UserServiceServer).VerifyChangeUserEmail(ctx, req.(*VerifyChangeUserEmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_DeleteSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteSessionRequest)
+func _UserService_VerifyResetUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyResetUserPasswordRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).DeleteSession(ctx, in)
+		return srv.(UserServiceServer).VerifyResetUserPassword(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/DeleteSession",
+		FullMethod: "/pb.UserService/VerifyResetUserPassword",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).DeleteSession(ctx, req.(*DeleteSessionRequest))
+		return srv.(UserServiceServer).VerifyResetUserPassword(ctx, req.(*VerifyResetUserPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -332,28 +303,24 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_ChangeUserNames_Handler,
 		},
 		{
-			MethodName: "ChangeUserEmail",
-			Handler:    _UserService_ChangeUserEmail_Handler,
-		},
-		{
 			MethodName: "ChangeUserPassword",
 			Handler:    _UserService_ChangeUserPassword_Handler,
 		},
 		{
-			MethodName: "DeleteUser",
-			Handler:    _UserService_DeleteUser_Handler,
+			MethodName: "ChangeUserEmail",
+			Handler:    _UserService_ChangeUserEmail_Handler,
 		},
 		{
-			MethodName: "GetUserSessions",
-			Handler:    _UserService_GetUserSessions_Handler,
+			MethodName: "ResetUserPassword",
+			Handler:    _UserService_ResetUserPassword_Handler,
 		},
 		{
-			MethodName: "GetUserDevices",
-			Handler:    _UserService_GetUserDevices_Handler,
+			MethodName: "VerifyChangeUserEmail",
+			Handler:    _UserService_VerifyChangeUserEmail_Handler,
 		},
 		{
-			MethodName: "DeleteSession",
-			Handler:    _UserService_DeleteSession_Handler,
+			MethodName: "VerifyResetUserPassword",
+			Handler:    _UserService_VerifyResetUserPassword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

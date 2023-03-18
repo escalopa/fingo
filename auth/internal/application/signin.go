@@ -36,7 +36,6 @@ type SigninCommandImpl struct {
 	ur UserRepository
 	sr SessionRepository
 	tr TokenRepository
-	rr RoleRepository
 	tg TokenGenerator
 	mp MessageProducer
 }
@@ -65,7 +64,6 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 			ClientIP:  params.ClientIP,
 			UserAgent: params.UserAgent,
 			SessionID: sessionID,
-			Roles:     []string{},
 		})
 		if err != nil {
 			return err
@@ -76,19 +74,9 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 			ClientIP:  params.ClientIP,
 			UserAgent: params.UserAgent,
 			SessionID: sessionID,
-			Roles:     []string{},
 		})
 		if err != nil {
 			return err
-		}
-		// Get user roles
-		roles, err := c.rr.GetUserRoles(ctx, user.ID)
-		if err != nil {
-			return err
-		}
-		roleNames := make([]string, len(roles))
-		for i := range roles {
-			roleNames[i] = roles[i].Name
 		}
 		// Get token payload after encryption
 		payload, err := c.tg.DecryptToken(accessToken)
@@ -114,7 +102,6 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 		if err != nil {
 			return err
 		}
-		log.Println(params)
 		// Publish message to queue to notify user about new session creation
 		err = c.mp.SendNewSignInSessionMessage(ctx, core.SendNewSignInSessionParams{
 			Name:      user.FirstName,
@@ -143,8 +130,7 @@ func NewSigninCommand(
 	ur UserRepository,
 	sr SessionRepository,
 	tr TokenRepository,
-	rr RoleRepository,
 	mp MessageProducer,
 ) SigninCommand {
-	return &SigninCommandImpl{v: v, h: h, tg: tg, ur: ur, sr: sr, tr: tr, rr: rr, mp: mp}
+	return &SigninCommandImpl{v: v, h: h, tg: tg, ur: ur, sr: sr, tr: tr, mp: mp}
 }

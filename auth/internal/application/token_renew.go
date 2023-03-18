@@ -29,7 +29,6 @@ type RenewTokenCommandImpl struct {
 	v  Validator
 	tg TokenGenerator
 	sr SessionRepository
-	rr RoleRepository
 	tr TokenRepository
 }
 
@@ -59,15 +58,20 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		accessToken, err := c.tg.GenerateAccessToken(core.GenerateTokenParam{
 			UserID:    payload.UserID,
 			SessionID: payload.SessionID,
-			Roles:     payload.Roles,
-		})
-		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
-			UserID:    payload.UserID,
-			SessionID: payload.SessionID,
-			Roles:     payload.Roles,
+			ClientIP:  payload.ClientIP,
+			UserAgent: payload.UserAgent,
 		})
 		if err != nil {
 			return errs.B(err).Code(errs.Internal).Msg("failed to create access token").Err()
+		}
+		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
+			UserID:    payload.UserID,
+			SessionID: payload.SessionID,
+			ClientIP:  payload.ClientIP,
+			UserAgent: payload.UserAgent,
+		})
+		if err != nil {
+			return errs.B(err).Code(errs.Internal).Msg("failed to create refresh token").Err()
 		}
 		// Update session in database
 		err = c.sr.UpdateSessionTokens(ctx, core.UpdateSessionTokenParams{
@@ -89,12 +93,15 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 	return &response, err
 }
 
 // NewRenewTokenCommand creates a new RenewTokenCommand with the passed dependencies
-func NewRenewTokenCommand(v Validator, tg TokenGenerator, sr SessionRepository, rr RoleRepository, tr TokenRepository) RenewTokenCommand {
-	return &RenewTokenCommandImpl{v: v, tg: tg, sr: sr, rr: rr, tr: tr}
+func NewRenewTokenCommand(v Validator, tg TokenGenerator, sr SessionRepository, tr TokenRepository) RenewTokenCommand {
+	return &RenewTokenCommandImpl{v: v, tg: tg, sr: sr, tr: tr}
 }
