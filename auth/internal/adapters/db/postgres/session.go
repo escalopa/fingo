@@ -3,61 +3,78 @@ package mypostgres
 import (
 	"context"
 	"database/sql"
+	"time"
+
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
-	"time"
 )
 
 type SessionRepository struct {
 	q   db.Querier
-	std time.Duration // session time duration
+	std time.Duration // sessions time duration
 }
 
-func NewSessionRepository(conn *sql.DB, std time.Duration) *SessionRepository {
-	return &SessionRepository{q: db.New(conn), std: std}
+// NewSessionRepository creates a new sessions repository with the given connection
+func NewSessionRepository(conn *sql.DB, opts ...func(*SessionRepository)) (*SessionRepository, error) {
+	if conn == nil {
+		return nil, errs.B().Msg("passed connection is nil").Err()
+	}
+	sr := &SessionRepository{q: db.New(conn)}
+	for _, opt := range opts {
+		opt(sr)
+	}
+	if sr.std == 0 {
+		return nil, errs.B().Msg("sessions time duration is not set").Err()
+	}
+	return sr, nil
 }
 
-func (sr *SessionRepository) CreateSession(ctx context.Context, arg core.CreateSessionParams) error {
+// WithSessionDuration is a functional option to set the sessions time duration
+func WithSessionDuration(d time.Duration) func(*SessionRepository) {
+	return func(sr *SessionRepository) {
+		sr.std = d
+	}
+}
+
+// CreateSession creates a new sessions for a user
+func (sr *SessionRepository) CreateSession(ctx context.Context, params core.CreateSessionParams) error {
 	err := sr.q.CreateSession(ctx, db.CreateSessionParams{
-		ID:           arg.ID,
-		UserID:       arg.UserID,
-		RefreshToken: arg.RefreshToken,
-		UserAgent:    sql.NullString{String: arg.UserAgent},
-		ClientIp:     sql.NullString{String: arg.ClientIp},
+		ID:           params.ID,
+		UserID:       params.UserID,
+		AccessToken:  params.AccessToken,
+		RefreshToken: params.RefreshToken,
+		UserAgent:    params.UserDevice.UserAgent,
+		ClientIp:     params.UserDevice.ClientIP,
 		ExpiresAt:    time.Now().Add(sr.std),
 	})
 	if err != nil {
-		if isUniqueViolationError(err) { // Unique violation
-			return errs.B(err).Msg("violation to unique keys in sessions table").Err()
+		if isUniqueViolationError(err) {
+			return errs.B(err).Code(errs.AlreadyExists).Msg("violation to unique keys in sessions table").Err()
 		}
-		return errs.B(err).Msg("failed to create new session").Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to create new sessions").Err()
 	}
 	return nil
 }
 
+// GetSessionByID returns a sessions by its id
 func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (core.Session, error) {
-	// Get a specific session by its id
 	session, err := sr.q.GetSessionByID(ctx, id)
-	// Handle error
 	if err != nil {
-		if isNotFoundError(err) {
-			errs.B(err).Msgf("no user sessions found with the given id, id: %s", id.String())
+		if err == sql.ErrNoRows {
+			return core.Session{}, errs.B(err).Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", id).Err()
 		}
-		return core.Session{}, errs.B(err).Msgf("failed to get user session with id, id: %s", id).Err()
+		return core.Session{}, errs.B(err).Code(errs.Internal).Msgf("failed to get user sessions with id, id: %s", id).Err()
 	}
 	return fromDbSessionToCore(session), nil
 }
 
+// GetUserSessions returns all sessions owned by a single user
 func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]core.Session, error) {
-	// Get all user sessions owned by a single user
 	sessions, err := sr.q.GetUserSessions(ctx, userID)
-	// Handle error
 	if err != nil {
-		if isNotFoundError(err) {
-			errs.B(err).Msgf("no user sessions found with the given userID, id: %s", userID.String())
-		}
+		return nil, errs.B(err).Code(errs.Internal).Msg("failed to get user sessions").Err()
 	}
 	// map from []db.Session to []core.Session
 	coreSessions := make([]core.Session, len(sessions))
@@ -67,48 +84,31 @@ func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UU
 	return coreSessions, nil
 }
 
-func (sr *SessionRepository) GetUserDevices(ctx context.Context, userID uuid.UUID) ([]core.UserDevice, error) {
-	// Get all user devices (Client-IP, User-Agent)
-	devices, err := sr.q.GetUserDevices(ctx, userID)
-	// Handel error
+// UpdateSessionTokens returns a sessions by its refresh token value
+func (sr *SessionRepository) UpdateSessionTokens(ctx context.Context, params core.UpdateSessionTokenParams) error {
+	rows, err := sr.q.UpdateSessionTokens(ctx, db.UpdateSessionTokensParams{
+		ID:           params.ID,
+		AccessToken:  params.AccessToken,
+		RefreshToken: params.RefreshToken,
+		ExpiresAt:    time.Now().Add(sr.std),
+	})
 	if err != nil {
-		if isNotFoundError(err) {
-			errs.B(err).Msgf("no user devices found with the given userID, userID: %s", userID.String())
-		}
-		return nil, errs.B(err).Msg("failed to get user devices").Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to set sessions refresh token").Err()
 	}
-	// map from []db.UserDevice to []core.UserDevice
-	coreDevices := make([]core.UserDevice, len(devices))
-	for i, v := range devices {
-		coreDevices[i] = fromDbDeviceToCore(v)
-	}
-	return nil, nil
-}
-
-func (sr *SessionRepository) DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error {
-	_, err := sr.q.GetSessionByID(ctx, sessionID)
-	if err != nil {
-		return errs.B(err).Msg("failed to get session with the given sID, sID: %s", sessionID.String()).Err()
-	}
-	err = sr.q.DeleteSessionByID(ctx, sessionID)
-	if err != nil {
-		return errs.B(err).Msg("failed to delete session with the given sID, sID: %s", sessionID.String()).Err()
+	if rows == 0 {
+		return errs.B().Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", params.ID.String()).Err()
 	}
 	return nil
 }
 
-func (sr *SessionRepository) SetSessionIsBlocked(ctx context.Context, arg core.SetSessionIsBlockedParams) error {
-	// Update session value by setting IsBlocked value
-	err := sr.q.SetSessionIsBlocked(ctx, db.SetSessionIsBlockedParams{
-		ID:        arg.ID,
-		IsBlocked: arg.IsBlocked,
-	})
-	// Handle error
+// DeleteSessionByID deletes a sessions by its id
+func (sr *SessionRepository) DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error {
+	rows, err := sr.q.DeleteSessionByID(ctx, sessionID)
 	if err != nil {
-		if isNotFoundError(err) {
-			errs.B(err).Msgf("no session found with the given id, id: %s", arg.ID.String())
-		}
-		return errs.B(err).Msg("failed to set session is_blocked value").Err()
+		return errs.B(err).Code(errs.Internal).Msg("failed to delete sessions with the given sID, sID: %s", sessionID.String()).Err()
+	}
+	if rows == 0 {
+		return errs.B(err).Code(errs.NotFound).Msgf("no sessions found with the given id, id: %s", sessionID.String()).Err()
 	}
 	return nil
 }
@@ -117,18 +117,10 @@ func fromDbSessionToCore(session db.Session) core.Session {
 	return core.Session{
 		ID:           session.ID,
 		UserID:       session.UserID,
+		AccessToken:  session.AccessToken,
 		RefreshToken: session.RefreshToken,
-		UserAgent:    session.UserAgent.String,
-		ClientIp:     session.ClientIp.String,
-		IsBlocked:    session.IsBlocked,
+		UserDevice:   core.UserDevice{ClientIP: session.ClientIp, UserAgent: session.UserAgent},
 		ExpiresAt:    session.ExpiresAt,
-		CreatedAt:    session.CreatedAt,
-	}
-}
-
-func fromDbDeviceToCore(row db.GetUserDevicesRow) core.UserDevice {
-	return core.UserDevice{
-		UserAgent: row.UserAgent.String,
-		ClientIP:  row.ClientIp.String,
+		UpdatedAt:    session.UpdatedAt,
 	}
 }

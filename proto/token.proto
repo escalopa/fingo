@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/escalopa/fingo/pb";
+
+package pb;
+
+// ValidateTokenRequest
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+message ValidateTokenResponse {
+  string user_id = 1;
+}
+
+service TokenService {
+  rpc ValidateToken (ValidateTokenRequest) returns (ValidateTokenResponse) {};
+}

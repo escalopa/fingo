@@ -1,93 +1,90 @@
-# gochat 💬
+# fingo 🏦💸
 
-Live chatting distributed system service built with go, websockets, gRPC
+[![Go Report Card](https://goreportcard.com/badge/github.com/escalopa/fingo)](https://goreportcard.com/report/github.com/escalopa/fingo)
+[![wakatime](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21.svg)](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21)
+[![codecov](https://codecov.io/gh/escalopa/fingo/branch/master/graph/badge.svg?token=QZQZQZQZQZ)](https://codecov.io/gh/escalopa/fingo)
+[![Build Status](https://travis-ci.com/escalopa/fingo.svg?branch=master)](https://travis-ci.com/escalopa/fingo)
 
-## Functionalities & Features 🚀
+[![GitHub issues](https://img.shields.io/github/issues/escalopa/fingo.svg)](https://github.com/escalopa/fingo/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/escalopa/fingo.svg)](https://github.com/escalopa/fingo/pulls)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- Chat with other users as in default messenger apps
-- Chats are updated in real time as someone send a message
-- Robust authentication with email verification
-- Api endpoints to frontend consumption
+fingo is a scalable, robust payment system that allows users to send money to each other. fingo users can issue wallet with more than one currency.
 
-## Micro-Services Architecture 🏗
+Currently, fingo supports 5 currencies: USD, EUR, GBP, EGP, RUB.
 
-Communication between all the microservices is done using `grpc`
+Besides that we also support chat feature between its users to communicate with each other.
 
-The following services are responsible for
+## Table of Contents 📑
 
-- **Chat**: Storing message between users
-- **Email**: Sending and email for verifications
-- **Auth** CRUD account and token handling
-- **API** Providing endpoints to interact with the application
+  - [Tech Stack](#tech-stack) 🛠
+  - [Project Architecture 🏘](#project-architecture-)
+  - [How to run 🏃‍♂️](#how-to-run-)
 
-## How to run 🏃‍♂️
+## Tech Stack 🛠
 
-## Diagrams & BP 📝
+fingo is built using scalable, reliable, robust and secure technologies which are listed below. 🔥
 
-* **Create An Account**
-  - User creates a new account with email & password
-  - Account confirmation is required to use the application, So a code is sent to your email upon creation.
+- Language: [Go](https://golang.org/)
+- Communication: [gRPC](https://grpc.io/), [gin](https://github.com/gin-gonic/gin), [RabbitMQ](https://www.rabbitmq.com/)
+- Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [mongoDB](https://www.mongodb.com/)
+- Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [Docker Swarm](https://docs.docker.com/engine/swarm/)
+- Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Datadog](https://www.datadoghq.com/), [Prometheus](https://prometheus.io/)
+- Security: [Paseto](https://paseto.io/)
+- External API: [Courier](https://www.courier.com/)
 
-```mermaid
-sequenceDiagram
-    Client->>Server: Send new account Info
-    activate Server
-    Server->>Email Service: Send Confirmation Code
-    activate Email Service
-    Note over Server,Email Service: Validate email
-    deactivate Email Service
-    Server->>Database: Create Account
-    Server-->>Client: Account Created
-    deactivate Server
-    Client->>Server: Send Confirmation Code
-    activate Server
-    activate Email Service
-    Server->>Email Service: Verify confirmation code
-    Email Service-->>Server: Confirmation Code Verified
-    deactivate Email Service
-    Server->>Database: Update Account Status
-    Server-->>Client: Account activated
-    deactivate Server
+
+## Architecture 🏗
+
+Communication between all the microservices is done using `grpc` or `message brokers` to
+ensure that the system is scalable and reliable.
+
+In fingo we have the following services, Where each one is responsible for a specific set of tasks,
+Click on each service to see its documentation and how it works.
+
+1. [**API**](./api) ==> Exposing the fingo API
+2. [**Auth**](./auth) ==> Signing up, Signing in, Signing out
+3. [**Token**](./token) ==> Validating access tokens
+4. [**User**](./user) ==> Managing users data changes
+5. [**Wallet**](./wallet) ==> Managing wallets CRUD with different currencies
+6. [**Payment**](./payment) ==> Managing payments between users
+7. [**Contact**](./contact) ==> Sending emails & SMS
+
+
+Each service is built using the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
+This allows us to have a clean separation between the business logic and the infrastructure. This way we can easily swap the infrastructure without affecting the business logic.
+
+### Components
+![Diagram](./fingo.png)
+
+## How to run ⚙️
+
+### Prerequisites
+
+1. [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+2. [Docker](https://docs.docker.com/get-docker/)
+3. [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Running the project
+
+First clone the project
+
+```bash
+git clone github.com/escalopa/fingo && cd fingo
 ```
 
-* **Send Messages**
-  - User must be authenticated to send messages
-  - Messages are should be updated in real time using websockets
+Copy
 
-```mermaid
-sequenceDiagram
-    actor Alice
-    actor Bob
-    Alice->>Server: Send Message to bob
-    activate Server
-    activate Database
-    Server->>Database: Store Message
-    deactivate Database
-    Server->>Message Queue: Produce a new message in the queue
-    Server-->>Alice: Message sent successfully response
-    deactivate Server
-    activate Message Queue
-    Bob->>Message Queue: Consume Message sent to him from the queue
-    Message Queue->>Bob: Send delivered message to the user
-    deactivate Message Queue
+- `.env.example` file to `.env` and fill in the empty fields.
+- `.db.env.example` file to `.db.env` and fill in the empty fields.
+
+```bash
+cp .env.example .env
+cp .db.env.example .db.env
 ```
 
-## Components Diagram 📊
+Run the project
 
-```mermaid
-graph TD
-    A[Client] -->| REST | B[API]
-    B -->| gRPC | D[Auth Service]
-    B -->| gRPC | C[Chat]
-    D -->| gRPC | H[Email Service]
-    D -->| SQL/NoSQL | E[Database]
-    C -->| SQL/NoSQL | F[Database]
-    C --> G[Message Queue]
-    G --> | Web Sockets | A
+```bash
+docker-compose up
 ```
-
-## Upcoming Features 📌
-
-### Milestones 1 🏁
-1. [x] Don't send email if email is already verified or a message already less than 2 minutes ago
-2. [x] Start `Auth-Service` **ONLY** after `Email-Service` using docker

@@ -11,21 +11,16 @@ import (
 )
 
 type Querier interface {
-	ChangeNames(ctx context.Context, arg ChangeNamesParams) error
-	ChangePassword(ctx context.Context, arg ChangePasswordParams) error
-	ChangeUserEmail(ctx context.Context, arg ChangeUserEmailParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) error
-	DeleteSessionByID(ctx context.Context, id uuid.UUID) error
-	DeleteUserByID(ctx context.Context, id uuid.UUID) error
+	DeleteSessionByID(ctx context.Context, id uuid.UUID) (int64, error)
+	DeleteUserByID(ctx context.Context, id uuid.UUID) (int64, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
-	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserDevices(ctx context.Context, userID uuid.UUID) ([]GetUserDevicesRow, error)
 	GetUserSessions(ctx context.Context, userID uuid.UUID) ([]Session, error)
-	SetSessionIsBlocked(ctx context.Context, arg SetSessionIsBlockedParams) error
-	SetUserIsVerified(ctx context.Context, arg SetUserIsVerifiedParams) error
+	UpdateSessionTokens(ctx context.Context, arg UpdateSessionTokensParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

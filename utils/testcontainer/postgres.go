@@ -3,28 +3,30 @@ package testcontainer
 import (
 	"context"
 	"database/sql"
+	"log"
+	"time"
+
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	"fmt"
-	"github.com/brianvoe/gofakeit/v6"
+
 	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"strconv"
-	"time"
 )
 
-func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
-	dbUser := "posgtres"
+func NewPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
+	dbUser := "postgres"
 	dbPass := "postgres"
 	dbDB := "fingo"
-
-	port := strconv.Itoa(gofakeit.IntRange(20_000, 30_000))
 	// Run container
 	ctx := context.Background()
-	pgContainer, err := startPostgresContainer(ctx,
+	pgContainer, err := spinPostgresContainer(ctx,
+		withPort("5432/tcp"),
 		withInitialDatabase(dbUser, dbPass, dbDB),
-		withPort(port),
+		withWaitStrategy(wait.ForLog("database system is ready to accept connections").
+			WithOccurrence(2).
+			WithStartupTimeout(5*time.Second)),
 	)
 	if err != nil {
 		return nil, nil, errs.B().Msg("failed to start postgres container").Err()
@@ -33,16 +35,24 @@ func StartPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error)
 	// Get pgContainer host
 	host, err := pgContainer.Host(ctx)
 	if err != nil {
-		return nil, nil, errs.B().Msg("failed to get postgres container host").Err()
-
+		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to get postgres container host").Err()
 	}
+	// Get container port
+	port, err := pgContainer.MappedPort(ctx, "5432")
+	if err != nil {
+		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to get postgres container port").Err()
+	}
+	// Create connection URL & connect to pg instance
 	dbUrl := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable",
-		dbUser, dbPass, host, port, dbDB,
-	)
+		dbUser, dbPass, host, port.Port(), dbDB)
 	dbSQL, err = sql.Open("postgres", dbUrl)
 	if err != nil {
-		return nil, nil, errs.B(err).Msg("failed to open postgres connection").Err()
+		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to open postgres connection").Err()
 	}
+	if err = dbSQL.Ping(); err != nil {
+		log.Fatalf("failed to ping pg test container: %s", err)
+	}
+	// Create terminate function to terminate container when done using it
 	terminate = func() error {
 		return pgContainer.Terminate(ctx)
 	}
@@ -56,6 +66,14 @@ type postgresContainer struct {
 
 type postgresContainerOption func(req *testcontainers.ContainerRequest)
 
+func withInitialDatabase(user string, password string, dbName string) func(req *testcontainers.ContainerRequest) {
+	return func(req *testcontainers.ContainerRequest) {
+		req.Env["POSTGRES_USER"] = user
+		req.Env["POSTGRES_PASSWORD"] = password
+		req.Env["POSTGRES_DB"] = dbName
+	}
+}
+
 func withWaitStrategy(strategies ...wait.Strategy) func(req *testcontainers.ContainerRequest) {
 	return func(req *testcontainers.ContainerRequest) {
 		req.WaitingFor = wait.ForAll(strategies...).WithDeadline(1 * time.Minute)
@@ -68,27 +86,19 @@ func withPort(port string) func(req *testcontainers.ContainerRequest) {
 	}
 }
 
-func withInitialDatabase(user string, password string, dbName string) func(req *testcontainers.ContainerRequest) {
-	return func(req *testcontainers.ContainerRequest) {
-		req.Env["POSTGRES_USER"] = user
-		req.Env["POSTGRES_PASSWORD"] = password
-		req.Env["POSTGRES_DB"] = dbName
-	}
-}
-
-// startPostgresContainer creates an instance of the postgres container type
-func startPostgresContainer(ctx context.Context, opts ...postgresContainerOption) (*postgresContainer, error) {
+// spinPostgresContainer creates an instance of the postgres container type
+func spinPostgresContainer(ctx context.Context, opts ...postgresContainerOption) (*postgresContainer, error) {
+	// Create request object with default values
 	req := testcontainers.ContainerRequest{
-		Image:        "postgres:12.8",
+		Image:        "postgres:12",
 		Env:          map[string]string{},
 		ExposedPorts: []string{},
-		Cmd:          []string{"postgres", "-c", "fsync=off"},
 	}
-
+	// Apply options
 	for _, opt := range opts {
 		opt(&req)
 	}
-
+	// Create container
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
@@ -96,6 +106,6 @@ func startPostgresContainer(ctx context.Context, opts ...postgresContainerOption
 	if err != nil {
 		return nil, err
 	}
-
+	// Return container
 	return &postgresContainer{Container: container}, nil
 }

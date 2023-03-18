@@ -5,29 +5,30 @@
 package db
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
 )
 
 type Session struct {
-	ID           uuid.UUID      `db:"id" json:"id"`
-	UserID       uuid.UUID      `db:"user_id" json:"user_id"`
-	RefreshToken string         `db:"refresh_token" json:"refresh_token"`
-	IsBlocked    bool           `db:"is_blocked" json:"is_blocked"`
-	UserAgent    sql.NullString `db:"user_agent" json:"user_agent"`
-	ClientIp     sql.NullString `db:"client_ip" json:"client_ip"`
-	ExpiresAt    time.Time      `db:"expires_at" json:"expires_at"`
-	CreatedAt    time.Time      `db:"created_at" json:"created_at"`
+	ID           uuid.UUID `db:"id" json:"id"`
+	UserID       uuid.UUID `db:"user_id" json:"user_id"`
+	AccessToken  string    `db:"access_token" json:"access_token"`
+	RefreshToken string    `db:"refresh_token" json:"refresh_token"`
+	UserAgent    string    `db:"user_agent" json:"user_agent"`
+	ClientIp     string    `db:"client_ip" json:"client_ip"`
+	ExpiresAt    time.Time `db:"expires_at" json:"expires_at"`
+	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type User struct {
-	ID             uuid.UUID `db:"id" json:"id"`
-	Name           string    `db:"name" json:"name"`
-	Username       string    `db:"username" json:"username"`
-	Email          string    `db:"email" json:"email"`
-	HashedPassword string    `db:"hashed_password" json:"hashed_password"`
-	IsVerified     bool      `db:"is_verified" json:"is_verified"`
-	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	ID                uuid.UUID `db:"id" json:"id"`
+	FirstName         string    `db:"first_name" json:"first_name"`
+	LastName          string    `db:"last_name" json:"last_name"`
+	Username          string    `db:"username" json:"username"`
+	Email             string    `db:"email" json:"email"`
+	HashedPassword    string    `db:"hashed_password" json:"hashed_password"`
+	PasswordChangedAt time.Time `db:"password_changed_at" json:"password_changed_at"`
+	IsVerifiedEmail   bool      `db:"is_verified_email" json:"is_verified_email"`
+	CreatedAt         time.Time `db:"created_at" json:"created_at"`
 }

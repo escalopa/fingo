@@ -23,15 +23,13 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AuthServiceClient interface {
 	// Auth
-	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
 	Signin(ctx context.Context, in *SigninRequest, opts ...grpc.CallOption) (*SigninResponse, error)
+	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
-	// Contact with email service
-	SendUserCode(ctx context.Context, in *SendUserCodeRequest, opts ...grpc.CallOption) (*SendUserCodeResponse, error)
-	VerifyUserCode(ctx context.Context, in *VerifyUserCodeRequest, opts ...grpc.CallOption) (*VerifyUserCodeResponse, error)
-	// Token verifying & renewing
-	VerifyAccessToken(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*VerifyTokenResponse, error)
+	// Token
 	RenewAccessToken(ctx context.Context, in *RenewAccessTokenRequest, opts ...grpc.CallOption) (*RenewAccessTokenResponse, error)
+	// Sessions
+	GetUserDevices(ctx context.Context, in *GetUserDevicesRequest, opts ...grpc.CallOption) (*GetUserDevicesResponse, error)
 }
 
 type authServiceClient struct {
@@ -42,18 +40,18 @@ func NewAuthServiceClient(cc grpc.ClientConnInterface) AuthServiceClient {
 	return &authServiceClient{cc}
 }
 
-func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error) {
-	out := new(SignupResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/Signup", in, out, opts...)
+func (c *authServiceClient) Signin(ctx context.Context, in *SigninRequest, opts ...grpc.CallOption) (*SigninResponse, error) {
+	out := new(SigninResponse)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/Signin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *authServiceClient) Signin(ctx context.Context, in *SigninRequest, opts ...grpc.CallOption) (*SigninResponse, error) {
-	out := new(SigninResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/Signin", in, out, opts...)
+func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error) {
+	out := new(SignupResponse)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/Signup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,36 +67,18 @@ func (c *authServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) SendUserCode(ctx context.Context, in *SendUserCodeRequest, opts ...grpc.CallOption) (*SendUserCodeResponse, error) {
-	out := new(SendUserCodeResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/SendUserCode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) VerifyUserCode(ctx context.Context, in *VerifyUserCodeRequest, opts ...grpc.CallOption) (*VerifyUserCodeResponse, error) {
-	out := new(VerifyUserCodeResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/VerifyUserCode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) VerifyAccessToken(ctx context.Context, in *VerifyTokenRequest, opts ...grpc.CallOption) (*VerifyTokenResponse, error) {
-	out := new(VerifyTokenResponse)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/VerifyAccessToken", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *authServiceClient) RenewAccessToken(ctx context.Context, in *RenewAccessTokenRequest, opts ...grpc.CallOption) (*RenewAccessTokenResponse, error) {
 	out := new(RenewAccessTokenResponse)
 	err := c.cc.Invoke(ctx, "/pb.AuthService/RenewAccessToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) GetUserDevices(ctx context.Context, in *GetUserDevicesRequest, opts ...grpc.CallOption) (*GetUserDevicesResponse, error) {
+	out := new(GetUserDevicesResponse)
+	err := c.cc.Invoke(ctx, "/pb.AuthService/GetUserDevices", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -110,15 +90,13 @@ func (c *authServiceClient) RenewAccessToken(ctx context.Context, in *RenewAcces
 // for forward compatibility
 type AuthServiceServer interface {
 	// Auth
-	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
 	Signin(context.Context, *SigninRequest) (*SigninResponse, error)
+	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
-	// Contact with email service
-	SendUserCode(context.Context, *SendUserCodeRequest) (*SendUserCodeResponse, error)
-	VerifyUserCode(context.Context, *VerifyUserCodeRequest) (*VerifyUserCodeResponse, error)
-	// Token verifying & renewing
-	VerifyAccessToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error)
+	// Token
 	RenewAccessToken(context.Context, *RenewAccessTokenRequest) (*RenewAccessTokenResponse, error)
+	// Sessions
+	GetUserDevices(context.Context, *GetUserDevicesRequest) (*GetUserDevicesResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -126,26 +104,20 @@ type AuthServiceServer interface {
 type UnimplementedAuthServiceServer struct {
 }
 
-func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*SignupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Signup not implemented")
-}
 func (UnimplementedAuthServiceServer) Signin(context.Context, *SigninRequest) (*SigninResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Signin not implemented")
+}
+func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*SignupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Signup not implemented")
 }
 func (UnimplementedAuthServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
 }
-func (UnimplementedAuthServiceServer) SendUserCode(context.Context, *SendUserCodeRequest) (*SendUserCodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendUserCode not implemented")
-}
-func (UnimplementedAuthServiceServer) VerifyUserCode(context.Context, *VerifyUserCodeRequest) (*VerifyUserCodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyUserCode not implemented")
-}
-func (UnimplementedAuthServiceServer) VerifyAccessToken(context.Context, *VerifyTokenRequest) (*VerifyTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyAccessToken not implemented")
-}
 func (UnimplementedAuthServiceServer) RenewAccessToken(context.Context, *RenewAccessTokenRequest) (*RenewAccessTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RenewAccessToken not implemented")
+}
+func (UnimplementedAuthServiceServer) GetUserDevices(context.Context, *GetUserDevicesRequest) (*GetUserDevicesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserDevices not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -158,24 +130,6 @@ type UnsafeAuthServiceServer interface {
 
 func RegisterAuthServiceServer(s grpc.ServiceRegistrar, srv AuthServiceServer) {
 	s.RegisterService(&AuthService_ServiceDesc, srv)
-}
-
-func _AuthService_Signup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SignupRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).Signup(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/Signup",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).Signup(ctx, req.(*SignupRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _AuthService_Signin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -192,6 +146,24 @@ func _AuthService_Signin_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServiceServer).Signin(ctx, req.(*SigninRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_Signup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).Signup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AuthService/Signup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).Signup(ctx, req.(*SignupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -214,60 +186,6 @@ func _AuthService_Logout_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_SendUserCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendUserCodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).SendUserCode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/SendUserCode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).SendUserCode(ctx, req.(*SendUserCodeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_VerifyUserCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyUserCodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).VerifyUserCode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/VerifyUserCode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).VerifyUserCode(ctx, req.(*VerifyUserCodeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_VerifyAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyTokenRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).VerifyAccessToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/VerifyAccessToken",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).VerifyAccessToken(ctx, req.(*VerifyTokenRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _AuthService_RenewAccessToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RenewAccessTokenRequest)
 	if err := dec(in); err != nil {
@@ -286,6 +204,24 @@ func _AuthService_RenewAccessToken_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_GetUserDevices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserDevicesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).GetUserDevices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AuthService/GetUserDevices",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).GetUserDevices(ctx, req.(*GetUserDevicesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -294,32 +230,24 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AuthServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Signup",
-			Handler:    _AuthService_Signup_Handler,
-		},
-		{
 			MethodName: "Signin",
 			Handler:    _AuthService_Signin_Handler,
+		},
+		{
+			MethodName: "Signup",
+			Handler:    _AuthService_Signup_Handler,
 		},
 		{
 			MethodName: "Logout",
 			Handler:    _AuthService_Logout_Handler,
 		},
 		{
-			MethodName: "SendUserCode",
-			Handler:    _AuthService_SendUserCode_Handler,
-		},
-		{
-			MethodName: "VerifyUserCode",
-			Handler:    _AuthService_VerifyUserCode_Handler,
-		},
-		{
-			MethodName: "VerifyAccessToken",
-			Handler:    _AuthService_VerifyAccessToken_Handler,
-		},
-		{
 			MethodName: "RenewAccessToken",
 			Handler:    _AuthService_RenewAccessToken_Handler,
+		},
+		{
+			MethodName: "GetUserDevices",
+			Handler:    _AuthService_GetUserDevices_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

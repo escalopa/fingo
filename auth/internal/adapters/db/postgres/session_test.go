@@ -2,98 +2,313 @@ package mypostgres
 
 import (
 	"context"
-	"github.com/escalopa/fingo/auth/internal/core"
-	"github.com/google/uuid"
 	"testing"
 	"time"
+
+	"github.com/brianvoe/gofakeit/v6"
+	"github.com/stretchr/testify/require"
+
+	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/google/uuid"
 )
 
 func TestSessionRepository_CreateSession(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	sr := NewSessionRepository(dbSQL, 24*time.Hour)
-
-	testCases := []struct {
-		name string
-		arg  core.CreateSessionParams
-	}{
-		{},
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
 	}
-
+	// Create user
+	user := randomUser()
+	// Create test cases
+	testCases := []struct {
+		name      string
+		arg       core.CreateSessionParams
+		wantError bool
+	}{
+		{
+			name:      "success",
+			arg:       randomSession(user.ID),
+			wantError: false,
+		},
+		{
+			name:      "invalid params",
+			arg:       core.CreateSessionParams{},
+			wantError: true,
+		},
+	}
+	// Create user to bind sessions to
+	err = ur.CreateUser(ctx, user)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.CreateSession(ctx, tc.arg)
+			err = sr.CreateSession(ctx, tc.arg)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error, got %s", err)
+			}
+			if err == nil && tc.wantError {
+				t.Errorf("expected error, got nil")
+			}
 		})
 	}
 }
 
 func TestSessionRepository_GetSessionByID(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	sr := NewSessionRepository(dbSQL, 24*time.Hour)
-
-	testCases := []struct {
-		name string
-		arg  uuid.UUID // sessionID
-	}{
-		{},
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
 	}
-
+	// Create user
+	user := randomUser()
+	session := randomSession(user.ID)
+	// Create test cases
+	testCases := []struct {
+		name      string
+		arg       uuid.UUID
+		wantError bool
+	}{
+		{
+			name:      "success",
+			arg:       session.ID,
+			wantError: false,
+		},
+		{
+			name:      "invalid sessions id",
+			arg:       uuid.New(),
+			wantError: true,
+		},
+	}
+	// Create user to bind sessions to
+	err = ur.CreateUser(ctx, user)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Create sessions
+	err = sr.CreateSession(ctx, session)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.GetSessionByID(ctx, tc.arg)
+			s, err := sr.GetSessionByID(ctx, tc.arg)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error, got %s", err)
+			}
+			if err == nil && tc.wantError {
+				t.Errorf("expected error, got nil")
+			}
+			if err == nil {
+				require.Equal(t, tc.arg, s.ID)
+			}
 		})
 	}
 }
 
 func TestSessionRepository_GetUserSessions(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	sr := NewSessionRepository(dbSQL, 24*time.Hour)
-
-	testCases := []struct {
-		name string
-		arg  uuid.UUID // userID
-	}{
-		{},
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
 	}
-
+	// Create user
+	user := randomUser()
+	userSessions := []core.CreateSessionParams{
+		randomSession(user.ID),
+		randomSession(user.ID),
+		randomSession(user.ID),
+	}
+	// Create user to bind userSessions to
+	err = ur.CreateUser(ctx, user)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Create test cases
+	testCases := []struct {
+		name      string
+		arg       uuid.UUID // userID
+		sessions  []core.CreateSessionParams
+		wantError bool
+	}{
+		{
+			name:      "success",
+			arg:       user.ID,
+			sessions:  userSessions,
+			wantError: false,
+		},
+		{
+			name:      "invalid user id",
+			arg:       uuid.New(),
+			sessions:  []core.CreateSessionParams{},
+			wantError: false,
+		},
+	}
+	// Create userSessions
+	for _, s := range userSessions {
+		err = sr.CreateSession(ctx, s)
+		if err != nil {
+			t.Errorf("unexpected error, got %s", err)
+		}
+	}
+	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.GetUserSessions(ctx, tc.arg)
+			s, err := sr.GetUserSessions(ctx, tc.arg)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error, got %s", err)
+			}
+			if err == nil && tc.wantError {
+				t.Errorf("expected error, got nil")
+			}
+			require.Len(t, s, len(tc.sessions))
 		})
 	}
 }
 
-func TestSessionRepository_GetUserDevices(t *testing.T) {
+func TestSessionRepository_UpdateSessionRefreshToken(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	sr := NewSessionRepository(dbSQL, 24*time.Hour)
-
-	testCases := []struct {
-		name string
-		arg  uuid.UUID // userID
-	}{
-		{},
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
 	}
-
+	// Create user
+	user := randomUser()
+	session := randomSession(user.ID)
+	// Create test cases
+	testCases := []struct {
+		name      string
+		arg       core.UpdateSessionTokenParams
+		wantError bool
+	}{
+		{
+			name: "success",
+			arg: core.UpdateSessionTokenParams{
+				ID:           session.ID,
+				RefreshToken: "new-refresh-token",
+			},
+			wantError: false,
+		},
+		{
+			name: "invalid sessions id",
+			arg: core.UpdateSessionTokenParams{
+				ID:           uuid.New(),
+				RefreshToken: "new-refresh-token",
+			},
+			wantError: true,
+		},
+	}
+	// Create user to bind sessions to
+	err = ur.CreateUser(ctx, user)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Create sessions
+	err = sr.CreateSession(ctx, session)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.GetUserDevices(ctx, tc.arg)
+			err = sr.UpdateSessionTokens(ctx, tc.arg)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error, got %s", err)
+
+			}
+			if err == nil && tc.wantError {
+				t.Errorf("expected error, got nil")
+			}
+			if err == nil {
+				s, err := sr.GetSessionByID(ctx, tc.arg.ID)
+				require.NoError(t, err)
+				require.Equal(t, tc.arg.RefreshToken, s.RefreshToken)
+			}
 		})
 	}
 }
 
-func TestSessionRepository_SetSessionIsBlocked(t *testing.T) {
+func TestSessionRepository_DeleteSessionByID(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
-	sr := NewSessionRepository(dbSQL, 24*time.Hour)
-
-	testCases := []struct {
-		name string
-		arg  core.SetSessionIsBlockedParams
-	}{
-		{},
+	ur, err := NewUserRepository(testPGConn)
+	require.NoError(t, err)
+	sr, err := NewSessionRepository(testPGConn, WithSessionDuration(1*time.Hour))
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
 	}
-
+	// Create user
+	user := randomUser()
+	session := randomSession(user.ID)
+	testCases := []struct {
+		name      string
+		arg       uuid.UUID // sessionID
+		wantError bool
+	}{
+		{
+			name:      "success",
+			arg:       session.ID,
+			wantError: false,
+		},
+		{
+			name:      "invalid sessions id",
+			arg:       uuid.New(),
+			wantError: true,
+		},
+	}
+	// Create user to bind sessions to
+	err = ur.CreateUser(ctx, user)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Create sessions
+	err = sr.CreateSession(ctx, session)
+	if err != nil {
+		t.Errorf("unexpected error, got %s", err)
+	}
+	// Run tests
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			sr.SetSessionIsBlocked(ctx, tc.arg)
+			err = sr.DeleteSessionByID(ctx, tc.arg)
+			if err != nil && !tc.wantError {
+				t.Errorf("unexpected error, got %s", err)
+			}
+			if err == nil && tc.wantError {
+				t.Errorf("expected error, got nil")
+			}
+			if err == nil {
+				s, err := sr.GetSessionByID(ctx, tc.arg)
+				require.Error(t, err)
+				require.Empty(t, s)
+			}
 		})
+	}
+}
+
+func randomSession(userID uuid.UUID) core.CreateSessionParams {
+	return core.CreateSessionParams{
+		ID:           uuid.New(),
+		UserID:       userID,
+		AccessToken:  gofakeit.UUID(),
+		RefreshToken: gofakeit.UUID(),
+		UserDevice: core.UserDevice{
+			ClientIP:  gofakeit.IPv4Address(),
+			UserAgent: gofakeit.UserAgent(),
+		},
 	}
 }

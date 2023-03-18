@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.0
+    hooks:
+      - id: go-fmt
+      - id: go-imports
+        stages: [push, merge-commit, commit]
+      - id: no-go-testing
+        stages: [push, merge-commit, commit]
+      - id: golangci-lint
+        stages: [push, merge-commit, commit]
+      - id: go-unit-tests
+        stages: [push, merge-commit, commit]
+      - id: validate-toml
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v8.0.0
+    hooks:
+      - id: commitlint
+        additional_dependencies: ["@commitlint/config-conventional"]

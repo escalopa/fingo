@@ -2,56 +2,106 @@ package application
 
 import (
 	"context"
+	"time"
 
-	"github.com/escalopa/fingo/auth/internal/adapters/token"
+	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
 )
 
+// RenewTokenParams is the input for the RenewTokenCommand
 type RenewTokenParams struct {
 	RefreshToken string `validate:"required"`
 }
 
-type RenewTokenCommand interface {
-	Execute(ctx context.Context, params RenewTokenParams) (string, error)
+// RenewTokenResponse is the output for the RenewTokenCommand
+type RenewTokenResponse struct {
+	AccessToken  string
+	RefreshToken string
 }
 
+// RenewTokenCommand is the interface for the RenewTokenCommand
+type RenewTokenCommand interface {
+	Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error)
+}
+
+// RenewTokenCommandImpl is the implementation of the RenewTokenCommand
 type RenewTokenCommandImpl struct {
 	v  Validator
 	tg TokenGenerator
 	sr SessionRepository
+	tr TokenRepository
 }
 
-func (v *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (string, error) {
-	// Decrypt token to get sessionID
-	user, sessionID, err := v.tg.VerifyToken(params.RefreshToken)
-	if err != nil {
-		return "", err
-	}
-	// Get user session from database to check if session is blocked
-	session, err := v.sr.GetSessionByID(ctx, sessionID)
-	if err != nil {
-		return "", err
-	}
-	// Validate user session
-	err = validateSession(session)
-	if err != nil {
-		return "", err
-	}
-	// Validate refresh token
-	if session.RefreshToken != params.RefreshToken {
-		return "", errs.B().Msg("refresh token doesn't match the one stored in session database").Err()
-	}
-	// Generate a new access token
-	accessToken, err := v.tg.GenerateAccessToken(token.GenerateTokenParam{
-		User:      user,
-		SessionID: sessionID,
+// Execute executes the RenewTokenCommand with the given params
+func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error) {
+	var response RenewTokenResponse
+	err := executeWithContextTimeout(ctx, 5*time.Second, func() error {
+		// Decrypt token to get sessionID
+		payload, err := c.tg.DecryptToken(params.RefreshToken)
+		if err != nil {
+			return err
+		}
+		// Check if session has expired
+		if time.Now().After(payload.ExpiresAt) {
+			return errs.B().Msg("user session has expired").Err()
+		}
+		// Get user's session from database to check if session is blocked
+		session, err := c.sr.GetSessionByID(ctx, payload.SessionID)
+		if err != nil {
+			return err
+		}
+		// Validate refresh token
+		if session.RefreshToken != params.RefreshToken {
+			return errs.B().Msg("refresh token doesn't match the one stored in session database").Err()
+		}
+		// Generate a new access & refresh tokens
+		accessToken, err := c.tg.GenerateAccessToken(core.GenerateTokenParam{
+			UserID:    payload.UserID,
+			SessionID: payload.SessionID,
+			ClientIP:  payload.ClientIP,
+			UserAgent: payload.UserAgent,
+		})
+		if err != nil {
+			return errs.B(err).Code(errs.Internal).Msg("failed to create access token").Err()
+		}
+		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
+			UserID:    payload.UserID,
+			SessionID: payload.SessionID,
+			ClientIP:  payload.ClientIP,
+			UserAgent: payload.UserAgent,
+		})
+		if err != nil {
+			return errs.B(err).Code(errs.Internal).Msg("failed to create refresh token").Err()
+		}
+		// Update session in database
+		err = c.sr.UpdateSessionTokens(ctx, core.UpdateSessionTokenParams{
+			ID:           payload.SessionID,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		})
+		if err != nil {
+			return err
+		}
+		// Get token payload after encryption to save the new values
+		payload, err = c.tg.DecryptToken(accessToken)
+		if err != nil {
+			return err
+		}
+		// Store access token in cache repository
+		err = c.tr.Store(ctx, accessToken, payload)
+		response = RenewTokenResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		}
+		if err != nil {
+			return err
+		}
+		return nil
 	})
-	if err != nil {
-		return "", errs.B(err).Msg("failed to create access token").Err()
-	}
-	return accessToken, nil
+	return &response, err
 }
 
-func NewRenewTokenCommand(v Validator, tg TokenGenerator, sr SessionRepository) RenewTokenCommand {
-	return &RenewTokenCommandImpl{v: v, tg: tg, sr: sr}
+// NewRenewTokenCommand creates a new RenewTokenCommand with the passed dependencies
+func NewRenewTokenCommand(v Validator, tg TokenGenerator, sr SessionRepository, tr TokenRepository) RenewTokenCommand {
+	return &RenewTokenCommandImpl{v: v, tg: tg, sr: sr, tr: tr}
 }
