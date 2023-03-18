@@ -4,12 +4,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/escalopa/fingo/email/internal/adapters/server"
-	"github.com/escalopa/fingo/email/internal/adapters/validator"
+	"github.com/escalopa/fingo/contact/internal/adapters/server"
+	"github.com/escalopa/fingo/contact/internal/adapters/validator"
 
-	"github.com/escalopa/fingo/email/internal/adapters/email/mycourier"
-	"github.com/escalopa/fingo/email/internal/adapters/queue/rabbitmq"
-	"github.com/escalopa/fingo/email/internal/application"
+	"github.com/escalopa/fingo/contact/internal/adapters/email/mycourier"
+	"github.com/escalopa/fingo/contact/internal/adapters/queue/rabbitmq"
+	"github.com/escalopa/fingo/contact/internal/application"
 	"github.com/escalopa/goconfig"
 )
 

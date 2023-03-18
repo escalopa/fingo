@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/escalopa/fingo/token/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"

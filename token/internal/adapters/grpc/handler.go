@@ -16,9 +16,9 @@ func NewTokenHandler(uc *application.UseCases) *TokenHandler {
 }
 
 func (h *TokenHandler) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
-	err := h.uc.TokenValidate.Execute(ctx, application.TokenValidateParams{AccessToken: req.AccessToken})
+	id, err := h.uc.TokenValidate.Execute(ctx, application.TokenValidateParams{AccessToken: req.AccessToken})
 	if err != nil {
-		return &pb.ValidateTokenResponse{Valid: false}, err
+		return nil, err
 	}
-	return &pb.ValidateTokenResponse{Valid: true}, nil
+	return &pb.ValidateTokenResponse{UserId: id.String()}, nil
 }

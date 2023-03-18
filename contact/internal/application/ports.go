@@ -2,7 +2,7 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/email/internal/core"
+	"github.com/escalopa/fingo/contact/internal/core"
 )
 
 type EmailSender interface {

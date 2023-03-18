@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
-	"github.com/escalopa/fingo/email/internal/core"
+	"github.com/escalopa/fingo/contact/internal/core"
 	"log"
 	"time"
 

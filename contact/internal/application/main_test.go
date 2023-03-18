@@ -2,11 +2,11 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/email/internal/core"
+	"github.com/escalopa/fingo/contact/internal/core"
 	"testing"
 	"time"
 
-	"github.com/escalopa/fingo/email/internal/adapters/validator"
+	"github.com/escalopa/fingo/contact/internal/adapters/validator"
 )
 
 var testUseCases *UseCases

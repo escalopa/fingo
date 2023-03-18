@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net"
+
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/pkg/pkgError"
 	"github.com/escalopa/fingo/token/internal/adapters/cache"
@@ -13,8 +16,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
 )
 
 func main() {
@@ -50,11 +51,11 @@ func start(c *goconfig.Config, uc *application.UseCases) error {
 	var opts []grpc.ServerOption
 
 	// Enable TLS if required
-	enableTLS := c.Get("TOKEN_GRPC_TLS") == "true"
+	enableTLS := c.Get("TOKEN_GRPC_TLS_ENABLE") == "true"
 	log.Println("starting gRPC server with TLS:", enableTLS)
 	if enableTLS {
 		// Load TLS certificates
-		creds, err := credentials.NewServerTLSFromFile(c.Get("TOKEN_GRPC_TLS_CERT"), c.Get("TOKEN_GRPC_TLS_KEY"))
+		creds, err := credentials.NewServerTLSFromFile(c.Get("TOKEN_GRPC_TLS_CERT_FILE"), c.Get("TOKEN_GRPC_TLS_KEY_FILE"))
 		if err != nil {
 			return errs.B(err).Msg("failed to load TLS certificates").Err()
 		}

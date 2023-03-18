@@ -2,7 +2,7 @@ package mycourier
 
 import (
 	"context"
-	"github.com/escalopa/fingo/email/internal/core"
+	"github.com/escalopa/fingo/contact/internal/core"
 	"strconv"
 	"time"
 

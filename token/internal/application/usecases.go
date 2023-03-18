@@ -18,6 +18,9 @@ func NewUseCases(opts ...func(*UseCases)) *UseCases {
 	for _, opt := range opts {
 		opt(u)
 	}
+	u.Command = Command{
+		TokenValidate: NewTokenValidateCommand(u.v, u.tr),
+	}
 	return u
 }
 

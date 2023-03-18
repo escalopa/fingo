@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 
-	"github.com/escalopa/fingo/email/internal/core"
+	"github.com/escalopa/fingo/contact/internal/core"
 
-	"github.com/escalopa/fingo/email/internal/application"
+	"github.com/escalopa/fingo/contact/internal/application"
 )
 
 type Server struct {
