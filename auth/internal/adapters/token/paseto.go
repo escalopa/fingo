@@ -56,7 +56,6 @@ func (pt *PasetoTokenizer) generateToken(params core.GenerateTokenParam, exp tim
 		UserAgent: params.UserAgent,
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(exp),
-		Roles:     params.Roles,
 	}
 	// Encrypt userToken
 	token, err := pt.p.Encrypt(pt.sk, ut, nil)

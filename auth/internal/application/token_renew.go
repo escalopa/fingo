@@ -29,7 +29,6 @@ type RenewTokenCommandImpl struct {
 	v  Validator
 	tg TokenGenerator
 	sr SessionRepository
-	rr RoleRepository
 	tr TokenRepository
 }
 
@@ -59,12 +58,14 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		accessToken, err := c.tg.GenerateAccessToken(core.GenerateTokenParam{
 			UserID:    payload.UserID,
 			SessionID: payload.SessionID,
-			Roles:     payload.Roles,
+			ClientIP:  payload.ClientIP,
+			UserAgent: payload.UserAgent,
 		})
 		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
 			UserID:    payload.UserID,
 			SessionID: payload.SessionID,
-			Roles:     payload.Roles,
+			ClientIP:  payload.ClientIP,
+			UserAgent: payload.UserAgent,
 		})
 		if err != nil {
 			return errs.B(err).Code(errs.Internal).Msg("failed to create access token").Err()
@@ -95,6 +96,6 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 }
 
 // NewRenewTokenCommand creates a new RenewTokenCommand with the passed dependencies
-func NewRenewTokenCommand(v Validator, tg TokenGenerator, sr SessionRepository, rr RoleRepository, tr TokenRepository) RenewTokenCommand {
-	return &RenewTokenCommandImpl{v: v, tg: tg, sr: sr, rr: rr, tr: tr}
+func NewRenewTokenCommand(v Validator, tg TokenGenerator, sr SessionRepository, tr TokenRepository) RenewTokenCommand {
+	return &RenewTokenCommandImpl{v: v, tg: tg, sr: sr, tr: tr}
 }

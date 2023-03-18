@@ -3,9 +3,9 @@ package application
 import (
 	"context"
 	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/pkgCore"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
-	"reflect"
 	"time"
 )
 
@@ -19,7 +19,6 @@ type LogoutCommand interface {
 
 type LogoutCommandImpl struct {
 	v  Validator
-	rr RoleRepository
 	sr SessionRepository
 	tr TokenRepository
 }
@@ -30,7 +29,7 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 			return err
 		}
 		// Read user id from context
-		callerID, err := parseUserIDFromContext(ctx)
+		callerID, err := pkgCore.GetUserIDFromContext(ctx)
 		if err != nil {
 			return err
 		}
@@ -45,17 +44,8 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 		if err != nil {
 			return err
 		}
-		// Check if the user is admin
-		isAdmin, err := c.rr.HasPrivillage(ctx, core.HasPrivillageParams{
-			UserID:   callerID,
-			RoleName: "admin",
-		})
-		if err != nil {
-			return err
-		}
-		// Check if the user has enough rights to invalidate the session
-		if !isAdmin && !reflect.DeepEqual(session.UserID, callerID) {
-			return errs.B().Code(errs.Forbidden).Msg("not enough privileges to invalidate session").Err()
+		if callerID != session.UserID {
+			return errs.B().Code(errs.Forbidden).Msg("not session owner").Err()
 		}
 		// Invalidate the access token from cache storage
 		err = c.tr.Delete(ctx, session.AccessToken)
@@ -65,6 +55,7 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 				if errErrs.Code != errs.NotFound {
 					return err
 				}
+				err = nil
 			} else {
 				return err
 			}
@@ -78,6 +69,6 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 	})
 }
 
-func NewLogoutCommand(v Validator, sr SessionRepository, rr RoleRepository, tr TokenRepository) LogoutCommand {
-	return &LogoutCommandImpl{v: v, sr: sr, rr: rr, tr: tr}
+func NewLogoutCommand(v Validator, sr SessionRepository, tr TokenRepository) LogoutCommand {
+	return &LogoutCommandImpl{v: v, sr: sr, tr: tr}
 }

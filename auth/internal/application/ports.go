@@ -23,16 +23,6 @@ type SessionRepository interface {
 	DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error
 }
 
-// RoleRepository is an interface for interacting with roles in the database
-type RoleRepository interface {
-	CreateRole(ctx context.Context, name string) error
-	GetRoleByName(ctx context.Context, name string) (core.Role, error)
-	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]core.Role, error)
-	GrantRole(ctx context.Context, params core.GrantRoleToUserParams) error
-	RevokeRole(ctx context.Context, params core.RevokeRoleFromUserParams) error
-	HasPrivillage(ctx context.Context, params core.HasPrivillageParams) (bool, error)
-}
-
 // TokenRepository is an interface for interacting with tokens in cache
 type TokenRepository interface {
 	Store(ctx context.Context, token string, params core.TokenPayload) error

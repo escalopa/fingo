@@ -15,7 +15,6 @@ func TestTokenPayload_MarshalBinary(t *testing.T) {
 		SessionID: sessionID,
 		IssuedAt:  time.Now(),
 		ExpiresAt: time.Now().Add(1 * time.Hour),
-		Roles:     []string{"admin", "user"},
 	}
 	// Marshal
 	b, err := payload.MarshalBinary()

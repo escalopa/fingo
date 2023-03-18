@@ -40,7 +40,7 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 		if err != migrate.ErrNoChange {
 			return err
 		}
-		log.Printf("Databse is up to date, No migration made")
+		log.Println("Database is up to date, No migration made")
 	}
 	return nil
 }

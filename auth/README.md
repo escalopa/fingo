@@ -7,7 +7,6 @@ This service is responsible for creating users & user’s session CRUD(authentic
 - Sign-up
 - Sign-in
 - Logout
-- Validate auth token
 - Renew auth token by refresh token
 
 ## Flow 🌊
@@ -108,3 +107,7 @@ sequenceDiagram
     Database-->>-Auth Service: Session updated
     Auth Service-->>-API: New auth token & refresh token
 ```
+
+## Database 🗄
+
+![Database](./docs/database.png)
