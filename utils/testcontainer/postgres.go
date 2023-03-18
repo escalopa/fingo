@@ -3,7 +3,6 @@ package testcontainer
 import (
 	"context"
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -50,7 +49,7 @@ func NewPostgresContainer() (dbSQL *sql.DB, terminate func() error, err error) {
 		return nil, nil, errs.B(err).Code(errs.Unknown).Msg("failed to open postgres connection").Err()
 	}
 	if err = dbSQL.Ping(); err != nil {
-		log.Fatalf("failed to ping pg test container: %s", err)
+		return nil, nil, errs.B(err).Msg("failed to ping pg test container:").Err()
 	}
 	// Create terminate function to terminate container when done using it
 	terminate = func() error {

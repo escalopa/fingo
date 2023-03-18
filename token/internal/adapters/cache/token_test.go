@@ -2,12 +2,13 @@ package cache
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/escalopa/fingo/token/internal/core"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestNewTokenRepositoryV1(t *testing.T) {
@@ -41,6 +42,7 @@ func TestNewTokenRepositoryV1(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			// set token
+			tc := tc
 			testRedisClient.Set(ctx, tc.token, tc.payload, 2*time.Second)
 			require.NoError(t, err)
 			// get token
