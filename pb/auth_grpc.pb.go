@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -25,16 +24,12 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthServiceClient interface {
 	// Auth
 	Signin(ctx context.Context, in *SigninRequest, opts ...grpc.CallOption) (*SigninResponse, error)
-	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error)
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 	// Token
 	RenewAccessToken(ctx context.Context, in *RenewAccessTokenRequest, opts ...grpc.CallOption) (*RenewAccessTokenResponse, error)
 	// Sessions
 	GetUserDevices(ctx context.Context, in *GetUserDevicesRequest, opts ...grpc.CallOption) (*GetUserDevicesResponse, error)
-	// Roles
-	CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	RevokeRole(ctx context.Context, in *RevokeRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type authServiceClient struct {
@@ -54,8 +49,8 @@ func (c *authServiceClient) Signin(ctx context.Context, in *SigninRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts ...grpc.CallOption) (*SignupResponse, error) {
+	out := new(SignupResponse)
 	err := c.cc.Invoke(ctx, "/pb.AuthService/Signup", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -63,8 +58,8 @@ func (c *authServiceClient) Signup(ctx context.Context, in *SignupRequest, opts 
 	return out, nil
 }
 
-func (c *authServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *authServiceClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
+	out := new(LogoutResponse)
 	err := c.cc.Invoke(ctx, "/pb.AuthService/Logout", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -90,49 +85,18 @@ func (c *authServiceClient) GetUserDevices(ctx context.Context, in *GetUserDevic
 	return out, nil
 }
 
-func (c *authServiceClient) CreateRole(ctx context.Context, in *CreateRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/CreateRole", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) GrantRole(ctx context.Context, in *GrantRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/GrantRole", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authServiceClient) RevokeRole(ctx context.Context, in *RevokeRoleRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/pb.AuthService/RevokeRole", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
 type AuthServiceServer interface {
 	// Auth
 	Signin(context.Context, *SigninRequest) (*SigninResponse, error)
-	Signup(context.Context, *SignupRequest) (*emptypb.Empty, error)
-	Logout(context.Context, *LogoutRequest) (*emptypb.Empty, error)
+	Signup(context.Context, *SignupRequest) (*SignupResponse, error)
+	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	// Token
 	RenewAccessToken(context.Context, *RenewAccessTokenRequest) (*RenewAccessTokenResponse, error)
 	// Sessions
 	GetUserDevices(context.Context, *GetUserDevicesRequest) (*GetUserDevicesResponse, error)
-	// Roles
-	CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error)
-	GrantRole(context.Context, *GrantRoleRequest) (*emptypb.Empty, error)
-	RevokeRole(context.Context, *RevokeRoleRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -143,10 +107,10 @@ type UnimplementedAuthServiceServer struct {
 func (UnimplementedAuthServiceServer) Signin(context.Context, *SigninRequest) (*SigninResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Signin not implemented")
 }
-func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*emptypb.Empty, error) {
+func (UnimplementedAuthServiceServer) Signup(context.Context, *SignupRequest) (*SignupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Signup not implemented")
 }
-func (UnimplementedAuthServiceServer) Logout(context.Context, *LogoutRequest) (*emptypb.Empty, error) {
+func (UnimplementedAuthServiceServer) Logout(context.Context, *LogoutRequest) (*LogoutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
 }
 func (UnimplementedAuthServiceServer) RenewAccessToken(context.Context, *RenewAccessTokenRequest) (*RenewAccessTokenResponse, error) {
@@ -154,15 +118,6 @@ func (UnimplementedAuthServiceServer) RenewAccessToken(context.Context, *RenewAc
 }
 func (UnimplementedAuthServiceServer) GetUserDevices(context.Context, *GetUserDevicesRequest) (*GetUserDevicesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserDevices not implemented")
-}
-func (UnimplementedAuthServiceServer) CreateRole(context.Context, *CreateRoleRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateRole not implemented")
-}
-func (UnimplementedAuthServiceServer) GrantRole(context.Context, *GrantRoleRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GrantRole not implemented")
-}
-func (UnimplementedAuthServiceServer) RevokeRole(context.Context, *RevokeRoleRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RevokeRole not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -267,60 +222,6 @@ func _AuthService_GetUserDevices_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AuthService_CreateRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateRoleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).CreateRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/CreateRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).CreateRole(ctx, req.(*CreateRoleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_GrantRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GrantRoleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).GrantRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/GrantRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).GrantRole(ctx, req.(*GrantRoleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AuthService_RevokeRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RevokeRoleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthServiceServer).RevokeRole(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.AuthService/RevokeRole",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthServiceServer).RevokeRole(ctx, req.(*RevokeRoleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -347,18 +248,6 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserDevices",
 			Handler:    _AuthService_GetUserDevices_Handler,
-		},
-		{
-			MethodName: "CreateRole",
-			Handler:    _AuthService_CreateRole_Handler,
-		},
-		{
-			MethodName: "GrantRole",
-			Handler:    _AuthService_GrantRole_Handler,
-		},
-		{
-			MethodName: "RevokeRole",
-			Handler:    _AuthService_RevokeRole_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -7,8 +7,20 @@ services:
     volumes:
       - ./auth:/go/src/github.com/escalopa/fingo/auth
       - ./pb:/go/src/github.com/escalopa/fingo/pb
+      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
+      - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
+
+      - AUTH_GRPC_TLS_ENABLE=${AUTH_GRPC_TLS_ENABLE}
+      - AUTH_GRPC_TLS_KEY_FILE=${AUTH_GRPC_TLS_KEY_FILE}
+      - AUTH_GRPC_TLS_CERT_FILE=${AUTH_GRPC_TLS_CERT_FILE}
+      - AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
+
+      - TOKEN_GRPC_URL=${TOKEN_GRPC_URL}
+      - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
+      - TOKEN_GRPC_TLS_CERT_FILE=${TOKEN_GRPC_TLS_CERT_FILE}
+
       - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
       - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
@@ -33,30 +45,59 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      token:
+        condition: service_started
 
-
-  email:
-    container_name: "email"
+  token:
+    container_name: "token"
     restart: unless-stopped
     volumes:
-      - ./email:/go/src/github.com/escalopa/fingo/email
+      - ./token:/go/src/github.com/escalopa/fingo/token
+      - ./pb:/go/src/github.com/escalopa/fingo/pb
+      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
+      - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
-      - EMAIL_CODES_EXPIRATION=${EMAIL_CODES_EXPIRATION}
-      - EMAIL_SEND_CODE_MIN_INTERVAL=${EMAIL_SEND_CODE_MIN_INTERVAL}
-      - EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL=${EMAIL_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL}
+    - TOKEN_GRPC_PORT=${TOKEN_GRPC_PORT}
 
-      - EMAIL_RABBITMQ_URL=${EMAIL_RABBITMQ_URL}
-      - EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME=${EMAIL_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME}
-      - EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME=${EMAIL_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME}
-      - EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=${EMAIL_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
+    - TOKEN_REDIS_URL=${TOKEN_REDIS_URL}
 
-      - EMAIL_COURIER_TOKEN=${EMAIL_COURIER_TOKEN}
-      - EMAIL_COURIER_VERIFICATION_TEMPLATE_ID=${EMAIL_COURIER_VERIFICATION_TEMPLATE_ID}
-      - EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID=${EMAIL_COURIER_RESET_PASSWORD_TEMPLATE_ID}
-      - EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID=${EMAIL_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID}
+    - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
+    - TOKEN_GRPC_TLS_CERT_FILE=${TOKEN_GRPC_TLS_CERT_FILE}
+    - TOKEN_GRPC_TLS_KEY_FILE=${TOKEN_GRPC_TLS_KEY_FILE}
+    build:
+        context: .
+        dockerfile: ./_deployments/Dockerfile.token
+        target: development
+    ports:
+        - "${TOKEN_GRPC_PORT}:${TOKEN_GRPC_PORT}"
+    depends_on:
+        cache:
+            condition: service_healthy
+
+
+  contact:
+    container_name: "contact"
+    restart: unless-stopped
+    volumes:
+      - ./contact:/go/src/github.com/escalopa/fingo/contact
+      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
+    environment:
+      - CONTACT_CODES_EXPIRATION=${CONTACT_CODES_EXPIRATION}
+      - CONTACT_SEND_CODE_MIN_INTERVAL=${CONTACT_SEND_CODE_MIN_INTERVAL}
+      - CONTACT_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL=${CONTACT_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL}
+
+      - CONTACT_RABBITMQ_URL=${CONTACT_RABBITMQ_URL}
+      - CONTACT_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME=${CONTACT_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME}
+      - CONTACT_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME=${CONTACT_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME}
+      - CONTACT_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=${CONTACT_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
+
+      - CONTACT_COURIER_TOKEN=${CONTACT_COURIER_TOKEN}
+      - CONTACT_COURIER_VERIFICATION_TEMPLATE_ID=${CONTACT_COURIER_VERIFICATION_TEMPLATE_ID}
+      - CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID=${CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID}
+      - CONTACT_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID=${CONTACT_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID}
     build:
       context: .
-      dockerfile: _deployments/Dockerfile.email
+      dockerfile: _deployments/Dockerfile.contact
       target: development
     depends_on:
       rabbitmq:
@@ -100,9 +141,9 @@ services:
       - ./.rabbitmq.env
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
+      interval: 3s
       timeout: 5s
-      retries: 3
+      retries: 5
 
 volumes:
   cache:

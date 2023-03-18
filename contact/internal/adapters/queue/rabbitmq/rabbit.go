@@ -3,9 +3,10 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
-	"github.com/escalopa/fingo/contact/internal/core"
 	"log"
 	"time"
+
+	"github.com/escalopa/fingo/contact/internal/core"
 
 	"github.com/lordvidex/errs"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -123,7 +124,7 @@ func (r *Consumer) handleMessage(msg amqp.Delivery, body interface{}, handle fun
 	// Read message from queue
 	err := json.Unmarshal(msg.Body, &body)
 	if err != nil {
-		log.Println(err, "failed to unmarshal message: ", err)
+		log.Println("failed to unmarshal message: ", err)
 		if err = msg.Nack(false, true); err != nil {
 			log.Println("failed to nack message: ", err, msg.MessageId)
 		}
