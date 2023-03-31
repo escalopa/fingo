@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/escalopa/fingo/auth/internal/core"
-	"github.com/escalopa/fingo/pkg/pkgCore"
+	"github.com/escalopa/fingo/pkg/contextutils"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -30,7 +30,7 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 			return err
 		}
 		// Read user id from context
-		callerID, err := pkgCore.GetUserIDFromContext(ctx)
+		callerID, err := contextutils.GetUserID(ctx)
 		if err != nil {
 			return err
 		}

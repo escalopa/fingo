@@ -10,7 +10,18 @@ import (
 )
 
 func NewRedisContainer(ctx context.Context) (url string, terminate func() error, err error) {
-	redisContainer, err := spinRedisContainer(ctx)
+	req := testcontainers.ContainerRequest{
+		Image:        "redis:alpine",
+		ExposedPorts: []string{"6379/tcp"},
+		WaitingFor:   wait.ForLog("* Ready to accept connections"),
+	}
+	redisContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		return "", nil, err
+	}
 	if err != nil {
 		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to start redis container").Err()
 	}
@@ -33,20 +44,4 @@ func NewRedisContainer(ctx context.Context) (url string, terminate func() error,
 		return redisContainer.Terminate(ctx)
 	}
 	return uri, terminate, nil
-}
-
-func spinRedisContainer(ctx context.Context) (testcontainers.Container, error) {
-	req := testcontainers.ContainerRequest{
-		Image:        "redis:alpine",
-		ExposedPorts: []string{"6379/tcp"},
-		WaitingFor:   wait.ForLog("* Ready to accept connections"),
-	}
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return container, nil
 }

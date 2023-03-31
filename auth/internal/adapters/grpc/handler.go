@@ -2,10 +2,11 @@ package grpc
 
 import (
 	"context"
+
 	"github.com/escalopa/fingo/auth/internal/application"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/escalopa/fingo/pb"
-	"github.com/escalopa/fingo/pkg/pkgCore"
+	"github.com/escalopa/fingo/pkg/contextutils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -33,7 +34,7 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (*pb.Si
 }
 
 func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (*pb.SigninResponse, error) {
-	clientIP, userAgent := pkgCore.GetMDFromContext(ctx)
+	clientIP, userAgent := contextutils.GetMetadata(ctx)
 	response, err := h.uc.Signin.Execute(ctx, application.SigninParams{
 		Email:     req.Email,
 		Password:  req.Password,

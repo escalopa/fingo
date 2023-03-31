@@ -102,17 +102,20 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 		if err != nil {
 			return err
 		}
-		// Publish message to queue to notify user about new session creation
-		err = c.mp.SendNewSignInSessionMessage(ctx, core.SendNewSignInSessionParams{
-			Name:      user.FirstName,
-			Email:     user.Email,
-			ClientIP:  params.ClientIP,
-			UserAgent: params.UserAgent,
-		})
-		if err != nil {
-			log.Printf("failed to send message about new session creation, email: %s, client-ip: %s, user-agent: %s, err: %s",
-				params.Email, params.ClientIP, params.UserAgent, err)
-		}
+		// Send message about the newly created session
+		go func() {
+			// Publish message to queue to notify user about new session creation
+			err = c.mp.SendNewSignInSessionMessage(ctx, core.SendNewSignInSessionParams{
+				Name:      user.FirstName,
+				Email:     user.Email,
+				ClientIP:  params.ClientIP,
+				UserAgent: params.UserAgent,
+			})
+			if err != nil {
+				log.Printf("failed to send message about new session creation, email: %s, client-ip: %s, user-agent: %s, err: %s",
+					params.Email, params.ClientIP, params.UserAgent, err)
+			}
+		}()
 		response = SigninResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/escalopa/fingo/pkg/contextutils"
+
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
 )
@@ -40,6 +42,14 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		payload, err := c.tg.DecryptToken(params.RefreshToken)
 		if err != nil {
 			return err
+		}
+		// Get caller ID from context
+		callerID, err := contextutils.GetUserID(ctx)
+		if err != nil {
+			return err
+		}
+		if callerID != payload.UserID {
+			return errs.B().Code(errs.Unauthenticated).Msg("not token owner").Err()
 		}
 		// Check if session has expired
 		if time.Now().After(payload.ExpiresAt) {

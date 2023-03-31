@@ -30,7 +30,7 @@ fingo is built using scalable, reliable, robust and secure technologies which ar
 - Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [mongoDB](https://www.mongodb.com/)
 - Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [Docker Swarm](https://docs.docker.com/engine/swarm/)
 - Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Datadog](https://www.datadoghq.com/), [Prometheus](https://prometheus.io/)
-- Security: [Paseto](https://paseto.io/)
+- Security: [Paseto](https://paseto.io/), [SSL/TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security)
 - External API: [Courier](https://www.courier.com/)
 
 

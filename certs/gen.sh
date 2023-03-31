@@ -1,4 +1,4 @@
-rm *.pem
+rm ./*.pem
 
 # 1. Generate CA's private key and self-signed certificate
 openssl req -x509 -newkey rsa:4096 -days 365 -nodes -keyout ca-key.pem -out ca-cert.pem -subj "/C=EG/ST=Egypt/L=Alexandria/O=fingo/OU=Development/CN=localhost/emailAddress=escalopa.prod@gmail.com"

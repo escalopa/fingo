@@ -3,14 +3,26 @@ package testcontainer
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/lordvidex/errs"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"time"
 )
 
 func NewRabbitMQContainer(ctx context.Context) (usi string, terminate func() error, err error) {
-	rabbitContainer, err := spinRabbitmqContainer(ctx)
+	req := testcontainers.ContainerRequest{
+		Image:        "rabbitmq:3.10.19",
+		ExposedPorts: []string{"5672/tcp"},
+		WaitingFor:   wait.ForLog("Server startup complete").WithStartupTimeout(time.Minute * 2),
+	}
+	rabbitContainer, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to start rabbit container").Err()
+	}
 	if err != nil {
 		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to start rabbitmq container").Err()
 	}
@@ -33,21 +45,4 @@ func NewRabbitMQContainer(ctx context.Context) (usi string, terminate func() err
 		return nil
 	}
 	return uri, terminate, nil
-}
-
-func spinRabbitmqContainer(ctx context.Context) (testcontainers.Container, error) {
-
-	req := testcontainers.ContainerRequest{
-		Image:        "rabbitmq:3.10.19",
-		ExposedPorts: []string{"5672/tcp"},
-		WaitingFor:   wait.ForLog("Server startup complete").WithStartupTimeout(time.Minute * 2),
-	}
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
-	})
-	if err != nil {
-		return nil, errs.B(err).Code(errs.Unknown).Msg("failed to start rabbit container").Err()
-	}
-	return container, nil
 }

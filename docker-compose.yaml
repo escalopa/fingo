@@ -113,6 +113,9 @@ services:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
 
   db:
       image: postgres:12
@@ -126,8 +129,8 @@ services:
         - ./scripts/multiple-database.sh:/docker-entrypoint-initdb.d/multiple-database.sh
       healthcheck:
         test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-        interval: 5s
-        timeout: 5s
+        interval: 2s
+        timeout: 2s
         retries: 5
 
   rabbitmq:
