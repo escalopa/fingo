@@ -24,15 +24,15 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	// User
-	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error)
+	GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (UserService_GetUserByUsernameClient, error)
 	ChangeUserNames(ctx context.Context, in *ChangeUserNamesRequest, opts ...grpc.CallOption) (*ChangeUserNamesResponse, error)
 	ChangeUserPassword(ctx context.Context, in *ChangeUserPasswordRequest, opts ...grpc.CallOption) (*ChangeUserPasswordResponse, error)
-	// Change email, phone, password (send confirmation code)
-	ChangeUserEmail(ctx context.Context, in *ChangeUserEmailRequest, opts ...grpc.CallOption) (*ChangeUserEmailResponse, error)
-	ResetUserPassword(ctx context.Context, in *ResetUserPasswordRequest, opts ...grpc.CallOption) (*ResetUserPasswordResponse, error)
-	// Verify change email, phone, password (Update email, phone, password in DB)
-	VerifyChangeUserEmail(ctx context.Context, in *VerifyChangeUserEmailRequest, opts ...grpc.CallOption) (*VerifyChangeUserEmailResponse, error)
-	VerifyResetUserPassword(ctx context.Context, in *VerifyResetUserPasswordRequest, opts ...grpc.CallOption) (*VerifyResetUserPasswordResponse, error)
+	// Change email, password (send confirmation code)
+	UpdateUserEmail(ctx context.Context, in *UpdateUserEmailRequest, opts ...grpc.CallOption) (*UpdateUserEmailResponse, error)
+	UpdateResetUserPassword(ctx context.Context, in *UpdateResetUserPasswordRequest, opts ...grpc.CallOption) (*UpdateResetUserPasswordResponse, error)
+	// Verify email, password (Update email, password in DB)
+	VerifyUserEmail(ctx context.Context, in *VerifyUserEmailRequest, opts ...grpc.CallOption) (*VerifyUserEmailResponse, error)
+	VerifyUserPassword(ctx context.Context, in *VerifyUserPasswordRequest, opts ...grpc.CallOption) (*VerifyUserPasswordResponse, error)
 }
 
 type userServiceClient struct {
@@ -43,13 +43,36 @@ func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
 	return &userServiceClient{cc}
 }
 
-func (c *userServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (*GetUserByUsernameResponse, error) {
-	out := new(GetUserByUsernameResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/GetUserByUsername", in, out, opts...)
+func (c *userServiceClient) GetUserByUsername(ctx context.Context, in *GetUserByUsernameRequest, opts ...grpc.CallOption) (UserService_GetUserByUsernameClient, error) {
+	stream, err := c.cc.NewStream(ctx, &UserService_ServiceDesc.Streams[0], "/pb.UserService/GetUserByUsername", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &userServiceGetUserByUsernameClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type UserService_GetUserByUsernameClient interface {
+	Recv() (*GetUserByUsernameResponse, error)
+	grpc.ClientStream
+}
+
+type userServiceGetUserByUsernameClient struct {
+	grpc.ClientStream
+}
+
+func (x *userServiceGetUserByUsernameClient) Recv() (*GetUserByUsernameResponse, error) {
+	m := new(GetUserByUsernameResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *userServiceClient) ChangeUserNames(ctx context.Context, in *ChangeUserNamesRequest, opts ...grpc.CallOption) (*ChangeUserNamesResponse, error) {
@@ -70,36 +93,36 @@ func (c *userServiceClient) ChangeUserPassword(ctx context.Context, in *ChangeUs
 	return out, nil
 }
 
-func (c *userServiceClient) ChangeUserEmail(ctx context.Context, in *ChangeUserEmailRequest, opts ...grpc.CallOption) (*ChangeUserEmailResponse, error) {
-	out := new(ChangeUserEmailResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/ChangeUserEmail", in, out, opts...)
+func (c *userServiceClient) UpdateUserEmail(ctx context.Context, in *UpdateUserEmailRequest, opts ...grpc.CallOption) (*UpdateUserEmailResponse, error) {
+	out := new(UpdateUserEmailResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/UpdateUserEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) ResetUserPassword(ctx context.Context, in *ResetUserPasswordRequest, opts ...grpc.CallOption) (*ResetUserPasswordResponse, error) {
-	out := new(ResetUserPasswordResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/ResetUserPassword", in, out, opts...)
+func (c *userServiceClient) UpdateResetUserPassword(ctx context.Context, in *UpdateResetUserPasswordRequest, opts ...grpc.CallOption) (*UpdateResetUserPasswordResponse, error) {
+	out := new(UpdateResetUserPasswordResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/UpdateResetUserPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) VerifyChangeUserEmail(ctx context.Context, in *VerifyChangeUserEmailRequest, opts ...grpc.CallOption) (*VerifyChangeUserEmailResponse, error) {
-	out := new(VerifyChangeUserEmailResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/VerifyChangeUserEmail", in, out, opts...)
+func (c *userServiceClient) VerifyUserEmail(ctx context.Context, in *VerifyUserEmailRequest, opts ...grpc.CallOption) (*VerifyUserEmailResponse, error) {
+	out := new(VerifyUserEmailResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/VerifyUserEmail", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userServiceClient) VerifyResetUserPassword(ctx context.Context, in *VerifyResetUserPasswordRequest, opts ...grpc.CallOption) (*VerifyResetUserPasswordResponse, error) {
-	out := new(VerifyResetUserPasswordResponse)
-	err := c.cc.Invoke(ctx, "/pb.UserService/VerifyResetUserPassword", in, out, opts...)
+func (c *userServiceClient) VerifyUserPassword(ctx context.Context, in *VerifyUserPasswordRequest, opts ...grpc.CallOption) (*VerifyUserPasswordResponse, error) {
+	out := new(VerifyUserPasswordResponse)
+	err := c.cc.Invoke(ctx, "/pb.UserService/VerifyUserPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,15 +134,15 @@ func (c *userServiceClient) VerifyResetUserPassword(ctx context.Context, in *Ver
 // for forward compatibility
 type UserServiceServer interface {
 	// User
-	GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error)
+	GetUserByUsername(*GetUserByUsernameRequest, UserService_GetUserByUsernameServer) error
 	ChangeUserNames(context.Context, *ChangeUserNamesRequest) (*ChangeUserNamesResponse, error)
 	ChangeUserPassword(context.Context, *ChangeUserPasswordRequest) (*ChangeUserPasswordResponse, error)
-	// Change email, phone, password (send confirmation code)
-	ChangeUserEmail(context.Context, *ChangeUserEmailRequest) (*ChangeUserEmailResponse, error)
-	ResetUserPassword(context.Context, *ResetUserPasswordRequest) (*ResetUserPasswordResponse, error)
-	// Verify change email, phone, password (Update email, phone, password in DB)
-	VerifyChangeUserEmail(context.Context, *VerifyChangeUserEmailRequest) (*VerifyChangeUserEmailResponse, error)
-	VerifyResetUserPassword(context.Context, *VerifyResetUserPasswordRequest) (*VerifyResetUserPasswordResponse, error)
+	// Change email, password (send confirmation code)
+	UpdateUserEmail(context.Context, *UpdateUserEmailRequest) (*UpdateUserEmailResponse, error)
+	UpdateResetUserPassword(context.Context, *UpdateResetUserPasswordRequest) (*UpdateResetUserPasswordResponse, error)
+	// Verify email, password (Update email, password in DB)
+	VerifyUserEmail(context.Context, *VerifyUserEmailRequest) (*VerifyUserEmailResponse, error)
+	VerifyUserPassword(context.Context, *VerifyUserPasswordRequest) (*VerifyUserPasswordResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -127,8 +150,8 @@ type UserServiceServer interface {
 type UnimplementedUserServiceServer struct {
 }
 
-func (UnimplementedUserServiceServer) GetUserByUsername(context.Context, *GetUserByUsernameRequest) (*GetUserByUsernameResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByUsername not implemented")
+func (UnimplementedUserServiceServer) GetUserByUsername(*GetUserByUsernameRequest, UserService_GetUserByUsernameServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetUserByUsername not implemented")
 }
 func (UnimplementedUserServiceServer) ChangeUserNames(context.Context, *ChangeUserNamesRequest) (*ChangeUserNamesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserNames not implemented")
@@ -136,17 +159,17 @@ func (UnimplementedUserServiceServer) ChangeUserNames(context.Context, *ChangeUs
 func (UnimplementedUserServiceServer) ChangeUserPassword(context.Context, *ChangeUserPasswordRequest) (*ChangeUserPasswordResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserPassword not implemented")
 }
-func (UnimplementedUserServiceServer) ChangeUserEmail(context.Context, *ChangeUserEmailRequest) (*ChangeUserEmailResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangeUserEmail not implemented")
+func (UnimplementedUserServiceServer) UpdateUserEmail(context.Context, *UpdateUserEmailRequest) (*UpdateUserEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserEmail not implemented")
 }
-func (UnimplementedUserServiceServer) ResetUserPassword(context.Context, *ResetUserPasswordRequest) (*ResetUserPasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ResetUserPassword not implemented")
+func (UnimplementedUserServiceServer) UpdateResetUserPassword(context.Context, *UpdateResetUserPasswordRequest) (*UpdateResetUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateResetUserPassword not implemented")
 }
-func (UnimplementedUserServiceServer) VerifyChangeUserEmail(context.Context, *VerifyChangeUserEmailRequest) (*VerifyChangeUserEmailResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyChangeUserEmail not implemented")
+func (UnimplementedUserServiceServer) VerifyUserEmail(context.Context, *VerifyUserEmailRequest) (*VerifyUserEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyUserEmail not implemented")
 }
-func (UnimplementedUserServiceServer) VerifyResetUserPassword(context.Context, *VerifyResetUserPasswordRequest) (*VerifyResetUserPasswordResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyResetUserPassword not implemented")
+func (UnimplementedUserServiceServer) VerifyUserPassword(context.Context, *VerifyUserPasswordRequest) (*VerifyUserPasswordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyUserPassword not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -161,22 +184,25 @@ func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
 	s.RegisterService(&UserService_ServiceDesc, srv)
 }
 
-func _UserService_GetUserByUsername_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetUserByUsernameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _UserService_GetUserByUsername_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetUserByUsernameRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(UserServiceServer).GetUserByUsername(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.UserService/GetUserByUsername",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).GetUserByUsername(ctx, req.(*GetUserByUsernameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(UserServiceServer).GetUserByUsername(m, &userServiceGetUserByUsernameServer{stream})
+}
+
+type UserService_GetUserByUsernameServer interface {
+	Send(*GetUserByUsernameResponse) error
+	grpc.ServerStream
+}
+
+type userServiceGetUserByUsernameServer struct {
+	grpc.ServerStream
+}
+
+func (x *userServiceGetUserByUsernameServer) Send(m *GetUserByUsernameResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _UserService_ChangeUserNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -215,74 +241,74 @@ func _UserService_ChangeUserPassword_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_ChangeUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ChangeUserEmailRequest)
+func _UserService_UpdateUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserEmailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).ChangeUserEmail(ctx, in)
+		return srv.(UserServiceServer).UpdateUserEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/ChangeUserEmail",
+		FullMethod: "/pb.UserService/UpdateUserEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ChangeUserEmail(ctx, req.(*ChangeUserEmailRequest))
+		return srv.(UserServiceServer).UpdateUserEmail(ctx, req.(*UpdateUserEmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_ResetUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ResetUserPasswordRequest)
+func _UserService_UpdateResetUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateResetUserPasswordRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).ResetUserPassword(ctx, in)
+		return srv.(UserServiceServer).UpdateResetUserPassword(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/ResetUserPassword",
+		FullMethod: "/pb.UserService/UpdateResetUserPassword",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).ResetUserPassword(ctx, req.(*ResetUserPasswordRequest))
+		return srv.(UserServiceServer).UpdateResetUserPassword(ctx, req.(*UpdateResetUserPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_VerifyChangeUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyChangeUserEmailRequest)
+func _UserService_VerifyUserEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyUserEmailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).VerifyChangeUserEmail(ctx, in)
+		return srv.(UserServiceServer).VerifyUserEmail(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/VerifyChangeUserEmail",
+		FullMethod: "/pb.UserService/VerifyUserEmail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).VerifyChangeUserEmail(ctx, req.(*VerifyChangeUserEmailRequest))
+		return srv.(UserServiceServer).VerifyUserEmail(ctx, req.(*VerifyUserEmailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_VerifyResetUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyResetUserPasswordRequest)
+func _UserService_VerifyUserPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyUserPasswordRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).VerifyResetUserPassword(ctx, in)
+		return srv.(UserServiceServer).VerifyUserPassword(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.UserService/VerifyResetUserPassword",
+		FullMethod: "/pb.UserService/VerifyUserPassword",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).VerifyResetUserPassword(ctx, req.(*VerifyResetUserPasswordRequest))
+		return srv.(UserServiceServer).VerifyUserPassword(ctx, req.(*VerifyUserPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -295,10 +321,6 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetUserByUsername",
-			Handler:    _UserService_GetUserByUsername_Handler,
-		},
-		{
 			MethodName: "ChangeUserNames",
 			Handler:    _UserService_ChangeUserNames_Handler,
 		},
@@ -307,22 +329,28 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_ChangeUserPassword_Handler,
 		},
 		{
-			MethodName: "ChangeUserEmail",
-			Handler:    _UserService_ChangeUserEmail_Handler,
+			MethodName: "UpdateUserEmail",
+			Handler:    _UserService_UpdateUserEmail_Handler,
 		},
 		{
-			MethodName: "ResetUserPassword",
-			Handler:    _UserService_ResetUserPassword_Handler,
+			MethodName: "UpdateResetUserPassword",
+			Handler:    _UserService_UpdateResetUserPassword_Handler,
 		},
 		{
-			MethodName: "VerifyChangeUserEmail",
-			Handler:    _UserService_VerifyChangeUserEmail_Handler,
+			MethodName: "VerifyUserEmail",
+			Handler:    _UserService_VerifyUserEmail_Handler,
 		},
 		{
-			MethodName: "VerifyResetUserPassword",
-			Handler:    _UserService_VerifyResetUserPassword_Handler,
+			MethodName: "VerifyUserPassword",
+			Handler:    _UserService_VerifyUserPassword_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetUserByUsername",
+			Handler:       _UserService_GetUserByUsername_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "user.proto",
 }

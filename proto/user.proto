@@ -31,53 +31,53 @@ message ChangeUserNamesResponse {
 
 // ChangeUserPassword
 message ChangeUserPasswordRequest {
-  string oldPassword = 2;
-  string newPassword = 3;
+  string old_password = 1;
+  string new_password = 2;
 }
 message ChangeUserPasswordResponse {
   string message = 1;
 }
 
-// ChangeUserEmail
-message ChangeUserEmailRequest {
+// UpdateUserEmail
+message UpdateUserEmailRequest {
   string email = 1;
 }
-message ChangeUserEmailResponse {
-  string response = 1;
+message UpdateUserEmailResponse {
+  string message = 1;
 }
 
-// ResetUserPassword
-message ResetUserPasswordRequest {}
-message ResetUserPasswordResponse {
-  string response = 1;
+// UpdateResetUserPassword
+message UpdateResetUserPasswordRequest {}
+message UpdateResetUserPasswordResponse {
+  string message = 1;
 }
 
 // Verify change user email
-message VerifyChangeUserEmailRequest {
-  string confirmation_code = 2;
+message VerifyUserEmailRequest {
+  string confirmation_code = 1;
 }
-message VerifyChangeUserEmailResponse {
-  string response = 1;
+message VerifyUserEmailResponse {
+  string message = 1;
 }
 
 // Verify reset user password
-message VerifyResetUserPasswordRequest {
-  string confirmation_code = 2;
-  string newPassword = 3;
+message VerifyUserPasswordRequest {
+  string confirmation_code = 1;
+  string new_password = 2;
 }
-message VerifyResetUserPasswordResponse {
-  string response = 1;
+message VerifyUserPasswordResponse {
+  string message = 1;
 }
 
 service UserService {
   // User
-  rpc GetUserByUsername(GetUserByUsernameRequest) returns (GetUserByUsernameResponse);
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (stream GetUserByUsernameResponse);
   rpc ChangeUserNames(ChangeUserNamesRequest) returns (ChangeUserNamesResponse);
   rpc ChangeUserPassword(ChangeUserPasswordRequest) returns (ChangeUserPasswordResponse);
-  // Change email, phone, password (send confirmation code)
-  rpc ChangeUserEmail(ChangeUserEmailRequest) returns (ChangeUserEmailResponse);
-  rpc ResetUserPassword(ResetUserPasswordRequest) returns (ResetUserPasswordResponse);
-  //  Verify change email, phone, password (Update email, phone, password in DB)
-  rpc VerifyChangeUserEmail(VerifyChangeUserEmailRequest) returns (VerifyChangeUserEmailResponse);
-  rpc VerifyResetUserPassword(VerifyResetUserPasswordRequest) returns (VerifyResetUserPasswordResponse);
+  // Change email, password (send confirmation code)
+  rpc UpdateUserEmail(UpdateUserEmailRequest) returns (UpdateUserEmailResponse);
+  rpc UpdateResetUserPassword(UpdateResetUserPasswordRequest) returns (UpdateResetUserPasswordResponse);
+  //  Verify email, password (Update email, password in DB)
+  rpc VerifyUserEmail(VerifyUserEmailRequest) returns (VerifyUserEmailResponse);
+  rpc VerifyUserPassword(VerifyUserPasswordRequest) returns (VerifyUserPasswordResponse);
 }
