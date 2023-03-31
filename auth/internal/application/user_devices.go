@@ -2,8 +2,9 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/pkg/pkgCore"
 	"time"
+
+	"github.com/escalopa/fingo/pkg/contextutils"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 )
@@ -33,7 +34,7 @@ func (c *GetUserDevicesCommandImpl) Execute(ctx context.Context, params GetUserD
 			return err
 		}
 		// Parse userID from context
-		userID, err := pkgCore.GetUserIDFromContext(ctx)
+		userID, err := contextutils.GetUserID(ctx)
 		if err != nil {
 			return err
 		}

@@ -2,10 +2,9 @@ package application
 
 import (
 	"context"
-	"fmt"
-	"github.com/escalopa/fingo/pkg/pkgCore"
 	"time"
 
+	"github.com/escalopa/fingo/pkg/contextutils"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -41,17 +40,13 @@ func (c *TokenValidateCommandImpl) Execute(ctx context.Context, params TokenVali
 		if time.Now().After(payload.ExpiresAt) {
 			return errs.B().Msg("access token has expired").Err()
 		}
-		clientIP, userAgent := pkgCore.GetMDFromContext(ctx)
-		fmt.Println(clientIP, userAgent)
-		fmt.Println(payload.ClientIP, payload.UserAgent)
+		clientIP, userAgent := contextutils.GetForwardMetadata(ctx)
 		// Check if the client ip is the same
 		if payload.ClientIP != clientIP {
-			fmt.Println(payload.ClientIP, clientIP)
 			return errs.B().Msg("client ip mismatch, possible ip spoofing", payload.ClientIP, "|", clientIP).Err()
 		}
 		// Check if the user agent is the same
 		if payload.UserAgent != userAgent {
-			fmt.Println(payload.UserAgent, userAgent)
 			return errs.B().Msg("user agent mismatch, possible user agent spoofing", payload.UserAgent, "|", userAgent).Err()
 		}
 		id = payload.UserID
