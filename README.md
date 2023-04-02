@@ -17,8 +17,8 @@ Besides that we also support chat feature between its users to communicate with 
 
 ## Table of Contents 📑
 
-  - [Tech Stack](#tech-stack) 🛠
-  - [Project Architecture 🏘](#project-architecture-)
+  - [Tech Stack](#tech-stack-) 🛠
+  - [Project Architecture 🏘](#architecture-)
   - [How to run 🏃‍♂️](#how-to-run-)
 
 ## Tech Stack 🛠
@@ -26,10 +26,10 @@ Besides that we also support chat feature between its users to communicate with 
 fingo is built using scalable, reliable, robust and secure technologies which are listed below. 🔥
 
 - Language: [Go](https://golang.org/)
-- Communication: [gRPC](https://grpc.io/), [gin](https://github.com/gin-gonic/gin), [RabbitMQ](https://www.rabbitmq.com/)
-- Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [mongoDB](https://www.mongodb.com/)
+- Communication: [gRPC](https://grpc.io/), [REST(gin)](https://github.com/gin-gonic/gin), [RabbitMQ](https://www.rabbitmq.com/)
+- Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [Memcached](https://memcached.org/)
 - Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [Docker Swarm](https://docs.docker.com/engine/swarm/)
-- Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Datadog](https://www.datadoghq.com/), [Prometheus](https://prometheus.io/)
+- Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Jaeger](https://www.jaegertracing.io/) [Prometheus](https://prometheus.io/)
 - Security: [Paseto](https://paseto.io/), [SSL/TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security)
 - External API: [Courier](https://www.courier.com/)
 
@@ -47,12 +47,12 @@ Click on each service to see its documentation and how it works.
 3. [**Token**](./token) ==> Validating access tokens
 4. [**User**](./user) ==> Managing users data changes
 5. [**Wallet**](./wallet) ==> Managing wallets CRUD with different currencies
-6. [**Payment**](./payment) ==> Managing payments between users
-7. [**Contact**](./contact) ==> Sending emails & SMS
-
+6. [**Contact**](./contact) ==> Sending emails & SMS
 
 Each service is built using the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
 This allows us to have a clean separation between the business logic and the infrastructure. This way we can easily swap the infrastructure without affecting the business logic.
+
+All services trace their requests using [OpenTelemetry](https://opentelemetry.io/) and send them to [Jaeger](https://www.jaegertracing.io/) for monitoring and debugging besides Jaeger UI for visualization.
 
 ### Components
 ![Diagram](./fingo.png)
