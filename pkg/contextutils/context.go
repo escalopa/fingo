@@ -2,7 +2,6 @@ package contextutils
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/google/uuid"
@@ -97,7 +96,6 @@ func SetForwardMetadata(ctx context.Context, clientIP, userAgent string) context
 }
 
 func formatClientIP(ip string) string {
-	fmt.Println(ip)
 	twoDots := strings.Count(ip, ":")
 	if twoDots > 1 && strings.Contains(ip, "[") { // IPV6
 		ip = ip[:strings.LastIndex(ip, ":")]

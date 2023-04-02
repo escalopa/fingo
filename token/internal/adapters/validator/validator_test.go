@@ -1,17 +1,12 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/require"
 )
-
-type TestValidatorStruct struct {
-	Name     string `validate:"required"`
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,min=8"`
-}
 
 func TestValidator(t *testing.T) {
 	v := NewValidator()
@@ -72,9 +67,10 @@ func TestValidator(t *testing.T) {
 		},
 	}
 
+	ctx := context.Background()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := v.Validate(tc.tv)
+			err := v.Validate(ctx, tc.tv)
 			require.True(t, (err != nil) == tc.isErr)
 		})
 	}

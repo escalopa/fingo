@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
@@ -44,7 +46,9 @@ type SigninCommandImpl struct {
 func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (SigninResponse, error) {
 	var response SigninResponse
 	err := executeWithContextTimeout(ctx, 5*time.Second, func() error {
-		if err := c.v.Validate(params); err != nil {
+		ctx, span := oteltracer.Tracer().Start(ctx, "SigninCommand.Execute")
+		defer span.End()
+		if err := c.v.Validate(ctx, params); err != nil {
 			return err
 		}
 		// Get user from database
@@ -53,13 +57,13 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 			return err
 		}
 		// Compare password
-		if !c.h.Compare(user.HashedPassword, params.Password) {
+		if !c.h.Compare(ctx, user.HashedPassword, params.Password) {
 			return errs.B().Code(errs.InvalidArgument).Msg("password is incorrect").Err()
 		}
 		// Create new sessionID
 		sessionID := uuid.New()
 		// Generate access token
-		accessToken, err := c.tg.GenerateAccessToken(core.GenerateTokenParam{
+		accessToken, err := c.tg.GenerateAccessToken(ctx, core.GenerateTokenParam{
 			UserID:    user.ID,
 			ClientIP:  params.ClientIP,
 			UserAgent: params.UserAgent,
@@ -69,7 +73,7 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 			return err
 		}
 		// Generate refresh token
-		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
+		refreshToken, err := c.tg.GenerateRefreshToken(ctx, core.GenerateTokenParam{
 			UserID:    user.ID,
 			ClientIP:  params.ClientIP,
 			UserAgent: params.UserAgent,
@@ -79,7 +83,7 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 			return err
 		}
 		// Get token payload after encryption
-		payload, err := c.tg.DecryptToken(accessToken)
+		payload, err := c.tg.DecryptToken(ctx, accessToken)
 		if err != nil {
 			return err
 		}

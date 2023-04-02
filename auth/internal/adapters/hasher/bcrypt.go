@@ -1,6 +1,9 @@
 package hasher
 
 import (
+	"context"
+
+	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
 	"github.com/lordvidex/errs"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -13,7 +16,9 @@ func NewBcryptHasher() *BcryptHasher {
 	return &BcryptHasher{}
 }
 
-func (c *BcryptHasher) Hash(password string) (string, error) {
+func (c *BcryptHasher) Hash(ctx context.Context, password string) (string, error) {
+	_, span := oteltracer.Tracer().Start(ctx, "BcryptHasher.Hash")
+	defer span.End()
 	if password == "" {
 		return "", errs.B().Code(errs.InvalidArgument).Msgf("password length is less than %d", minPasswordLen).Err()
 	}
@@ -24,6 +29,8 @@ func (c *BcryptHasher) Hash(password string) (string, error) {
 	return string(hash), nil
 }
 
-func (c *BcryptHasher) Compare(hash, password string) bool {
+func (c *BcryptHasher) Compare(ctx context.Context, hash, password string) bool {
+	_, span := oteltracer.Tracer().Start(ctx, "BcryptHasher.Compare")
+	defer span.End()
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }

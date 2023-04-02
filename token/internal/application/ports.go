@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"github.com/escalopa/fingo/token/internal/core"
 )
 
@@ -10,5 +11,5 @@ type TokenRepository interface {
 }
 
 type Validator interface {
-	Validate(params interface{}) error
+	Validate(ctx context.Context, params interface{}) error
 }

@@ -5,8 +5,12 @@ import (
 	"log"
 	"net"
 
+	"github.com/escalopa/fingo/pkg/grpctls"
+	"github.com/escalopa/fingo/pkg/pkgerror"
+	"github.com/escalopa/fingo/pkg/pkgtracer"
+	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
+
 	"github.com/escalopa/fingo/pb"
-	"github.com/escalopa/fingo/pkg/pkgError"
 	"github.com/escalopa/fingo/token/internal/adapters/cache"
 	mygrpc "github.com/escalopa/fingo/token/internal/adapters/grpc"
 	"github.com/escalopa/fingo/token/internal/adapters/validator"
@@ -14,7 +18,6 @@ import (
 	"github.com/escalopa/goconfig"
 	"github.com/lordvidex/errs"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -27,12 +30,12 @@ func main() {
 
 	// Create redis client
 	rc, err := cache.NewRedisClient(c.Get("TOKEN_REDIS_URL"))
-	pkgError.CheckError(err, "failed to create redis client")
+	pkgerror.CheckError(err, "failed to create redis client")
 	log.Println("redis client created")
 
 	// Create token repository
 	tr, err := cache.NewTokenRepositoryV1(rc)
-	pkgError.CheckError(err, "failed to create token repository")
+	pkgerror.CheckError(err, "failed to create token repository")
 	log.Println("token repository created")
 
 	// Create use cases
@@ -41,33 +44,32 @@ func main() {
 		application.WithTokenRepository(tr),
 	)
 
-	pkgError.CheckError(start(c, uc), "failed to start gRPC server")
+	// Create a new tracer
+	t, err := pkgtracer.LoadTracer(
+		c.Get("TOKEN_TRACING_ENABLE"),
+		c.Get("TOKEN_TRACING_JAEGER_ENABLE"),
+		c.Get("TOKEN_TRACING_JAEGER_AGENT_URL"),
+		c.Get("TOKEN_TRACING_JAEGER_SERVICE_NAME"),
+		c.Get("TOKEN_TRACING_JAEGER_ENVIRONMENT"),
+	)
+	pkgerror.CheckError(err, "failed to load tracer")
+	oteltracer.SetTracer(t)
+	log.Println("tracer created")
+
+	// Load TLS certificates
+	var opts []grpc.ServerOption
+	pkgerror.CheckError(loadTls(c, &opts), "failed to load token TLS certificates")
+
+	// Start gRPC server
+	pkgerror.CheckError(start(c, uc, opts), "failed to start gRPC server")
 }
 
-func start(c *goconfig.Config, uc *application.UseCases) error {
-	// Create a new gRPC server with TLS enabled
-	handler := mygrpc.NewTokenHandler(uc)
-
-	var opts []grpc.ServerOption
-
-	// Enable TLS if required
-	enableTLS := c.Get("TOKEN_GRPC_TLS_ENABLE") == "true"
-	log.Println("starting gRPC server with TLS:", enableTLS)
-	if enableTLS {
-		// Load TLS certificates
-		creds, err := credentials.NewServerTLSFromFile(c.Get("TOKEN_GRPC_TLS_CERT_FILE"), c.Get("TOKEN_GRPC_TLS_KEY_FILE"))
-		if err != nil {
-			return errs.B(err).Msg("failed to load TLS certificates").Err()
-		}
-		opts = append(opts, grpc.Creds(creds))
-		log.Println("loaded TLS certificates")
-	}
-
+func start(c *goconfig.Config, uc *application.UseCases, opts []grpc.ServerOption) error {
 	// Create a gRPC server object
+	handler := mygrpc.NewTokenHandler(uc)
 	grpcS := grpc.NewServer(opts...)
 	pb.RegisterTokenServiceServer(grpcS, handler)
 	reflection.Register(grpcS)
-	log.Println("gRPC server instance created")
 
 	// Start the server
 	port := c.Get("TOKEN_GRPC_PORT")
@@ -80,5 +82,19 @@ func start(c *goconfig.Config, uc *application.UseCases) error {
 	if err != nil {
 		return errs.B(err).Msg(fmt.Sprintf("failed to serve on port %s", port)).Err()
 	}
+	return nil
+}
+
+func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
+	// Enable TLS if required
+	creds, err := grpctls.LoadServerTLS(
+		c.Get("TOKEN_GRPC_TLS_ENABLE"),
+		c.Get("TOKEN_GRPC_TLS_CERT_FILE"),
+		c.Get("TOKEN_GRPC_TLS_KEY_FILE"),
+	)
+	if err != nil {
+		return err
+	}
+	*opts = append(*opts, grpc.Creds(creds))
 	return nil
 }

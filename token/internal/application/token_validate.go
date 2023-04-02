@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
+
 	"github.com/escalopa/fingo/pkg/contextutils"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
@@ -28,7 +30,9 @@ type TokenValidateCommandImpl struct {
 func (c *TokenValidateCommandImpl) Execute(ctx context.Context, params TokenValidateParams) (uuid.UUID, error) {
 	var id uuid.UUID
 	err := executeWithContextTimeout(ctx, 10*time.Second, func() error {
-		if err := c.v.Validate(params); err != nil {
+		ctx, span := oteltracer.Tracer().Start(ctx, "TokenValidateCommandImpl.Execute")
+		defer span.End()
+		if err := c.v.Validate(ctx, params); err != nil {
 			return err
 		}
 		// Get the token payload from the cache

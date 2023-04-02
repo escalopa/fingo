@@ -1,6 +1,7 @@
 package validator
 
 import (
+	"context"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -66,9 +67,10 @@ func TestValidator(t *testing.T) {
 		},
 	}
 
+	ctx := context.Background()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := v.Validate(tc.tv)
+			err := v.Validate(ctx, tc.tv)
 			require.True(t, (err != nil) == tc.isErr)
 		})
 	}

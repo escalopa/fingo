@@ -2,9 +2,11 @@ package mycourier
 
 import (
 	"context"
-	"github.com/escalopa/fingo/contact/internal/core"
 	"strconv"
 	"time"
+
+	oteltracer "github.com/escalopa/fingo/contact/internal/adapters/tracer"
+	"github.com/escalopa/fingo/contact/internal/core"
 
 	"github.com/lordvidex/errs"
 	"github.com/trycourier/courier-go/v2"
@@ -74,6 +76,8 @@ func WithNewSignInSessionTemplate(templateCode string) func(*Sender) {
 
 // SendVerificationCode sends a verification code to the given email
 func (c *Sender) SendVerificationCode(ctx context.Context, params core.SendVerificationCodeMessage) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "courier.SendVerificationCode")
+	defer span.End()
 	requestID, err := c.c.SendMessage(ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{
@@ -96,6 +100,8 @@ func (c *Sender) SendVerificationCode(ctx context.Context, params core.SendVerif
 // SendResetPasswordToken sends a reset password token to the given email
 // The token is used to reset the password and set a new one
 func (c *Sender) SendResetPasswordToken(ctx context.Context, params core.SendResetPasswordTokenMessage) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "courier.SendResetPasswordToken")
+	defer span.End()
 	requestID, err := c.c.SendMessage(ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{
@@ -117,6 +123,8 @@ func (c *Sender) SendResetPasswordToken(ctx context.Context, params core.SendRes
 
 // SendNewSignInSession sends an email to notify user about a new login session on his account
 func (c *Sender) SendNewSignInSession(ctx context.Context, params core.SendNewSignInSessionMessage) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "courier.SendNewSignInSession")
+	defer span.End()
 	requestID, err := c.c.SendMessage(ctx,
 		courier.SendMessageRequestBody{
 			Message: map[string]interface{}{

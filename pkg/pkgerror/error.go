@@ -1,9 +1,9 @@
-package pkgError
+package pkgerror
 
 import "log"
 
 func CheckError(err error, msg string) {
 	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
+		log.Panicf("%s: %s", msg, err)
 	}
 }

@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/escalopa/fingo/pkg/pkgError"
 	"log"
 	"time"
+
+	oteltracer "github.com/escalopa/fingo/contact/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/pkgerror"
+	"github.com/escalopa/fingo/pkg/pkgtracer"
 
 	"github.com/escalopa/fingo/contact/internal/adapters/server"
 	"github.com/escalopa/fingo/contact/internal/adapters/validator"
@@ -19,7 +22,7 @@ func main() {
 	c := goconfig.New()
 	// Parse code expiration from config
 	exp, err := time.ParseDuration(c.Get("CONTACT_CODES_EXPIRATION"))
-	pkgError.CheckError(err, "failed to parse code expiration")
+	pkgerror.CheckError(err, "failed to parse code expiration")
 	log.Println("using codes-expiration:", exp)
 
 	// Create a courier sender
@@ -29,7 +32,7 @@ func main() {
 		mycourier.WithResetPasswordTemplate(c.Get("CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID")),
 		mycourier.WithNewSignInSessionTemplate(c.Get("CONTACT_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID")),
 	)
-	pkgError.CheckError(err, "failed to create courier sender")
+	pkgerror.CheckError(err, "failed to create courier sender")
 	defer func() {
 		log.Println("closing courier-sender")
 		_ = cs.Close()
@@ -42,7 +45,7 @@ func main() {
 		rabbitmq.WithResetPasswordTokenQueue(c.Get("CONTACT_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME")),
 		rabbitmq.WithNewSignInSessionQueue(c.Get("CONTACT_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME")),
 	)
-	pkgError.CheckError(err, "failed to create rabbitmq consumer")
+	pkgerror.CheckError(err, "failed to create rabbitmq consumer")
 	defer func() {
 		log.Println("closing rabbitmq consumer")
 		_ = rbc.Close()
@@ -51,11 +54,11 @@ func main() {
 
 	// Parse send code min interval from config
 	smi, err := time.ParseDuration(c.Get("CONTACT_SEND_CODE_MIN_INTERVAL"))
-	pkgError.CheckError(err, "failed to parse send code min interval")
+	pkgerror.CheckError(err, "failed to parse send code min interval")
 	log.Println("using send-min-interval:", smi)
 	// Parse send reset password token min interval from config
 	spi, err := time.ParseDuration(c.Get("CONTACT_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL"))
-	pkgError.CheckError(err, "failed to parse send reset password token min interval")
+	pkgerror.CheckError(err, "failed to parse send reset password token min interval")
 	log.Println("using send-min-interval:", spi)
 
 	// Create a validator
@@ -70,11 +73,22 @@ func main() {
 		application.WithMinSendPasswordTokenInterval(spi),
 	)
 
+	// Create a new tracer
+	t, err := pkgtracer.LoadTracer(
+		c.Get("CONTACT_TRACING_ENABLE"),
+		c.Get("CONTACT_TRACING_JAEGER_ENABLE"),
+		c.Get("CONTACT_TRACING_JAEGER_AGENT_URL"),
+		c.Get("CONTACT_TRACING_JAEGER_SERVICE_NAME"),
+		c.Get("CONTACT_TRACING_JAEGER_ENVIRONMENT"),
+	)
+	pkgerror.CheckError(err, "failed to load tracer")
+	oteltracer.SetTracer(t)
+
 	// Create server
 	s := server.NewServer(uc, rbc)
 	log.Println("created server")
 
 	// Start server
 	log.Println("starting server")
-	pkgError.CheckError(s.Start(), "failed to start server")
+	pkgerror.CheckError(s.Start(), "failed to start server")
 }

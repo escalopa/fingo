@@ -1,6 +1,7 @@
 package token
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -20,8 +21,10 @@ func TestNewPaseto(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, er.Code, errs.InvalidArgument)
 }
+
 func TestPasetoTokenizer_GenerateAccessToken(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	// Create paseto
 	p, err := NewPaseto("12345678901234567890123456789012", 1*time.Minute, 2*time.Minute)
 	require.NoError(t, err)
@@ -30,14 +33,14 @@ func TestPasetoTokenizer_GenerateAccessToken(t *testing.T) {
 	user := randomUser()
 	sessionID := uuid.New()
 	// Generate user access token
-	token, err := p.GenerateAccessToken(core.GenerateTokenParam{
+	token, err := p.GenerateAccessToken(ctx, core.GenerateTokenParam{
 		UserID:    user.ID,
 		SessionID: sessionID,
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, t)
 	// DecryptToken token
-	payload, err := p.DecryptToken(token)
+	payload, err := p.DecryptToken(ctx, token)
 	require.NoError(t, err)
 	require.True(t, reflect.DeepEqual(user.ID, payload.UserID))
 	require.True(t, reflect.DeepEqual(sessionID, payload.SessionID))
@@ -45,6 +48,7 @@ func TestPasetoTokenizer_GenerateAccessToken(t *testing.T) {
 
 func TestPasetoTokenizer_GenerateRefreshToken(t *testing.T) {
 	t.Parallel()
+	ctx := context.Background()
 	// Create paseto
 	p, err := NewPaseto("12345678901234567890123456789012", 1*time.Minute, 2*time.Minute)
 	require.NoError(t, err)
@@ -53,14 +57,14 @@ func TestPasetoTokenizer_GenerateRefreshToken(t *testing.T) {
 	user := randomUser()
 	sessionID := uuid.New()
 	// Generate user refresh token
-	token, err := p.GenerateRefreshToken(core.GenerateTokenParam{
+	token, err := p.GenerateRefreshToken(ctx, core.GenerateTokenParam{
 		UserID:    user.ID,
 		SessionID: sessionID,
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, t)
 	// DecryptToken token
-	payload, err := p.DecryptToken(token)
+	payload, err := p.DecryptToken(ctx, token)
 	require.NoError(t, err)
 	require.True(t, reflect.DeepEqual(user.ID, payload.UserID))
 	require.True(t, reflect.DeepEqual(sessionID, payload.SessionID))
