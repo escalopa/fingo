@@ -1,4 +1,4 @@
-package validator
+package pkgvalidator
 
 import (
 	"context"
@@ -7,6 +7,12 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/stretchr/testify/require"
 )
+
+type TestValidatorStruct struct {
+	Name     string `validate:"required"`
+	Email    string `validate:"required,email"`
+	Password string `validate:"required,min=8"`
+}
 
 func TestValidator(t *testing.T) {
 	v := NewValidator()

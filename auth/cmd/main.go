@@ -7,9 +7,9 @@ import (
 	"time"
 
 	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-	"github.com/escalopa/fingo/pkg/grpctls"
-	"github.com/escalopa/fingo/pkg/pkgerror"
-	"github.com/escalopa/fingo/pkg/pkgtracer"
+	pkgerror "github.com/escalopa/fingo/pkg/error"
+	grpctls "github.com/escalopa/fingo/pkg/tls"
+	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
 
 	mypostgres "github.com/escalopa/fingo/auth/internal/adapters/db/postgres"
 	"github.com/escalopa/fingo/auth/internal/adapters/db/redis"

@@ -1,9 +1,8 @@
-package validator
+package pkgvalidator
 
 import (
 	"context"
 
-	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
 	"github.com/go-playground/validator/v10"
 	"github.com/lordvidex/errs"
 )
@@ -12,21 +11,13 @@ type Validator struct {
 	v *validator.Validate
 }
 
-type TestValidatorStruct struct {
-	Name     string `validate:"required"`
-	Email    string `validate:"required,email"`
-	Password string `validate:"required,min=8"`
-}
-
 func NewValidator() *Validator {
 	return &Validator{
 		v: validator.New(),
 	}
 }
 
-func (va *Validator) Validate(ctx context.Context, s any) error {
-	_, span := oteltracer.Tracer().Start(ctx, "Validator.Validate")
-	defer span.End()
+func (va *Validator) Validate(_ context.Context, s any) error {
 	err := va.v.Struct(s)
 	if err != nil {
 		if errors, ok := err.(validator.ValidationErrors); ok {

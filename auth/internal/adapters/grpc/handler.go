@@ -39,7 +39,7 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (_ *pb.
 	if err != nil {
 		return nil, err
 	}
-	return &pb.SignupResponse{Message: "user created successfully"}, nil
+	return &pb.SignupResponse{Success: true}, nil
 }
 
 func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (_ *pb.SigninResponse, err error) {
@@ -78,7 +78,7 @@ func (h *AuthHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (_ *pb.
 	if err != nil {
 		return nil, err
 	}
-	return &pb.LogoutResponse{Message: "session deleted successfully"}, nil
+	return &pb.LogoutResponse{Success: true}, nil
 }
 
 func (h *AuthHandler) RenewAccessToken(ctx context.Context, req *pb.RenewAccessTokenRequest) (_ *pb.RenewAccessTokenResponse, err error) {
