@@ -93,12 +93,13 @@ type Currency struct {
 }
 
 type Transaction struct {
-	ID                   int32           `db:"id" json:"id"`
+	ID                   uuid.UUID       `db:"id" json:"id"`
 	Type                 TransactionType `db:"type" json:"type"`
 	Amount               string          `db:"amount" json:"amount"`
 	SourceAccountID      sql.NullInt32   `db:"source_account_id" json:"source_account_id"`
 	DestinationAccountID sql.NullInt32   `db:"destination_account_id" json:"destination_account_id"`
 	CreatedAt            time.Time       `db:"created_at" json:"created_at"`
+	IsRolledBack         bool            `db:"is_rolled_back" json:"is_rolled_back"`
 }
 
 type User struct {

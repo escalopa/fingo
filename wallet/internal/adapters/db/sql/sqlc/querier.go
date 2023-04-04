@@ -6,7 +6,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -25,10 +24,8 @@ type Querier interface {
 	GetAccounts(ctx context.Context, db DBTX, userID int32) ([]Account, error)
 	GetCard(ctx context.Context, db DBTX, number string) (Card, error)
 	GetCardBalance(ctx context.Context, db DBTX, number string) (string, error)
-	GetTransaction(ctx context.Context, db DBTX, id int32) (GetTransactionRow, error)
-	GetTransactionsByAccount(ctx context.Context, db DBTX, sourceAccountID sql.NullInt32) ([]GetTransactionsByAccountRow, error)
-	GetTransactionsByAccountAndDate(ctx context.Context, db DBTX, arg GetTransactionsByAccountAndDateParams) ([]GetTransactionsByAccountAndDateRow, error)
-	GetTransactionsByAccountAndType(ctx context.Context, db DBTX, arg GetTransactionsByAccountAndTypeParams) ([]GetTransactionsByAccountAndTypeRow, error)
+	GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (GetTransactionRow, error)
+	GetTransactions(ctx context.Context, db DBTX, arg GetTransactionsParams) ([]GetTransactionsRow, error)
 	GetUserByExternalID(ctx context.Context, db DBTX, externalID uuid.UUID) (int32, error)
 	GetUserCards(ctx context.Context, db DBTX, userID int32) ([]GetUserCardsRow, error)
 	SubtractCardBalance(ctx context.Context, db DBTX, arg SubtractCardBalanceParams) error

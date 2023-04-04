@@ -8,47 +8,23 @@ SELECT transactions.id, type, amount, source_account_id, destination_account_id
 FROM transactions
 WHERE id = $1;
 
--- name: GetTransactionsByAccount :many
+-- name: GetTransactions :many
 SELECT transactions.id,
-       type,
        transactions.amount,
-       source.name            as from_account_name,
-       source_account_id      as from_account_id,
-       destination.name       as to_account_name,
-       destination_account_id as to_account_id,
+       type,
+       source.name      as from_account_name,
+       destination.name as to_account_name,
        created_at
 FROM transactions
        JOIN accounts destination on destination.id = transactions.destination_account_id
        JOIN accounts source on destination.id = transactions.source_account_id
-WHERE (source_account_id = $1 OR destination_account_id = $1);
-
--- name: GetTransactionsByAccountAndType :many
-SELECT transactions.id,
-       type,
-       transactions.amount,
-       source.name            as from_account_name,
-       source_account_id      as from_account_id,
-       destination.name       as to_account_name,
-       destination_account_id as to_account_id,
-       transactions.created_at
-FROM transactions
-       JOIN accounts destination on destination.id = transactions.destination_account_id
-       JOIN accounts source on destination.id = transactions.source_account_id
-WHERE (source_account_id = $1 OR destination_account_id = $1)
-  AND type = $2;
-
--- name: GetTransactionsByAccountAndDate :many
-SELECT transactions.id,
-       type,
-       transactions.amount,
-       source.name            as from_account_name,
-       source_account_id      as from_account_id,
-       destination.name       as to_account_name,
-       destination_account_id as to_account_id,
-       created_at
-FROM transactions
-       JOIN accounts destination on destination.id = transactions.destination_account_id
-       JOIN accounts source on destination.id = transactions.source_account_id
-WHERE (source_account_id = $1 OR destination_account_id = $1)
-  AND created_at >= $2
-  AND created_at <= $3;
+WHERE source.id = sqlc.arg('account_id')
+   OR destination.id = sqlc.arg('account_id')
+  AND coalesce(sqlc.narg('transaction_type'), type) = type
+  AND coalesce(sqlc.narg('from_date'), created_at) = created_at
+  AND coalesce(sqlc.narg('to_date'), created_at) = created_at
+  AND coalesce(sqlc.narg('from_amount'), transactions.amount) <= transactions.amount
+  AND coalesce(sqlc.narg('to_amount'), transactions.amount) >= transactions.amount
+  AND coalesce(sqlc.narg('is_rolled_back'), transactions.is_rolled_back) = transactions.is_rolled_back
+ORDER BY created_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');

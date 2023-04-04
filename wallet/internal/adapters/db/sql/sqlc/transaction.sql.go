@@ -9,6 +9,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const createTransaction = `-- name: CreateTransaction :exec
@@ -41,14 +43,14 @@ WHERE id = $1
 `
 
 type GetTransactionRow struct {
-	ID                   int32           `db:"id" json:"id"`
+	ID                   uuid.UUID       `db:"id" json:"id"`
 	Type                 TransactionType `db:"type" json:"type"`
 	Amount               string          `db:"amount" json:"amount"`
 	SourceAccountID      sql.NullInt32   `db:"source_account_id" json:"source_account_id"`
 	DestinationAccountID sql.NullInt32   `db:"destination_account_id" json:"destination_account_id"`
 }
 
-func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id int32) (GetTransactionRow, error) {
+func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (GetTransactionRow, error) {
 	row := db.QueryRowContext(ctx, getTransaction, id)
 	var i GetTransactionRow
 	err := row.Scan(
@@ -61,179 +63,74 @@ func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id int32) (GetTra
 	return i, err
 }
 
-const getTransactionsByAccount = `-- name: GetTransactionsByAccount :many
+const getTransactions = `-- name: GetTransactions :many
 SELECT transactions.id,
-       type,
        transactions.amount,
-       source.name            as from_account_name,
-       source_account_id      as from_account_id,
-       destination.name       as to_account_name,
-       destination_account_id as to_account_id,
+       type,
+       source.name      as from_account_name,
+       destination.name as to_account_name,
        created_at
 FROM transactions
        JOIN accounts destination on destination.id = transactions.destination_account_id
        JOIN accounts source on destination.id = transactions.source_account_id
-WHERE (source_account_id = $1 OR destination_account_id = $1)
+WHERE source.id = $1
+   OR destination.id = $1
+  AND coalesce($2, type) = type
+  AND coalesce($3, created_at) = created_at
+  AND coalesce($4, created_at) = created_at
+  AND coalesce($5, transactions.amount) <= transactions.amount
+  AND coalesce($6, transactions.amount) >= transactions.amount
+  AND coalesce($7, transactions.is_rolled_back) = transactions.is_rolled_back
+ORDER BY created_at DESC
+LIMIT $9 OFFSET $8
 `
 
-type GetTransactionsByAccountRow struct {
-	ID              int32           `db:"id" json:"id"`
-	Type            TransactionType `db:"type" json:"type"`
+type GetTransactionsParams struct {
+	AccountID       int32               `db:"account_id" json:"account_id"`
+	TransactionType NullTransactionType `db:"transaction_type" json:"transaction_type"`
+	FromDate        sql.NullTime        `db:"from_date" json:"from_date"`
+	ToDate          sql.NullTime        `db:"to_date" json:"to_date"`
+	FromAmount      sql.NullString      `db:"from_amount" json:"from_amount"`
+	ToAmount        sql.NullString      `db:"to_amount" json:"to_amount"`
+	IsRolledBack    sql.NullBool        `db:"is_rolled_back" json:"is_rolled_back"`
+	Offset          int32               `db:"offset" json:"offset"`
+	Limit           int32               `db:"limit" json:"limit"`
+}
+
+type GetTransactionsRow struct {
+	ID              uuid.UUID       `db:"id" json:"id"`
 	Amount          string          `db:"amount" json:"amount"`
+	Type            TransactionType `db:"type" json:"type"`
 	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
-	FromAccountID   sql.NullInt32   `db:"from_account_id" json:"from_account_id"`
 	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
-	ToAccountID     sql.NullInt32   `db:"to_account_id" json:"to_account_id"`
 	CreatedAt       time.Time       `db:"created_at" json:"created_at"`
 }
 
-func (q *Queries) GetTransactionsByAccount(ctx context.Context, db DBTX, sourceAccountID sql.NullInt32) ([]GetTransactionsByAccountRow, error) {
-	rows, err := db.QueryContext(ctx, getTransactionsByAccount, sourceAccountID)
+func (q *Queries) GetTransactions(ctx context.Context, db DBTX, arg GetTransactionsParams) ([]GetTransactionsRow, error) {
+	rows, err := db.QueryContext(ctx, getTransactions,
+		arg.AccountID,
+		arg.TransactionType,
+		arg.FromDate,
+		arg.ToDate,
+		arg.FromAmount,
+		arg.ToAmount,
+		arg.IsRolledBack,
+		arg.Offset,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetTransactionsByAccountRow{}
+	items := []GetTransactionsRow{}
 	for rows.Next() {
-		var i GetTransactionsByAccountRow
+		var i GetTransactionsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Type,
 			&i.Amount,
-			&i.FromAccountName,
-			&i.FromAccountID,
-			&i.ToAccountName,
-			&i.ToAccountID,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTransactionsByAccountAndDate = `-- name: GetTransactionsByAccountAndDate :many
-SELECT transactions.id,
-       type,
-       transactions.amount,
-       source.name            as from_account_name,
-       source_account_id      as from_account_id,
-       destination.name       as to_account_name,
-       destination_account_id as to_account_id,
-       created_at
-FROM transactions
-       JOIN accounts destination on destination.id = transactions.destination_account_id
-       JOIN accounts source on destination.id = transactions.source_account_id
-WHERE (source_account_id = $1 OR destination_account_id = $1)
-  AND created_at >= $2
-  AND created_at <= $3
-`
-
-type GetTransactionsByAccountAndDateParams struct {
-	SourceAccountID sql.NullInt32 `db:"source_account_id" json:"source_account_id"`
-	CreatedAt       time.Time     `db:"created_at" json:"created_at"`
-	CreatedAt_2     time.Time     `db:"created_at_2" json:"created_at_2"`
-}
-
-type GetTransactionsByAccountAndDateRow struct {
-	ID              int32           `db:"id" json:"id"`
-	Type            TransactionType `db:"type" json:"type"`
-	Amount          string          `db:"amount" json:"amount"`
-	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
-	FromAccountID   sql.NullInt32   `db:"from_account_id" json:"from_account_id"`
-	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
-	ToAccountID     sql.NullInt32   `db:"to_account_id" json:"to_account_id"`
-	CreatedAt       time.Time       `db:"created_at" json:"created_at"`
-}
-
-func (q *Queries) GetTransactionsByAccountAndDate(ctx context.Context, db DBTX, arg GetTransactionsByAccountAndDateParams) ([]GetTransactionsByAccountAndDateRow, error) {
-	rows, err := db.QueryContext(ctx, getTransactionsByAccountAndDate, arg.SourceAccountID, arg.CreatedAt, arg.CreatedAt_2)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetTransactionsByAccountAndDateRow{}
-	for rows.Next() {
-		var i GetTransactionsByAccountAndDateRow
-		if err := rows.Scan(
-			&i.ID,
 			&i.Type,
-			&i.Amount,
 			&i.FromAccountName,
-			&i.FromAccountID,
 			&i.ToAccountName,
-			&i.ToAccountID,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getTransactionsByAccountAndType = `-- name: GetTransactionsByAccountAndType :many
-SELECT transactions.id,
-       type,
-       transactions.amount,
-       source.name            as from_account_name,
-       source_account_id      as from_account_id,
-       destination.name       as to_account_name,
-       destination_account_id as to_account_id,
-       transactions.created_at
-FROM transactions
-       JOIN accounts destination on destination.id = transactions.destination_account_id
-       JOIN accounts source on destination.id = transactions.source_account_id
-WHERE (source_account_id = $1 OR destination_account_id = $1)
-  AND type = $2
-`
-
-type GetTransactionsByAccountAndTypeParams struct {
-	SourceAccountID sql.NullInt32   `db:"source_account_id" json:"source_account_id"`
-	Type            TransactionType `db:"type" json:"type"`
-}
-
-type GetTransactionsByAccountAndTypeRow struct {
-	ID              int32           `db:"id" json:"id"`
-	Type            TransactionType `db:"type" json:"type"`
-	Amount          string          `db:"amount" json:"amount"`
-	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
-	FromAccountID   sql.NullInt32   `db:"from_account_id" json:"from_account_id"`
-	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
-	ToAccountID     sql.NullInt32   `db:"to_account_id" json:"to_account_id"`
-	CreatedAt       time.Time       `db:"created_at" json:"created_at"`
-}
-
-func (q *Queries) GetTransactionsByAccountAndType(ctx context.Context, db DBTX, arg GetTransactionsByAccountAndTypeParams) ([]GetTransactionsByAccountAndTypeRow, error) {
-	rows, err := db.QueryContext(ctx, getTransactionsByAccountAndType, arg.SourceAccountID, arg.Type)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetTransactionsByAccountAndTypeRow{}
-	for rows.Next() {
-		var i GetTransactionsByAccountAndTypeRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Type,
-			&i.Amount,
-			&i.FromAccountName,
-			&i.FromAccountID,
-			&i.ToAccountName,
-			&i.ToAccountID,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err

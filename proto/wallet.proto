@@ -15,76 +15,142 @@ enum TransferType {
 
 enum Currency {
   UNDEFINED = 0;
-  EGP =1;
-  USD =2;
-  EUR =3;
-  RUB =4;
-  GBP =5;
+  EGP = 1;
+  USD = 2;
+  EUR = 3;
+  RUB = 4;
+  GBP = 5;
 }
 
 // CreateWallet
-message CreateWalletRequest {
-  Currency currency = 1;
-  string name =2;
-}
+// Wallet is a user's account in the system that can have multiple accounts
+message CreateWalletRequest {} // user id is taken from the context
 message CreateWalletResponse {
-  uint32 wallet_id =1;
+  bool success = 1;
+}
+
+// CreateAccount
+message CreateAccountRequest {
+  Currency currency = 1;
+  string name = 2;
+}
+message CreateAccountResponse {
+  uint32 account_id = 1;
+}
+
+// GetAccounts
+message GetAccountsRequest {} // user id is taken from the context
+message GetAccountsResponse {
+  message Account {
+    uint32 id = 1;
+    string name = 2;
+    double balance = 3;
+    Currency currency = 4;
+  }
+  repeated Account accounts = 1;
+}
+
+// DeleteAccount
+message DeleteAccountRequest {
+  uint32 account_id = 1;
+}
+message DeleteAccountResponse {
+  bool success = 1;
+}
+
+// CreateCard
+message CreateCardRequest {
+  uint32 account_id = 1;
+}
+message CreateCardResponse {
+  uint32 card_id = 1;
+}
+
+// GetCards
+message GetCardsRequest {
+  uint32 account_id = 1;
+}
+message GetCardsResponse {
+  message Card {
+    string number = 1; // 16 digits number
+  }
+  repeated Card cards = 1;
+}
+
+// DeleteCard
+message DeleteCardRequest {
+  uint32 card_id = 1;
+}
+message DeleteCardResponse {
+  bool success = 1;
 }
 
 // Transfer
 message TransferRequest {
   TransferType type = 1;
   double amount = 2;
-  int32 wallet_id =3;
-  optional int32 recipient =4; // wallet_id of recipient, Is required for transfer type only
+  string card_number = 3; // 16 digits number
+  optional string recipient_card_number = 4; // 16 digits number, required on `TransferType.TRANSFER`
 }
 message TransferResponse {
-  double balance =1;
+  double balance = 1;
 }
 
-// RollbackTransfer
-message RollbackTransferRequest {
-  uint32 transaction_id =1;
+// TransferRollback
+message TransferRollbackRequest {
+  uint32 transaction_id = 1;
 }
-message RollbackTransferResponse {
-  double balance =1;
+message TransferRollbackResponse {
+  double balance = 1; // balance after rollback
 }
 
 // GetWallets
 message GetWalletsRequest {} // user id is taken from the context
 message GetWalletsResponse {
   message Wallet {
-    uint32 id =1;
-    string name =2;
-    double balance =3;
-    Currency currency =4;
+    uint32 id = 1;
+    string name = 2;
+    double balance = 3;
+    Currency currency = 4;
   }
-  repeated Wallet wallets =1;
+  repeated Wallet wallets = 1;
 }
 
 // GetTransactionHistory
 message GetTransactionHistoryRequest {
-  int32 wallet_id =1;
-
+  int32 account_id = 1;
+  uint32 limit = 2;
+  uint32 offset = 3;
+  optional TransferType type = 4;
+  optional google.protobuf.Timestamp from = 5;
+  optional google.protobuf.Timestamp to = 6;
 }
 message GetTransactionHistoryResponse {
   message Transaction {
-    uint32 id =1;
-    double amount =2;
-    TransferType type =3;
-    optional int32 recipient =4; // On withdraw equal -1, on deposit equal -2
-    optional string recipient_name =5;  // On withdraw and deposit equal ""
-    google.protobuf.Timestamp timestamp =6;
+    string id = 1; // uuid
+    double amount = 2;
+    TransferType type = 3;
+    optional int32 recipient = 4; // On withdraw 0, on deposit account_id
+    optional string recipient_name = 5;  // On withdraw "", on deposit "ATM"
+    google.protobuf.Timestamp created_at = 6;
   }
-  repeated Transaction transactions =1;
+  repeated Transaction transactions = 1;
 }
 
 service WalletService {
-  // Mutators
+  // User
   rpc CreateWallet(CreateWalletRequest) returns (CreateWalletResponse);
+  // Account
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  // Card
+  rpc CreateCard(CreateCardRequest) returns (CreateCardResponse);
+  rpc GetCards(GetCardsRequest) returns (GetCardsResponse);
+  rpc DeleteCard(DeleteCardRequest) returns (DeleteCardResponse);
+  // Transfer
   rpc Transfer(TransferRequest) returns (TransferResponse);
-  rpc RollbackTransfer(RollbackTransferRequest) returns (RollbackTransferResponse);
-  // Getters
-  rpc GetWallets(GetWalletsRequest) returns (GetWalletsResponse);
+  rpc TransferRollback(TransferRollbackRequest) returns (TransferRollbackResponse);
+  // History
   rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (stream GetTransactionHistoryResponse);
 }

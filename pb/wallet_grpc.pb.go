@@ -23,12 +23,20 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WalletServiceClient interface {
-	// Mutators
+	// User
 	CreateWallet(ctx context.Context, in *CreateWalletRequest, opts ...grpc.CallOption) (*CreateWalletResponse, error)
+	// Account
+	CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountResponse, error)
+	GetAccounts(ctx context.Context, in *GetAccountsRequest, opts ...grpc.CallOption) (*GetAccountsResponse, error)
+	DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error)
+	// Card
+	CreateCard(ctx context.Context, in *CreateCardRequest, opts ...grpc.CallOption) (*CreateCardResponse, error)
+	GetCards(ctx context.Context, in *GetCardsRequest, opts ...grpc.CallOption) (*GetCardsResponse, error)
+	DeleteCard(ctx context.Context, in *DeleteCardRequest, opts ...grpc.CallOption) (*DeleteCardResponse, error)
+	// Transfer
 	Transfer(ctx context.Context, in *TransferRequest, opts ...grpc.CallOption) (*TransferResponse, error)
-	RollbackTransfer(ctx context.Context, in *RollbackTransferRequest, opts ...grpc.CallOption) (*RollbackTransferResponse, error)
-	// Getters
-	GetWallets(ctx context.Context, in *GetWalletsRequest, opts ...grpc.CallOption) (*GetWalletsResponse, error)
+	TransferRollback(ctx context.Context, in *TransferRollbackRequest, opts ...grpc.CallOption) (*TransferRollbackResponse, error)
+	// History
 	GetTransactionHistory(ctx context.Context, in *GetTransactionHistoryRequest, opts ...grpc.CallOption) (WalletService_GetTransactionHistoryClient, error)
 }
 
@@ -49,6 +57,60 @@ func (c *walletServiceClient) CreateWallet(ctx context.Context, in *CreateWallet
 	return out, nil
 }
 
+func (c *walletServiceClient) CreateAccount(ctx context.Context, in *CreateAccountRequest, opts ...grpc.CallOption) (*CreateAccountResponse, error) {
+	out := new(CreateAccountResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/CreateAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) GetAccounts(ctx context.Context, in *GetAccountsRequest, opts ...grpc.CallOption) (*GetAccountsResponse, error) {
+	out := new(GetAccountsResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/GetAccounts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) DeleteAccount(ctx context.Context, in *DeleteAccountRequest, opts ...grpc.CallOption) (*DeleteAccountResponse, error) {
+	out := new(DeleteAccountResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/DeleteAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) CreateCard(ctx context.Context, in *CreateCardRequest, opts ...grpc.CallOption) (*CreateCardResponse, error) {
+	out := new(CreateCardResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/CreateCard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) GetCards(ctx context.Context, in *GetCardsRequest, opts ...grpc.CallOption) (*GetCardsResponse, error) {
+	out := new(GetCardsResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/GetCards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *walletServiceClient) DeleteCard(ctx context.Context, in *DeleteCardRequest, opts ...grpc.CallOption) (*DeleteCardResponse, error) {
+	out := new(DeleteCardResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/DeleteCard", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *walletServiceClient) Transfer(ctx context.Context, in *TransferRequest, opts ...grpc.CallOption) (*TransferResponse, error) {
 	out := new(TransferResponse)
 	err := c.cc.Invoke(ctx, "/pb.WalletService/Transfer", in, out, opts...)
@@ -58,18 +120,9 @@ func (c *walletServiceClient) Transfer(ctx context.Context, in *TransferRequest,
 	return out, nil
 }
 
-func (c *walletServiceClient) RollbackTransfer(ctx context.Context, in *RollbackTransferRequest, opts ...grpc.CallOption) (*RollbackTransferResponse, error) {
-	out := new(RollbackTransferResponse)
-	err := c.cc.Invoke(ctx, "/pb.WalletService/RollbackTransfer", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *walletServiceClient) GetWallets(ctx context.Context, in *GetWalletsRequest, opts ...grpc.CallOption) (*GetWalletsResponse, error) {
-	out := new(GetWalletsResponse)
-	err := c.cc.Invoke(ctx, "/pb.WalletService/GetWallets", in, out, opts...)
+func (c *walletServiceClient) TransferRollback(ctx context.Context, in *TransferRollbackRequest, opts ...grpc.CallOption) (*TransferRollbackResponse, error) {
+	out := new(TransferRollbackResponse)
+	err := c.cc.Invoke(ctx, "/pb.WalletService/TransferRollback", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,12 +165,20 @@ func (x *walletServiceGetTransactionHistoryClient) Recv() (*GetTransactionHistor
 // All implementations must embed UnimplementedWalletServiceServer
 // for forward compatibility
 type WalletServiceServer interface {
-	// Mutators
+	// User
 	CreateWallet(context.Context, *CreateWalletRequest) (*CreateWalletResponse, error)
+	// Account
+	CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountResponse, error)
+	GetAccounts(context.Context, *GetAccountsRequest) (*GetAccountsResponse, error)
+	DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error)
+	// Card
+	CreateCard(context.Context, *CreateCardRequest) (*CreateCardResponse, error)
+	GetCards(context.Context, *GetCardsRequest) (*GetCardsResponse, error)
+	DeleteCard(context.Context, *DeleteCardRequest) (*DeleteCardResponse, error)
+	// Transfer
 	Transfer(context.Context, *TransferRequest) (*TransferResponse, error)
-	RollbackTransfer(context.Context, *RollbackTransferRequest) (*RollbackTransferResponse, error)
-	// Getters
-	GetWallets(context.Context, *GetWalletsRequest) (*GetWalletsResponse, error)
+	TransferRollback(context.Context, *TransferRollbackRequest) (*TransferRollbackResponse, error)
+	// History
 	GetTransactionHistory(*GetTransactionHistoryRequest, WalletService_GetTransactionHistoryServer) error
 	mustEmbedUnimplementedWalletServiceServer()
 }
@@ -129,14 +190,29 @@ type UnimplementedWalletServiceServer struct {
 func (UnimplementedWalletServiceServer) CreateWallet(context.Context, *CreateWalletRequest) (*CreateWalletResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateWallet not implemented")
 }
+func (UnimplementedWalletServiceServer) CreateAccount(context.Context, *CreateAccountRequest) (*CreateAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAccount not implemented")
+}
+func (UnimplementedWalletServiceServer) GetAccounts(context.Context, *GetAccountsRequest) (*GetAccountsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAccounts not implemented")
+}
+func (UnimplementedWalletServiceServer) DeleteAccount(context.Context, *DeleteAccountRequest) (*DeleteAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccount not implemented")
+}
+func (UnimplementedWalletServiceServer) CreateCard(context.Context, *CreateCardRequest) (*CreateCardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCard not implemented")
+}
+func (UnimplementedWalletServiceServer) GetCards(context.Context, *GetCardsRequest) (*GetCardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCards not implemented")
+}
+func (UnimplementedWalletServiceServer) DeleteCard(context.Context, *DeleteCardRequest) (*DeleteCardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCard not implemented")
+}
 func (UnimplementedWalletServiceServer) Transfer(context.Context, *TransferRequest) (*TransferResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Transfer not implemented")
 }
-func (UnimplementedWalletServiceServer) RollbackTransfer(context.Context, *RollbackTransferRequest) (*RollbackTransferResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RollbackTransfer not implemented")
-}
-func (UnimplementedWalletServiceServer) GetWallets(context.Context, *GetWalletsRequest) (*GetWalletsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWallets not implemented")
+func (UnimplementedWalletServiceServer) TransferRollback(context.Context, *TransferRollbackRequest) (*TransferRollbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransferRollback not implemented")
 }
 func (UnimplementedWalletServiceServer) GetTransactionHistory(*GetTransactionHistoryRequest, WalletService_GetTransactionHistoryServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetTransactionHistory not implemented")
@@ -172,6 +248,114 @@ func _WalletService_CreateWallet_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _WalletService_CreateAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).CreateAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.WalletService/CreateAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).CreateAccount(ctx, req.(*CreateAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_GetAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAccountsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).GetAccounts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.WalletService/GetAccounts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).GetAccounts(ctx, req.(*GetAccountsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_DeleteAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).DeleteAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.WalletService/DeleteAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).DeleteAccount(ctx, req.(*DeleteAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_CreateCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).CreateCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.WalletService/CreateCard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).CreateCard(ctx, req.(*CreateCardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_GetCards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).GetCards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.WalletService/GetCards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).GetCards(ctx, req.(*GetCardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _WalletService_DeleteCard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(WalletServiceServer).DeleteCard(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.WalletService/DeleteCard",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(WalletServiceServer).DeleteCard(ctx, req.(*DeleteCardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _WalletService_Transfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TransferRequest)
 	if err := dec(in); err != nil {
@@ -190,38 +374,20 @@ func _WalletService_Transfer_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WalletService_RollbackTransfer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RollbackTransferRequest)
+func _WalletService_TransferRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransferRollbackRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WalletServiceServer).RollbackTransfer(ctx, in)
+		return srv.(WalletServiceServer).TransferRollback(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.WalletService/RollbackTransfer",
+		FullMethod: "/pb.WalletService/TransferRollback",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletServiceServer).RollbackTransfer(ctx, req.(*RollbackTransferRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _WalletService_GetWallets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWalletsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WalletServiceServer).GetWallets(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.WalletService/GetWallets",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletServiceServer).GetWallets(ctx, req.(*GetWalletsRequest))
+		return srv.(WalletServiceServer).TransferRollback(ctx, req.(*TransferRollbackRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -259,16 +425,36 @@ var WalletService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WalletService_CreateWallet_Handler,
 		},
 		{
+			MethodName: "CreateAccount",
+			Handler:    _WalletService_CreateAccount_Handler,
+		},
+		{
+			MethodName: "GetAccounts",
+			Handler:    _WalletService_GetAccounts_Handler,
+		},
+		{
+			MethodName: "DeleteAccount",
+			Handler:    _WalletService_DeleteAccount_Handler,
+		},
+		{
+			MethodName: "CreateCard",
+			Handler:    _WalletService_CreateCard_Handler,
+		},
+		{
+			MethodName: "GetCards",
+			Handler:    _WalletService_GetCards_Handler,
+		},
+		{
+			MethodName: "DeleteCard",
+			Handler:    _WalletService_DeleteCard_Handler,
+		},
+		{
 			MethodName: "Transfer",
 			Handler:    _WalletService_Transfer_Handler,
 		},
 		{
-			MethodName: "RollbackTransfer",
-			Handler:    _WalletService_RollbackTransfer_Handler,
-		},
-		{
-			MethodName: "GetWallets",
-			Handler:    _WalletService_GetWallets_Handler,
+			MethodName: "TransferRollback",
+			Handler:    _WalletService_TransferRollback_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
