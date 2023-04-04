@@ -56,6 +56,48 @@ services:
       jaeger:
         condition: service_started
 
+  wallet:
+    container_name: "wallet"
+    restart: unless-stopped
+    volumes:
+      - ./wallet:/go/src/github.com/escalopa/fingo/wallet
+      - ./pb:/go/src/github.com/escalopa/fingo/pb
+      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
+      - ./certs:/go/src/github.com/escalopa/fingo/certs
+    environment:
+      # Server
+      - WALLET_GRPC_PORT=${WALLET_GRPC_PORT}
+      # Tracing
+      - WALLET_TRACING_ENABLE=${WALLET_TRACING_ENABLE}
+      - WALLET_TRACING_JAEGER_ENABLE=${WALLET_TRACING_JAEGER_ENABLE}
+      - WALLET_TRACING_JAEGER_AGENT_URL=${WALLET_TRACING_JAEGER_AGENT_URL}
+      - WALLET_TRACING_JAEGER_SERVICE_NAME=${WALLET_TRACING_JAEGER_SERVICE_NAME}
+      - WALLET_TRACING_JAEGER_ENVIRONMENT=${WALLET_TRACING_JAEGER_ENVIRONMENT}
+      # Tls
+      - WALLET_GRPC_TLS_ENABLE=${WALLET_GRPC_TLS_ENABLE}
+      - WALLET_GRPC_TLS_KEY_FILE=${WALLET_GRPC_TLS_KEY_FILE}
+      - WALLET_GRPC_TLS_CERT_FILE=${WALLET_GRPC_TLS_CERT_FILE}
+      # Token service
+      - TOKEN_GRPC_URL=${TOKEN_GRPC_URL}
+      - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
+      - AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
+      # Database (cockroachdb or postgres)
+      - WALLET_DATABASE_URL=${WALLET_DATABASE_URL}
+      - WALLET_DATABASE_MIGRATION_PATH=${WALLET_DATABASE_MIGRATION_PATH}
+    ports:
+      - "${WALLET_GRPC_PORT}:${WALLET_GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: ./_deployments/Dockerfile.wallet
+      target: development
+    depends_on:
+      token:
+        condition: service_started
+      cockroachdb_node_1:
+        condition: service_healthy
+      cockroachdb_node_2:
+        condition: service_healthy
+
   token:
     container_name: "token"
     restart: unless-stopped
@@ -158,6 +200,38 @@ services:
       timeout: 2s
       retries: 5
 
+  cockroachdb_node_1: # Master node
+    image: cockroachdb/cockroach:latest
+    container_name: crdb1
+    volumes:
+      - crdb1:/cockroach/cockroach-data
+      - ./scripts/cockroach-inti.sh:/docker-entrypoint-initdb.d/cockroach-inti.sh
+    command: [ "start", "--insecure", "--join=crdb1,crdb2", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb1" ]
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    networks:
+      crdbnet:
+    healthcheck:
+      test: [ "CMD", "cockroach", "node", "status", "--insecure" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  cockroachdb_node_2:
+    image: cockroachdb/cockroach:latest
+    container_name: crdb2
+    volumes:
+      - crdb2:/cockroach/cockroach-data
+    command: [ "start", "--insecure", "--join=crdb1,crdb2", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb2" ]
+    networks:
+      crdbnet:
+    healthcheck:
+      test: [ "CMD", "cockroach", "node", "status", "--insecure" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3.10.19-management
     container_name: "rabbitmq"
@@ -184,5 +258,10 @@ services:
       - "6831:6831/udp"
 
 volumes:
+  crdb1:
+  crdb2:
   cache:
   db:
+
+networks:
+  crdbnet:
