@@ -1,4 +1,4 @@
--- name: CreateCard :exec
+-- name: CreateCard :execresult
 INSERT INTO cards (number, account_id)
 VALUES ($1, $2);
 
@@ -24,20 +24,6 @@ FROM accounts
 WHERE id = (SELECT account_id
             FROM cards
             WHERE number = $1);
-
--- name: AddCardBalance :exec
-UPDATE accounts
-SET balance = balance + $1
-WHERE id = (SELECT account_id
-            FROM cards
-            WHERE number = $2);
-
--- name: SubtractCardBalance :exec
-UPDATE accounts
-SET balance = balance - $1
-WHERE id = (SELECT account_id
-            FROM cards
-            WHERE number = $2);
 
 -- name: DeleteCard :exec
 DELETE

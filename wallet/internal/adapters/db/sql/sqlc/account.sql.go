@@ -3,26 +3,43 @@
 //   sqlc v1.16.0
 // source: account.sql
 
-package db
+package sqlc
 
 import (
 	"context"
+	"database/sql"
 )
 
-const createAccount = `-- name: CreateAccount :exec
+const addAccountBalance = `-- name: AddAccountBalance :exec
+UPDATE accounts
+SET balance = balance + $2
+WHERE id = $1
+`
+
+type AddAccountBalanceParams struct {
+	ID      int64   `db:"id" json:"id"`
+	Balance float64 `db:"balance" json:"balance"`
+}
+
+func (q *Queries) AddAccountBalance(ctx context.Context, db DBTX, arg AddAccountBalanceParams) error {
+	_, err := db.ExecContext(ctx, addAccountBalance, arg.ID, arg.Balance)
+	return err
+}
+
+const createAccount = `-- name: CreateAccount :execresult
 INSERT INTO accounts (user_id, currency_id, name)
 VALUES ($1, $2, $3)
+RETURNING id
 `
 
 type CreateAccountParams struct {
-	UserID     int32  `db:"user_id" json:"user_id"`
+	UserID     int64  `db:"user_id" json:"user_id"`
 	CurrencyID int16  `db:"currency_id" json:"currency_id"`
 	Name       string `db:"name" json:"name"`
 }
 
-func (q *Queries) CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) error {
-	_, err := db.ExecContext(ctx, createAccount, arg.UserID, arg.CurrencyID, arg.Name)
-	return err
+func (q *Queries) CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) (sql.Result, error) {
+	return db.ExecContext(ctx, createAccount, arg.UserID, arg.CurrencyID, arg.Name)
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec
@@ -31,7 +48,7 @@ FROM accounts
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAccount(ctx context.Context, db DBTX, id int32) error {
+func (q *Queries) DeleteAccount(ctx context.Context, db DBTX, id int64) error {
 	_, err := db.ExecContext(ctx, deleteAccount, id)
 	return err
 }
@@ -43,7 +60,7 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetAccount(ctx context.Context, db DBTX, id int32) (Account, error) {
+func (q *Queries) GetAccount(ctx context.Context, db DBTX, id int64) (Account, error) {
 	row := db.QueryRowContext(ctx, getAccount, id)
 	var i Account
 	err := row.Scan(
@@ -62,7 +79,7 @@ FROM accounts
 WHERE user_id = $1
 `
 
-func (q *Queries) GetAccounts(ctx context.Context, db DBTX, userID int32) ([]Account, error) {
+func (q *Queries) GetAccounts(ctx context.Context, db DBTX, userID int64) ([]Account, error) {
 	rows, err := db.QueryContext(ctx, getAccounts, userID)
 	if err != nil {
 		return nil, err
@@ -89,4 +106,20 @@ func (q *Queries) GetAccounts(ctx context.Context, db DBTX, userID int32) ([]Acc
 		return nil, err
 	}
 	return items, nil
+}
+
+const subAccountBalance = `-- name: SubAccountBalance :exec
+UPDATE accounts
+SET balance = balance + $2
+WHERE id = $1
+`
+
+type SubAccountBalanceParams struct {
+	ID      int64   `db:"id" json:"id"`
+	Balance float64 `db:"balance" json:"balance"`
+}
+
+func (q *Queries) SubAccountBalance(ctx context.Context, db DBTX, arg SubAccountBalanceParams) error {
+	_, err := db.ExecContext(ctx, subAccountBalance, arg.ID, arg.Balance)
+	return err
 }

@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"log"
 
+	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/postgres"
+	_ "github.com/mattes/migrate/source/file"
 )
 
 // New creates a new postgres connection with the given connection string

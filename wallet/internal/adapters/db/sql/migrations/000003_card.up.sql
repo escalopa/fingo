@@ -1,7 +1,7 @@
 CREATE TABLE cards
 (
   number     VARCHAR(16) PRIMARY KEY NOT NULL,
-  account_id INTEGER                 NOT NULL
+  account_id BIGINT                 NOT NULL
 );
 
 ALTER TABLE cards

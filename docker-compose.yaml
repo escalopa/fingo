@@ -210,8 +210,6 @@ services:
     ports:
       - "26257:26257"
       - "8080:8080"
-    networks:
-      crdbnet:
     healthcheck:
       test: [ "CMD", "cockroach", "node", "status", "--insecure" ]
       interval: 2s
@@ -224,8 +222,6 @@ services:
     volumes:
       - crdb2:/cockroach/cockroach-data
     command: [ "start", "--insecure", "--join=crdb1,crdb2", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb2" ]
-    networks:
-      crdbnet:
     healthcheck:
       test: [ "CMD", "cockroach", "node", "status", "--insecure" ]
       interval: 2s
@@ -262,6 +258,3 @@ volumes:
   crdb2:
   cache:
   db:
-
-networks:
-  crdbnet:

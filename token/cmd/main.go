@@ -60,7 +60,8 @@ func main() {
 
 	// Load TLS certificates
 	var opts []grpc.ServerOption
-	pkgerror.CheckError(loadTls(c, &opts), "failed to load token TLS certificates")
+	err = loadTls(c, &opts)
+	pkgerror.CheckError(err, "failed to load token tls certificates")
 
 	// Start gRPC server
 	pkgerror.CheckError(start(c, uc, opts), "failed to start gRPC server")

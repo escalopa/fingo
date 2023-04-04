@@ -3,7 +3,7 @@
 //   sqlc v1.16.0
 // source: transaction.sql
 
-package db
+package sqlc
 
 import (
 	"context"
@@ -21,9 +21,9 @@ RETURNING id
 
 type CreateTransactionParams struct {
 	Type                 TransactionType `db:"type" json:"type"`
-	Amount               string          `db:"amount" json:"amount"`
-	SourceAccountID      sql.NullInt32   `db:"source_account_id" json:"source_account_id"`
-	DestinationAccountID sql.NullInt32   `db:"destination_account_id" json:"destination_account_id"`
+	Amount               float64         `db:"amount" json:"amount"`
+	SourceAccountID      sql.NullInt64   `db:"source_account_id" json:"source_account_id"`
+	DestinationAccountID sql.NullInt64   `db:"destination_account_id" json:"destination_account_id"`
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, db DBTX, arg CreateTransactionParams) error {
@@ -37,17 +37,29 @@ func (q *Queries) CreateTransaction(ctx context.Context, db DBTX, arg CreateTran
 }
 
 const getTransaction = `-- name: GetTransaction :one
-SELECT transactions.id, type, amount, source_account_id, destination_account_id
+SELECT transactions.id,
+       type,
+       amount,
+       source.id        as from_account_id,
+       source.name      as from_account_name,
+       destination.id   as to_account_id,
+       destination.name as to_account_name,
+       created_at
 FROM transactions
-WHERE id = $1
+       JOIN accounts destination on destination.id = transactions.destination_account_id
+       JOIN accounts source on destination.id = transactions.source_account_id
+WHERE transactions.id = $1
 `
 
 type GetTransactionRow struct {
-	ID                   uuid.UUID       `db:"id" json:"id"`
-	Type                 TransactionType `db:"type" json:"type"`
-	Amount               string          `db:"amount" json:"amount"`
-	SourceAccountID      sql.NullInt32   `db:"source_account_id" json:"source_account_id"`
-	DestinationAccountID sql.NullInt32   `db:"destination_account_id" json:"destination_account_id"`
+	ID              uuid.UUID       `db:"id" json:"id"`
+	Type            TransactionType `db:"type" json:"type"`
+	Amount          float64         `db:"amount" json:"amount"`
+	FromAccountID   int64           `db:"from_account_id" json:"from_account_id"`
+	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
+	ToAccountID     int64           `db:"to_account_id" json:"to_account_id"`
+	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
+	CreatedAt       time.Time       `db:"created_at" json:"created_at"`
 }
 
 func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (GetTransactionRow, error) {
@@ -57,8 +69,11 @@ func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (Ge
 		&i.ID,
 		&i.Type,
 		&i.Amount,
-		&i.SourceAccountID,
-		&i.DestinationAccountID,
+		&i.FromAccountID,
+		&i.FromAccountName,
+		&i.ToAccountID,
+		&i.ToAccountName,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -86,12 +101,12 @@ LIMIT $9 OFFSET $8
 `
 
 type GetTransactionsParams struct {
-	AccountID       int32               `db:"account_id" json:"account_id"`
+	AccountID       int64               `db:"account_id" json:"account_id"`
 	TransactionType NullTransactionType `db:"transaction_type" json:"transaction_type"`
 	FromDate        sql.NullTime        `db:"from_date" json:"from_date"`
 	ToDate          sql.NullTime        `db:"to_date" json:"to_date"`
-	FromAmount      sql.NullString      `db:"from_amount" json:"from_amount"`
-	ToAmount        sql.NullString      `db:"to_amount" json:"to_amount"`
+	FromAmount      sql.NullFloat64     `db:"from_amount" json:"from_amount"`
+	ToAmount        sql.NullFloat64     `db:"to_amount" json:"to_amount"`
 	IsRolledBack    sql.NullBool        `db:"is_rolled_back" json:"is_rolled_back"`
 	Offset          int32               `db:"offset" json:"offset"`
 	Limit           int32               `db:"limit" json:"limit"`
@@ -99,7 +114,7 @@ type GetTransactionsParams struct {
 
 type GetTransactionsRow struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
-	Amount          string          `db:"amount" json:"amount"`
+	Amount          float64         `db:"amount" json:"amount"`
 	Type            TransactionType `db:"type" json:"type"`
 	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
 	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
@@ -144,4 +159,15 @@ func (q *Queries) GetTransactions(ctx context.Context, db DBTX, arg GetTransacti
 		return nil, err
 	}
 	return items, nil
+}
+
+const setTransactionRolledBack = `-- name: SetTransactionRolledBack :exec
+UPDATE transactions
+SET is_rolled_back = true
+WHERE id = $1
+`
+
+func (q *Queries) SetTransactionRolledBack(ctx context.Context, db DBTX, id uuid.UUID) error {
+	_, err := db.ExecContext(ctx, setTransactionRolledBack, id)
+	return err
 }

@@ -3,7 +3,7 @@
 //   sqlc v1.16.0
 // source: user.sql
 
-package db
+package sqlc
 
 import (
 	"context"
@@ -28,9 +28,9 @@ FROM users
 WHERE external_id = $1
 `
 
-func (q *Queries) GetUserByExternalID(ctx context.Context, db DBTX, externalID uuid.UUID) (int32, error) {
+func (q *Queries) GetUserByExternalID(ctx context.Context, db DBTX, externalID uuid.UUID) (int64, error) {
 	row := db.QueryRowContext(ctx, getUserByExternalID, externalID)
-	var id int32
+	var id int64
 	err := row.Scan(&id)
 	return id, err
 }

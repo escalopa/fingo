@@ -15,16 +15,11 @@ repos:
         stages: [push, merge-commit, commit]
       - id: no-go-testing
         stages: [push, merge-commit, commit]
-      # - id: golangci-lint
-      #   stages: [ push, merge-commit, commit ]
-      # - id: go-unit-tests
-      #   stages: [push, merge-commit, commit]
+      - id: golangci-lint
+        stages: [push, merge-commit, commit]
+#      - id: go-unit-tests
+#        stages: [push, merge-commit, commit]
       - id: validate-toml
-  #  - repo: https://github.com/sqlfluff/sqlfluff
-  #    rev: 2.0.1
-  #    hooks:
-  #      - id: sqlfluff-lint
-  #      - id: sqlfluff-fix
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v8.0.0
     hooks:

@@ -4,9 +4,18 @@ VALUES ($1, $2, $3, $4)
 RETURNING id;
 
 -- name: GetTransaction :one
-SELECT transactions.id, type, amount, source_account_id, destination_account_id
+SELECT transactions.id,
+       type,
+       amount,
+       source.id        as from_account_id,
+       source.name      as from_account_name,
+       destination.id   as to_account_id,
+       destination.name as to_account_name,
+       created_at
 FROM transactions
-WHERE id = $1;
+       JOIN accounts destination on destination.id = transactions.destination_account_id
+       JOIN accounts source on destination.id = transactions.source_account_id
+WHERE transactions.id = $1;
 
 -- name: GetTransactions :many
 SELECT transactions.id,
@@ -28,3 +37,8 @@ WHERE source.id = sqlc.arg('account_id')
   AND coalesce(sqlc.narg('is_rolled_back'), transactions.is_rolled_back) = transactions.is_rolled_back
 ORDER BY created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: SetTransactionRolledBack :exec
+UPDATE transactions
+SET is_rolled_back = true
+WHERE id = $1;

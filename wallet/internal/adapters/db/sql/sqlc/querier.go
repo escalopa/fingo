@@ -2,33 +2,37 @@
 // versions:
 //   sqlc v1.16.0
 
-package db
+package sqlc
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
 
 type Querier interface {
-	AddCardBalance(ctx context.Context, db DBTX, arg AddCardBalanceParams) error
-	CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) error
-	CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) error
+	AddAccountBalance(ctx context.Context, db DBTX, arg AddAccountBalanceParams) error
+	CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) (sql.Result, error)
+	CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) (sql.Result, error)
 	CreateTransaction(ctx context.Context, db DBTX, arg CreateTransactionParams) error
 	CreateUser(ctx context.Context, db DBTX, externalID uuid.UUID) error
-	DeleteAccount(ctx context.Context, db DBTX, id int32) error
-	DeleteAccountCards(ctx context.Context, db DBTX, accountID int32) error
+	DeleteAccount(ctx context.Context, db DBTX, id int64) error
+	DeleteAccountCards(ctx context.Context, db DBTX, accountID int64) error
 	DeleteCard(ctx context.Context, db DBTX, number string) error
-	GetAccount(ctx context.Context, db DBTX, id int32) (Account, error)
-	GetAccountCards(ctx context.Context, db DBTX, accountID int32) ([]Card, error)
-	GetAccounts(ctx context.Context, db DBTX, userID int32) ([]Account, error)
+	GetAccount(ctx context.Context, db DBTX, id int64) (Account, error)
+	GetAccountCards(ctx context.Context, db DBTX, accountID int64) ([]Card, error)
+	GetAccounts(ctx context.Context, db DBTX, userID int64) ([]Account, error)
 	GetCard(ctx context.Context, db DBTX, number string) (Card, error)
-	GetCardBalance(ctx context.Context, db DBTX, number string) (string, error)
+	GetCardBalance(ctx context.Context, db DBTX, number string) (float64, error)
+	GetCurrencyByID(ctx context.Context, db DBTX, id int16) (Currency, error)
+	GetCurrencyByName(ctx context.Context, db DBTX, name string) (int16, error)
 	GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (GetTransactionRow, error)
 	GetTransactions(ctx context.Context, db DBTX, arg GetTransactionsParams) ([]GetTransactionsRow, error)
-	GetUserByExternalID(ctx context.Context, db DBTX, externalID uuid.UUID) (int32, error)
-	GetUserCards(ctx context.Context, db DBTX, userID int32) ([]GetUserCardsRow, error)
-	SubtractCardBalance(ctx context.Context, db DBTX, arg SubtractCardBalanceParams) error
+	GetUserByExternalID(ctx context.Context, db DBTX, externalID uuid.UUID) (int64, error)
+	GetUserCards(ctx context.Context, db DBTX, userID int64) ([]GetUserCardsRow, error)
+	SetTransactionRolledBack(ctx context.Context, db DBTX, id uuid.UUID) error
+	SubAccountBalance(ctx context.Context, db DBTX, arg SubAccountBalanceParams) error
 }
 
 var _ Querier = (*Queries)(nil)

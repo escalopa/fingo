@@ -54,7 +54,7 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, params core.Crea
 		ExpiresAt:    time.Now().Add(sr.std),
 	})
 	if err != nil {
-		if isUniqueViolationError(err) {
+		if IsUniqueViolationError(err) {
 			return errs.B(err).Code(errs.AlreadyExists).Msg("violation to unique keys in sessions table").Err()
 		}
 		return errs.B(err).Code(errs.Internal).Msg("failed to create new sessions").Err()

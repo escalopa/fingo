@@ -3,43 +3,25 @@
 //   sqlc v1.16.0
 // source: card.sql
 
-package db
+package sqlc
 
 import (
 	"context"
+	"database/sql"
 )
 
-const addCardBalance = `-- name: AddCardBalance :exec
-UPDATE accounts
-SET balance = balance + $1
-WHERE id = (SELECT account_id
-            FROM cards
-            WHERE number = $2)
-`
-
-type AddCardBalanceParams struct {
-	Balance string `db:"balance" json:"balance"`
-	Number  string `db:"number" json:"number"`
-}
-
-func (q *Queries) AddCardBalance(ctx context.Context, db DBTX, arg AddCardBalanceParams) error {
-	_, err := db.ExecContext(ctx, addCardBalance, arg.Balance, arg.Number)
-	return err
-}
-
-const createCard = `-- name: CreateCard :exec
+const createCard = `-- name: CreateCard :execresult
 INSERT INTO cards (number, account_id)
 VALUES ($1, $2)
 `
 
 type CreateCardParams struct {
 	Number    string `db:"number" json:"number"`
-	AccountID int32  `db:"account_id" json:"account_id"`
+	AccountID int64  `db:"account_id" json:"account_id"`
 }
 
-func (q *Queries) CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) error {
-	_, err := db.ExecContext(ctx, createCard, arg.Number, arg.AccountID)
-	return err
+func (q *Queries) CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) (sql.Result, error) {
+	return db.ExecContext(ctx, createCard, arg.Number, arg.AccountID)
 }
 
 const deleteAccountCards = `-- name: DeleteAccountCards :exec
@@ -48,7 +30,7 @@ FROM cards
 WHERE account_id = $1
 `
 
-func (q *Queries) DeleteAccountCards(ctx context.Context, db DBTX, accountID int32) error {
+func (q *Queries) DeleteAccountCards(ctx context.Context, db DBTX, accountID int64) error {
 	_, err := db.ExecContext(ctx, deleteAccountCards, accountID)
 	return err
 }
@@ -70,7 +52,7 @@ FROM cards
 WHERE account_id = $1
 `
 
-func (q *Queries) GetAccountCards(ctx context.Context, db DBTX, accountID int32) ([]Card, error) {
+func (q *Queries) GetAccountCards(ctx context.Context, db DBTX, accountID int64) ([]Card, error) {
 	rows, err := db.QueryContext(ctx, getAccountCards, accountID)
 	if err != nil {
 		return nil, err
@@ -114,9 +96,9 @@ WHERE id = (SELECT account_id
             WHERE number = $1)
 `
 
-func (q *Queries) GetCardBalance(ctx context.Context, db DBTX, number string) (string, error) {
+func (q *Queries) GetCardBalance(ctx context.Context, db DBTX, number string) (float64, error) {
 	row := db.QueryRowContext(ctx, getCardBalance, number)
-	var balance string
+	var balance float64
 	err := row.Scan(&balance)
 	return balance, err
 }
@@ -130,11 +112,11 @@ WHERE accounts.user_id = $1
 
 type GetUserCardsRow struct {
 	Number     string `db:"number" json:"number"`
-	AccountID  int32  `db:"account_id" json:"account_id"`
+	AccountID  int64  `db:"account_id" json:"account_id"`
 	CurrencyID int16  `db:"currency_id" json:"currency_id"`
 }
 
-func (q *Queries) GetUserCards(ctx context.Context, db DBTX, userID int32) ([]GetUserCardsRow, error) {
+func (q *Queries) GetUserCards(ctx context.Context, db DBTX, userID int64) ([]GetUserCardsRow, error) {
 	rows, err := db.QueryContext(ctx, getUserCards, userID)
 	if err != nil {
 		return nil, err
@@ -155,22 +137,4 @@ func (q *Queries) GetUserCards(ctx context.Context, db DBTX, userID int32) ([]Ge
 		return nil, err
 	}
 	return items, nil
-}
-
-const subtractCardBalance = `-- name: SubtractCardBalance :exec
-UPDATE accounts
-SET balance = balance - $1
-WHERE id = (SELECT account_id
-            FROM cards
-            WHERE number = $2)
-`
-
-type SubtractCardBalanceParams struct {
-	Balance string `db:"balance" json:"balance"`
-	Number  string `db:"number" json:"number"`
-}
-
-func (q *Queries) SubtractCardBalance(ctx context.Context, db DBTX, arg SubtractCardBalanceParams) error {
-	_, err := db.ExecContext(ctx, subtractCardBalance, arg.Balance, arg.Number)
-	return err
 }

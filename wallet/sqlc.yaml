@@ -1,6 +1,6 @@
 version: 1
 packages:
-  - name: "db"
+  - name: "sqlc"
     engine: "postgresql"
     path: "./internal/adapters/db/sql/sqlc"
     schema: "./internal/adapters/db/sql/migrations/"

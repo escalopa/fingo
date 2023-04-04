@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.16.0
 
-package db
+package sqlc
 
 import (
 	"database/sql"
@@ -75,16 +75,16 @@ func AllTransactionTypeValues() []TransactionType {
 }
 
 type Account struct {
-	ID         int32  `db:"id" json:"id"`
-	UserID     int32  `db:"user_id" json:"user_id"`
-	Name       string `db:"name" json:"name"`
-	Balance    string `db:"balance" json:"balance"`
-	CurrencyID int16  `db:"currency_id" json:"currency_id"`
+	ID         int64   `db:"id" json:"id"`
+	UserID     int64   `db:"user_id" json:"user_id"`
+	Name       string  `db:"name" json:"name"`
+	Balance    float64 `db:"balance" json:"balance"`
+	CurrencyID int16   `db:"currency_id" json:"currency_id"`
 }
 
 type Card struct {
 	Number    string `db:"number" json:"number"`
-	AccountID int32  `db:"account_id" json:"account_id"`
+	AccountID int64  `db:"account_id" json:"account_id"`
 }
 
 type Currency struct {
@@ -95,14 +95,14 @@ type Currency struct {
 type Transaction struct {
 	ID                   uuid.UUID       `db:"id" json:"id"`
 	Type                 TransactionType `db:"type" json:"type"`
-	Amount               string          `db:"amount" json:"amount"`
-	SourceAccountID      sql.NullInt32   `db:"source_account_id" json:"source_account_id"`
-	DestinationAccountID sql.NullInt32   `db:"destination_account_id" json:"destination_account_id"`
+	Amount               float64         `db:"amount" json:"amount"`
+	SourceAccountID      sql.NullInt64   `db:"source_account_id" json:"source_account_id"`
+	DestinationAccountID sql.NullInt64   `db:"destination_account_id" json:"destination_account_id"`
 	CreatedAt            time.Time       `db:"created_at" json:"created_at"`
 	IsRolledBack         bool            `db:"is_rolled_back" json:"is_rolled_back"`
 }
 
 type User struct {
-	ID         int32     `db:"id" json:"id"`
+	ID         int64     `db:"id" json:"id"`
 	ExternalID uuid.UUID `db:"external_id" json:"external_id"`
 }
