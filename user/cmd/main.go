@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/escalopa/fingo/pkg/pkgerror"
+	pkgerror "github.com/escalopa/fingo/pkg/error"
 
 	"github.com/escalopa/fingo/user/internal/adapters/codegen"
 	"github.com/escalopa/fingo/user/internal/adapters/redis"

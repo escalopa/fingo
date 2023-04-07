@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+	"github.com/lib/pq"
 
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
@@ -35,7 +36,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserPar
 		HashedPassword: arg.HashedPassword,
 	})
 	if err != nil {
-		if isUniqueViolationError(err) {
+		if IsUniqueViolationError(err) {
 			return errs.B(err).Code(errs.AlreadyExists).Msg("user already exists").Err()
 		}
 		return errs.B(err).Code(errs.Internal).Msg("failed to create user").Err()
@@ -93,4 +94,10 @@ func fromDbUserToCore(user db.User) (core.User, error) {
 		IsEmailVerified: user.IsVerifiedEmail,
 		CreatedAt:       user.CreatedAt,
 	}, nil
+}
+
+// IsUniqueViolationError checks if an error is a unique violation error
+func IsUniqueViolationError(err error) bool {
+	er, ok := err.(*pq.Error)
+	return ok && er.Code == "23505"
 }

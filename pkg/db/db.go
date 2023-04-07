@@ -1,14 +1,14 @@
-package mypostgres
+package pkgdb
 
 import (
 	"database/sql"
-	"github.com/lib/pq"
+	"log"
+
 	_ "github.com/lib/pq"
 	"github.com/lordvidex/errs"
 	"github.com/mattes/migrate"
 	"github.com/mattes/migrate/database/postgres"
 	_ "github.com/mattes/migrate/source/file"
-	"log"
 )
 
 // New creates a new postgres connection with the given connection string
@@ -43,10 +43,4 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 		log.Println("Database is up to date, No migration made")
 	}
 	return nil
-}
-
-// isUniqueViolationError checks if an error is a unique violation error
-func isUniqueViolationError(err error) bool {
-	er, ok := err.(*pq.Error)
-	return ok && er.Code == "23505"
 }

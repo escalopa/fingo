@@ -28,7 +28,7 @@ type GetUserDevicesCommandImpl struct {
 // Execute executes the GetUserDevicesCommand with the given parameters
 func (c *GetUserDevicesCommandImpl) Execute(ctx context.Context, params GetUserDevicesParams) ([]core.Session, error) {
 	var response []core.Session
-	err := executeWithContextTimeout(ctx, 5*time.Second, func() error {
+	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
 		ctx, span := oteltracer.Tracer().Start(ctx, "GetUserDevicesCommand.Execute")
 		defer span.End()
 		// Validate function can be removed since the params are empty

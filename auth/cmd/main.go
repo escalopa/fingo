@@ -7,9 +7,10 @@ import (
 	"time"
 
 	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-	"github.com/escalopa/fingo/pkg/grpctls"
-	"github.com/escalopa/fingo/pkg/pkgerror"
-	"github.com/escalopa/fingo/pkg/pkgtracer"
+	pkgdb "github.com/escalopa/fingo/pkg/db"
+	pkgerror "github.com/escalopa/fingo/pkg/error"
+	grpctls "github.com/escalopa/fingo/pkg/tls"
+	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
 
 	mypostgres "github.com/escalopa/fingo/auth/internal/adapters/db/postgres"
 	"github.com/escalopa/fingo/auth/internal/adapters/db/redis"
@@ -44,12 +45,12 @@ func main() {
 	log.Println("successfully create token generator")
 
 	// Create postgres conn
-	pgConn, err := mypostgres.New(c.Get("AUTH_DATABASE_URL"))
+	pgConn, err := pkgdb.New(c.Get("AUTH_DATABASE_URL"))
 	pkgerror.CheckError(err, "failed to connect to postgres")
 	log.Println("successfully connected to postgres")
 
 	// Migrate database
-	err = mypostgres.Migrate(pgConn, c.Get("AUTH_DATABASE_MIGRATION_PATH"))
+	err = pkgdb.Migrate(pgConn, c.Get("AUTH_DATABASE_MIGRATION_PATH"))
 	pkgerror.CheckError(err, "failed to migrate postgres db")
 	log.Println("successfully migrated postgres db")
 
@@ -95,7 +96,8 @@ func main() {
 
 	var opts []grpc.ServerOption
 	// Load TLS certificates
-	pkgerror.CheckError(loadTls(c, &opts), "failed to load auth TLS certificates")
+	err = loadTls(c, &opts)
+	pkgerror.CheckError(err, "failed to load auth TLS certificates")
 
 	// Load auth interceptor
 	pkgerror.CheckError(loadInterceptor(c, &opts), "failed to load auth interceptor")

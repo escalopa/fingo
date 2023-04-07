@@ -29,7 +29,7 @@ type TokenValidateCommandImpl struct {
 // Execute executes the TokenValidateCommand with the given params
 func (c *TokenValidateCommandImpl) Execute(ctx context.Context, params TokenValidateParams) (uuid.UUID, error) {
 	var id uuid.UUID
-	err := executeWithContextTimeout(ctx, 10*time.Second, func() error {
+	err := contextutils.ExecuteWithContextTimeout(ctx, 10*time.Second, func() error {
 		ctx, span := oteltracer.Tracer().Start(ctx, "TokenValidateCommandImpl.Execute")
 		defer span.End()
 		if err := c.v.Validate(ctx, params); err != nil {

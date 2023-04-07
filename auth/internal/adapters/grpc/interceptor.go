@@ -43,6 +43,9 @@ func (ai *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 			ctx, span := oteltracer.Tracer().Start(ctx, "ValidateToken")
 			defer span.End()
 			response, err := ai.c.ValidateToken(ctx, &pb.ValidateTokenRequest{AccessToken: accessToken})
+			if err != nil {
+				return "", err
+			}
 			return response.GetUserId(), err
 		},
 	)

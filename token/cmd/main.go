@@ -5,15 +5,17 @@ import (
 	"log"
 	"net"
 
-	"github.com/escalopa/fingo/pkg/grpctls"
-	"github.com/escalopa/fingo/pkg/pkgerror"
-	"github.com/escalopa/fingo/pkg/pkgtracer"
+	pkgvalidator "github.com/escalopa/fingo/pkg/validator"
+
+	pkgerror "github.com/escalopa/fingo/pkg/error"
+	grpctls "github.com/escalopa/fingo/pkg/tls"
+	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
+
 	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
 
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/token/internal/adapters/cache"
 	mygrpc "github.com/escalopa/fingo/token/internal/adapters/grpc"
-	"github.com/escalopa/fingo/token/internal/adapters/validator"
 	"github.com/escalopa/fingo/token/internal/application"
 	"github.com/escalopa/goconfig"
 	"github.com/lordvidex/errs"
@@ -25,7 +27,7 @@ func main() {
 	c := goconfig.New()
 
 	// Create validator
-	v := validator.NewValidator()
+	v := pkgvalidator.NewValidator()
 	log.Println("validator created")
 
 	// Create redis client
@@ -58,7 +60,8 @@ func main() {
 
 	// Load TLS certificates
 	var opts []grpc.ServerOption
-	pkgerror.CheckError(loadTls(c, &opts), "failed to load token TLS certificates")
+	err = loadTls(c, &opts)
+	pkgerror.CheckError(err, "failed to load token tls certificates")
 
 	// Start gRPC server
 	pkgerror.CheckError(start(c, uc, opts), "failed to start gRPC server")

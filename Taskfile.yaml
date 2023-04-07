@@ -1,0 +1,95 @@
+version: '3'
+
+tasks:
+  # General Commands
+  proto:
+    cmds:
+      - rm -rf pb/*
+      - protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative
+        --go-grpc_out=pb --go-grpc_opt=paths=source_relative proto/*.proto
+
+  cert:
+    dir: certs
+    cmds:
+      - ./gen.sh
+
+  # Auth Command
+  auth-sqlc:
+    cmds:
+      - task: sqlc-gen
+        vars:
+          SQLC_CONFIG_PATH: ./auth/sqlc.yaml
+
+  auth-mig-new: # takes SCHEMA_NAME as argument
+    cmds:
+      - task: mig-new
+        vars:
+          MIGRATION_DIR_PATH: ./auth/internal/adapters/db/postgres/migrations
+          SCHEMA_NAME: ${SCHEMA_NAME}
+
+  auth-mig-up:
+    cmds:
+      - task: mig-up
+        vars:
+          MIGRATION_DIR_PATH: ./auth/internal/adapters/db/postgres/migrations
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/fingo_auth?sslmode=disable
+
+  auth-mig-down:
+    cmds:
+      - task: mig-down
+        vars:
+          MIGRATION_DIR_PATH: ./auth/internal/adapters/db/postgres/migrations
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/fingo_auth?sslmode=disable
+
+  # Wallet Command
+  wallet-sqlc:
+    cmds:
+      - task: sqlc-gen
+        vars:
+          SQLC_CONFIG_PATH: ./wallet/sqlc.yaml
+
+  wallet-mig-new: # takes SCHEMA_NAME as argument
+    cmds:
+      - task: mig-new
+        vars:
+          MIGRATION_DIR_PATH: ./wallet/internal/adapters/db/sql/migrations
+          SCHEMA_NAME: ${SCHEMA_NAME}
+
+  wallet-mig-up:
+    cmds:
+      - task: mig-up
+        vars:
+          MIGRATION_DIR_PATH: ./wallet/internal/adapters/db/sql/migrations
+          DATABASE_URL: cockroach://root@localhost:26257/fingo_wallet?sslmode=disable
+
+  wallet-mig-down:
+    cmds:
+      - task: mig-down
+        vars:
+          MIGRATION_DIR_PATH: ./wallet/internal/adapters/db/sql/migrations
+          DATABASE_URL: cockroach://root@localhost:26257/fingo_wallet?sslmode=disable
+
+  # Migration Command
+  sqlc-gen:
+    internal: true
+    desc: "generate sqlc code from sqlc.yaml"
+    cmds:
+      - sqlc generate -f {{.SQLC_CONFIG_PATH}}
+
+  mig-new:
+    internal: true
+    desc: "create a new migration file in the given directory with the given schema name"
+    cmds:
+      - migrate create -ext sql -dir {{.MIGRATION_DIR_PATH}} -seq ${SCHEMA_NAME}
+
+  mig-up:
+    internal: true
+    desc: "migrate up the whole database schema"
+    cmds:
+      - migrate -source "file://{{.MIGRATION_DIR_PATH}}" -database {{.DATABASE_URL}} up
+
+  mig-down:
+    internal: true
+    desc: "migrate down the whole database schema"
+    cmds:
+      - migrate -source "file://{{.MIGRATION_DIR_PATH}}" -database {{.DATABASE_URL}} down

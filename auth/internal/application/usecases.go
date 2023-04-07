@@ -1,12 +1,5 @@
 package application
 
-import (
-	"context"
-	"time"
-
-	"github.com/lordvidex/errs"
-)
-
 type UseCases struct {
 	v  Validator
 	h  PasswordHasher
@@ -88,26 +81,4 @@ type Command struct {
 	Signup     SignupCommand
 	Logout     LogoutCommand
 	RenewToken RenewTokenCommand
-}
-
-func executeWithContextTimeout(ctx context.Context, timeout time.Duration, handler func() error) error {
-	// Create a context with a given timeout
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-	errChan := make(chan error, 1)
-	// Execute logic
-	go func() {
-		defer close(errChan)
-		errChan <- handler()
-	}()
-	// Wait for response
-	select {
-	case err := <-errChan:
-		if err != nil {
-			return err
-		}
-	case <-ctxWithTimeout.Done():
-		return errs.B().Code(errs.DeadlineExceeded).Msg("context timeout").Err()
-	}
-	return nil
 }

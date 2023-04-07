@@ -5,8 +5,8 @@ import (
 	"time"
 
 	oteltracer "github.com/escalopa/fingo/contact/internal/adapters/tracer"
-	"github.com/escalopa/fingo/pkg/pkgerror"
-	"github.com/escalopa/fingo/pkg/pkgtracer"
+	pkgerror "github.com/escalopa/fingo/pkg/error"
+	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
 
 	"github.com/escalopa/fingo/contact/internal/adapters/server"
 	"github.com/escalopa/fingo/contact/internal/adapters/validator"
