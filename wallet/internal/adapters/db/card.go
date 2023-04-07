@@ -18,38 +18,33 @@ func NewCardRepository(db *sql.DB) *CardRepository {
 }
 
 // CreateCard creates a new card in the database
-func (r *CardRepository) CreateCard(ctx context.Context, params core.CreateCardParams) (int64, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepo.CreateCard")
+func (r *CardRepository) CreateCard(ctx context.Context, params core.CreateCardParams) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.CreateCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return 0, errorTxNotStarted(err)
+		return errorTxNotStarted(err)
 	}
 	defer deferTx(tx, &err)
 	q := db.New()
 	// Create card
-	res, err := q.CreateCard(ctx, tx, db.CreateCardParams{
+	err = q.CreateCard(ctx, tx, db.CreateCardParams{
 		AccountID: params.AccountID,
 		Number:    params.Number,
 	})
 	if err != nil {
 		if IsUniqueViolationError(err) {
-			return 0, errorUniqueViolation(err, "card with this number already exists")
+			return errorUniqueViolation(err, "card with this number already exists")
 		} else {
-			return 0, errorQuery(err, "failed to create card")
+			return errorQuery(err, "failed to create card")
 		}
 	}
-	// Get card id
-	cardID, err := res.LastInsertId()
-	if err != nil {
-		return 0, errorQuery(err, "failed to get card id from result")
-	}
-	return int64(cardID), nil
+	return nil
 }
 
 // GetCard returns a card for a given number
 func (r *CardRepository) GetCard(ctx context.Context, cardNumber string) (core.Card, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepo.GetCard")
+	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.GetCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -69,9 +64,36 @@ func (r *CardRepository) GetCard(ctx context.Context, cardNumber string) (core.C
 	return fromDBCardToCard(card), nil
 }
 
+func (r *CardRepository) GetCardAccount(ctx context.Context, cardNumber string) (core.Account, error) {
+	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.GetCard")
+	defer span.End()
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return core.Account{}, errorTxNotStarted(err)
+	}
+	defer deferTx(tx, &err)
+	q := db.New()
+	accountRow, err := q.GetCardAccount(ctx, tx, cardNumber)
+	if err != nil {
+		if IsNotFoundError(err) {
+			return core.Account{}, errorNotFound(err, "card not found")
+		} else {
+			return core.Account{}, errorQuery(err, "failed to get card's account")
+		}
+	}
+	account := core.Account{
+		ID:       accountRow.ID,
+		OwnerID:  accountRow.OwnerID,
+		Name:     accountRow.Name,
+		Balance:  accountRow.Balance,
+		Currency: core.Currency(accountRow.Currency),
+	}
+	return account, nil
+}
+
 // GetCards returns all cards for a given account
 func (r *CardRepository) GetCards(ctx context.Context, accountID int64) ([]core.Card, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepo.GetCards")
+	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.GetCards")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -98,7 +120,7 @@ func (r *CardRepository) GetCards(ctx context.Context, accountID int64) ([]core.
 
 // DeleteCard deletes a card for a given number
 func (r *CardRepository) DeleteCard(ctx context.Context, cardNumber string) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepo.DeleteCard")
+	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.DeleteCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

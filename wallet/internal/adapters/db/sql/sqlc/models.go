@@ -79,7 +79,7 @@ type Account struct {
 	UserID     int64   `db:"user_id" json:"user_id"`
 	Name       string  `db:"name" json:"name"`
 	Balance    float64 `db:"balance" json:"balance"`
-	CurrencyID int16   `db:"currency_id" json:"currency_id"`
+	CurrencyID int64   `db:"currency_id" json:"currency_id"`
 }
 
 type Card struct {
@@ -88,7 +88,7 @@ type Card struct {
 }
 
 type Currency struct {
-	ID   int16  `db:"id" json:"id"`
+	ID   int64  `db:"id" json:"id"`
 	Name string `db:"name" json:"name"`
 }
 

@@ -7,7 +7,6 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 )
 
 const addAccountBalance = `-- name: AddAccountBalance :exec
@@ -26,20 +25,21 @@ func (q *Queries) AddAccountBalance(ctx context.Context, db DBTX, arg AddAccount
 	return err
 }
 
-const createAccount = `-- name: CreateAccount :execresult
-INSERT INTO accounts (user_id, currency_id, name)
-VALUES ($1, $2, $3)
+const createAccount = `-- name: CreateAccount :exec
+INSERT INTO accounts (user_id, currency_id, balance, name)
+VALUES ($1, $2, 0, $3)
 RETURNING id
 `
 
 type CreateAccountParams struct {
 	UserID     int64  `db:"user_id" json:"user_id"`
-	CurrencyID int16  `db:"currency_id" json:"currency_id"`
+	CurrencyID int64  `db:"currency_id" json:"currency_id"`
 	Name       string `db:"name" json:"name"`
 }
 
-func (q *Queries) CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) (sql.Result, error) {
-	return db.ExecContext(ctx, createAccount, arg.UserID, arg.CurrencyID, arg.Name)
+func (q *Queries) CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) error {
+	_, err := db.ExecContext(ctx, createAccount, arg.UserID, arg.CurrencyID, arg.Name)
+	return err
 }
 
 const deleteAccount = `-- name: DeleteAccount :exec
@@ -54,46 +54,68 @@ func (q *Queries) DeleteAccount(ctx context.Context, db DBTX, id int64) error {
 }
 
 const getAccount = `-- name: GetAccount :one
-SELECT id, user_id, name, balance, currency_id
-FROM accounts
-WHERE id = $1
+SELECT a.id, a.user_id, a.name, a.balance, a.currency_id, c.name as currency_name
+FROM accounts a
+       JOIN currency c on a.currency_id = c.id
+WHERE a.id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetAccount(ctx context.Context, db DBTX, id int64) (Account, error) {
+type GetAccountRow struct {
+	ID           int64   `db:"id" json:"id"`
+	UserID       int64   `db:"user_id" json:"user_id"`
+	Name         string  `db:"name" json:"name"`
+	Balance      float64 `db:"balance" json:"balance"`
+	CurrencyID   int64   `db:"currency_id" json:"currency_id"`
+	CurrencyName string  `db:"currency_name" json:"currency_name"`
+}
+
+func (q *Queries) GetAccount(ctx context.Context, db DBTX, id int64) (GetAccountRow, error) {
 	row := db.QueryRowContext(ctx, getAccount, id)
-	var i Account
+	var i GetAccountRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.Name,
 		&i.Balance,
 		&i.CurrencyID,
+		&i.CurrencyName,
 	)
 	return i, err
 }
 
 const getAccounts = `-- name: GetAccounts :many
-SELECT id, user_id, name, balance, currency_id
-FROM accounts
-WHERE user_id = $1
+SELECT a.id, a.user_id, a.name, a.balance, a.currency_id, c.name as currency_name
+FROM accounts a
+       JOIN currency c on a.currency_id = c.id
+WHERE a.user_id = $1
 `
 
-func (q *Queries) GetAccounts(ctx context.Context, db DBTX, userID int64) ([]Account, error) {
+type GetAccountsRow struct {
+	ID           int64   `db:"id" json:"id"`
+	UserID       int64   `db:"user_id" json:"user_id"`
+	Name         string  `db:"name" json:"name"`
+	Balance      float64 `db:"balance" json:"balance"`
+	CurrencyID   int64   `db:"currency_id" json:"currency_id"`
+	CurrencyName string  `db:"currency_name" json:"currency_name"`
+}
+
+func (q *Queries) GetAccounts(ctx context.Context, db DBTX, userID int64) ([]GetAccountsRow, error) {
 	rows, err := db.QueryContext(ctx, getAccounts, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Account{}
+	items := []GetAccountsRow{}
 	for rows.Next() {
-		var i Account
+		var i GetAccountsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
 			&i.Name,
 			&i.Balance,
 			&i.CurrencyID,
+			&i.CurrencyName,
 		); err != nil {
 			return nil, err
 		}
@@ -110,7 +132,7 @@ func (q *Queries) GetAccounts(ctx context.Context, db DBTX, userID int64) ([]Acc
 
 const subAccountBalance = `-- name: SubAccountBalance :exec
 UPDATE accounts
-SET balance = balance + $2
+SET balance = balance - $2
 WHERE id = $1
 `
 

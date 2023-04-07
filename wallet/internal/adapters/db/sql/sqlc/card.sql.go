@@ -7,10 +7,9 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 )
 
-const createCard = `-- name: CreateCard :execresult
+const createCard = `-- name: CreateCard :exec
 INSERT INTO cards (number, account_id)
 VALUES ($1, $2)
 `
@@ -20,8 +19,9 @@ type CreateCardParams struct {
 	AccountID int64  `db:"account_id" json:"account_id"`
 }
 
-func (q *Queries) CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) (sql.Result, error) {
-	return db.ExecContext(ctx, createCard, arg.Number, arg.AccountID)
+func (q *Queries) CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) error {
+	_, err := db.ExecContext(ctx, createCard, arg.Number, arg.AccountID)
+	return err
 }
 
 const deleteAccountCards = `-- name: DeleteAccountCards :exec
@@ -88,6 +88,36 @@ func (q *Queries) GetCard(ctx context.Context, db DBTX, number string) (Card, er
 	return i, err
 }
 
+const getCardAccount = `-- name: GetCardAccount :one
+SELECT a.id as id, a.user_id as owner_id, a.name, a.balance, cc.name as currency
+FROM cards c
+       JOIN accounts a on a.id = c.account_id
+       JOIN currency cc on a.currency_id = cc.id
+WHERE c.number = $1
+LIMIT 1
+`
+
+type GetCardAccountRow struct {
+	ID       int64   `db:"id" json:"id"`
+	OwnerID  int64   `db:"owner_id" json:"owner_id"`
+	Name     string  `db:"name" json:"name"`
+	Balance  float64 `db:"balance" json:"balance"`
+	Currency string  `db:"currency" json:"currency"`
+}
+
+func (q *Queries) GetCardAccount(ctx context.Context, db DBTX, number string) (GetCardAccountRow, error) {
+	row := db.QueryRowContext(ctx, getCardAccount, number)
+	var i GetCardAccountRow
+	err := row.Scan(
+		&i.ID,
+		&i.OwnerID,
+		&i.Name,
+		&i.Balance,
+		&i.Currency,
+	)
+	return i, err
+}
+
 const getCardBalance = `-- name: GetCardBalance :one
 SELECT balance
 FROM accounts
@@ -113,7 +143,7 @@ WHERE accounts.user_id = $1
 type GetUserCardsRow struct {
 	Number     string `db:"number" json:"number"`
 	AccountID  int64  `db:"account_id" json:"account_id"`
-	CurrencyID int16  `db:"currency_id" json:"currency_id"`
+	CurrencyID int64  `db:"currency_id" json:"currency_id"`
 }
 
 func (q *Queries) GetUserCards(ctx context.Context, db DBTX, userID int64) ([]GetUserCardsRow, error) {

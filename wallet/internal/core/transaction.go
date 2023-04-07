@@ -1,6 +1,7 @@
 package core
 
 import (
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,18 +10,21 @@ import (
 type TransactionType string
 
 const (
-	TransactionTypeUnknown    TransactionType = "unknown"
 	TransactionTypeTransfer   TransactionType = "transfer"
 	TransactionTypeDeposit    TransactionType = "deposit"
 	TransactionTypeWithdrawal TransactionType = "withdrawal"
 )
 
-func IsSupportedTransactionType(t TransactionType) bool {
-	switch t {
-	case TransactionTypeTransfer, TransactionTypeDeposit, TransactionTypeWithdrawal:
-		return true
+func ParseTransactionType(t string) TransactionType {
+	switch strings.ToLower(t) {
+	case TransactionTypeTransfer.String():
+		return TransactionTypeTransfer
+	case TransactionTypeDeposit.String():
+		return TransactionTypeDeposit
+	case TransactionTypeWithdrawal.String():
+		return TransactionTypeWithdrawal
 	default:
-		return false
+		return ""
 	}
 }
 
@@ -30,21 +34,18 @@ func (t TransactionType) String() string {
 
 type CreateTransactionParams struct {
 	Amount        float64
-	Type          TransactionType
 	FromAccountID int64
 	ToAccountID   int64
 }
 
 type GetTransactionsParams struct {
-	AccountID       int64
-	TransactionType TransactionType
-	FromDate        time.Time
-	ToDate          time.Time
-	FromAmount      float64
-	ToAmount        float64
-	IsRolledBack    bool
-	Offset          int32
-	Limit           int32
+	AccountID int64
+	Offset    int32
+	Limit     int32
+	// Additional filters
+	Type      TransactionType
+	MinAmount float64
+	MaxAmount float64
 }
 
 type SendTransactionSmsParams struct {
@@ -55,10 +56,13 @@ type SendTransactionSmsParams struct {
 }
 
 type Transaction struct {
-	ID          uuid.UUID       `json:"id"`
-	Amount      float64         `json:"amount"`
-	Type        TransactionType `json:"type"`
-	FromAccount string          `json:"from_account"`
-	ToAccount   string          `json:"to_account"`
-	CreatedAt   time.Time       `json:"created_at"`
+	ID              uuid.UUID       `json:"id"`
+	Amount          float64         `json:"amount"`
+	Type            TransactionType `json:"type"`
+	FromAccountID   int64           `json:"from_account_id"`
+	FromAccountName string          `json:"from_account_name"`
+	ToAccountID     int64           `json:"to_account_id"`
+	ToAccountName   string          `json:"to_account_name"`
+	CreatedAt       time.Time       `json:"created_at"`
+	IsRolledBack    bool            `json:"is_rolled_back"`
 }

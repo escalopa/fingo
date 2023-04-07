@@ -6,28 +6,31 @@ package sqlc
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
 
 type Querier interface {
 	AddAccountBalance(ctx context.Context, db DBTX, arg AddAccountBalanceParams) error
-	CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) (sql.Result, error)
-	CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) (sql.Result, error)
-	CreateTransaction(ctx context.Context, db DBTX, arg CreateTransactionParams) error
+	CreateAccount(ctx context.Context, db DBTX, arg CreateAccountParams) error
+	CreateCard(ctx context.Context, db DBTX, arg CreateCardParams) error
+	CreateDepositTransaction(ctx context.Context, db DBTX, arg CreateDepositTransactionParams) error
+	CreateTransferTransaction(ctx context.Context, db DBTX, arg CreateTransferTransactionParams) error
 	CreateUser(ctx context.Context, db DBTX, externalID uuid.UUID) error
+	CreateWithdrawTransaction(ctx context.Context, db DBTX, arg CreateWithdrawTransactionParams) error
 	DeleteAccount(ctx context.Context, db DBTX, id int64) error
 	DeleteAccountCards(ctx context.Context, db DBTX, accountID int64) error
 	DeleteCard(ctx context.Context, db DBTX, number string) error
-	GetAccount(ctx context.Context, db DBTX, id int64) (Account, error)
+	GetAccount(ctx context.Context, db DBTX, id int64) (GetAccountRow, error)
 	GetAccountCards(ctx context.Context, db DBTX, accountID int64) ([]Card, error)
-	GetAccounts(ctx context.Context, db DBTX, userID int64) ([]Account, error)
+	GetAccounts(ctx context.Context, db DBTX, userID int64) ([]GetAccountsRow, error)
 	GetCard(ctx context.Context, db DBTX, number string) (Card, error)
+	GetCardAccount(ctx context.Context, db DBTX, number string) (GetCardAccountRow, error)
 	GetCardBalance(ctx context.Context, db DBTX, number string) (float64, error)
-	GetCurrencyByID(ctx context.Context, db DBTX, id int16) (Currency, error)
-	GetCurrencyByName(ctx context.Context, db DBTX, name string) (int16, error)
+	GetCurrencyByID(ctx context.Context, db DBTX, id int64) (Currency, error)
+	GetCurrencyByName(ctx context.Context, db DBTX, name string) (int64, error)
 	GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (GetTransactionRow, error)
+	//   AND coalesce(sqlc.narg('transaction_type') IS NULL, t.type) = t.type
 	GetTransactions(ctx context.Context, db DBTX, arg GetTransactionsParams) ([]GetTransactionsRow, error)
 	GetUserByExternalID(ctx context.Context, db DBTX, externalID uuid.UUID) (int64, error)
 	GetUserCards(ctx context.Context, db DBTX, userID int64) ([]GetUserCardsRow, error)

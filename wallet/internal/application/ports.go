@@ -13,21 +13,24 @@ type UserRepository interface {
 }
 
 type AccountRepository interface {
-	CreateAccount(ctx context.Context, params core.CreateAccountParams) (int64, error)
+	CreateAccount(ctx context.Context, params core.CreateAccountParams) error
 	GetAccount(ctx context.Context, accountID int64) (core.Account, error)
 	GetAccounts(ctx context.Context, userID int64) ([]core.Account, error)
 	DeleteAccount(ctx context.Context, accountID int64) error
 }
 
 type CardRepository interface {
-	CreateCard(ctx context.Context, params core.CreateCardParams) (int64, error)
+	CreateCard(ctx context.Context, params core.CreateCardParams) error
 	GetCard(ctx context.Context, cardNumber string) (core.Card, error)
+	GetCardAccount(ctx context.Context, cardNumber string) (core.Account, error)
 	GetCards(ctx context.Context, accountID int64) ([]core.Card, error)
 	DeleteCard(ctx context.Context, cardNumber string) error
 }
 
 type TransactionRepository interface {
-	CreateTransaction(ctx context.Context, params core.CreateTransactionParams) error
+	Transfer(ctx context.Context, params core.CreateTransactionParams) error
+	Deposit(ctx context.Context, params core.CreateTransactionParams) error
+	Withdraw(ctx context.Context, params core.CreateTransactionParams) error
 	GetTransaction(ctx context.Context, transactionID uuid.UUID) (core.Transaction, error)
 	GetTransactions(ctx context.Context, params core.GetTransactionsParams) ([]core.Transaction, error)
 	RollbackTransaction(ctx context.Context, transactionID uuid.UUID) error
@@ -41,6 +44,12 @@ type CardNumberGenerator interface {
 // SmsSender is an interface for sending sms about transactions completion
 type SmsSender interface {
 	SendTransactionSms(ctx context.Context, params core.SendTransactionSmsParams) error
+}
+
+// Locker locks account ids for applying transactions
+// The function returned is used to free the lock
+type Locker interface {
+	Lock(ctx context.Context, x any, y ...any) func()
 }
 
 // Validator is an interface for validating structs using tags

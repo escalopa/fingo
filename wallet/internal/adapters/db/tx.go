@@ -26,7 +26,7 @@ var (
 	errorTxNotRolledBack = func(err, err2 error) error {
 		return errs.B(err).Code(errs.Internal).Details(err2).Msg("transaction not rolled back").Err()
 	}
-	errorRollabckUnsupported = errs.B().Msg("rollback not supported for deposit & withdrawals transactions").Err()
+	errorRollbackUnsupported = errs.B().Msg("rollback not supported for deposit & withdrawals transactions").Err()
 )
 
 func deferTx(tx *sql.Tx, err *error) {

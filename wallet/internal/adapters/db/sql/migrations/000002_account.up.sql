@@ -3,7 +3,7 @@ CREATE TABLE accounts
   id      BIGSERIAL PRIMARY KEY NOT NULL,
   user_id BIGINT                NOT NULL,
   name    varchar(20)           NOT NULL,
-  balance DOUBLE PRECISION      NOT NULL DEFAULT 0.0000
+  balance DOUBLE PRECISION      NOT NULL DEFAULT 0.0
 );
 
 ALTER TABLE accounts

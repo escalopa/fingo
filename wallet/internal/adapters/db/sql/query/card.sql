@@ -1,4 +1,4 @@
--- name: CreateCard :execresult
+-- name: CreateCard :exec
 INSERT INTO cards (number, account_id)
 VALUES ($1, $2);
 
@@ -11,6 +11,14 @@ WHERE number = $1;
 SELECT *
 FROM cards
 WHERE account_id = $1;
+
+-- name: GetCardAccount :one
+SELECT a.id as id, a.user_id as owner_id, a.name, a.balance, cc.name as currency
+FROM cards c
+       JOIN accounts a on a.id = c.account_id
+       JOIN currency cc on a.currency_id = cc.id
+WHERE c.number = $1
+LIMIT 1;
 
 -- name: GetUserCards :many
 SELECT cards.*, accounts.currency_id

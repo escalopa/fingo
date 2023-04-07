@@ -16,7 +16,7 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetCurrencyByID(ctx context.Context, db DBTX, id int16) (Currency, error) {
+func (q *Queries) GetCurrencyByID(ctx context.Context, db DBTX, id int64) (Currency, error) {
 	row := db.QueryRowContext(ctx, getCurrencyByID, id)
 	var i Currency
 	err := row.Scan(&i.ID, &i.Name)
@@ -30,9 +30,9 @@ WHERE name = $1
 LIMIT 1
 `
 
-func (q *Queries) GetCurrencyByName(ctx context.Context, db DBTX, name string) (int16, error) {
+func (q *Queries) GetCurrencyByName(ctx context.Context, db DBTX, name string) (int64, error) {
 	row := db.QueryRowContext(ctx, getCurrencyByName, name)
-	var id int16
+	var id int64
 	err := row.Scan(&id)
 	return id, err
 }

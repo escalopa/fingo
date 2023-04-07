@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"strconv"
+	"time"
+
+	"github.com/escalopa/fingo/wallet/internal/adapters/locker"
 
 	"github.com/escalopa/fingo/pb"
 	pkgdb "github.com/escalopa/fingo/pkg/db"
@@ -26,6 +31,8 @@ import (
 
 func main() {
 	c := goconfig.New()
+	appCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Create validator
 	v := pkgvalidator.NewValidator()
@@ -44,7 +51,12 @@ func main() {
 	cr := db.NewCardRepository(conn)
 	ar := db.NewAccountRepository(conn)
 	tr := db.NewTransactionRepository(conn)
-	cng := numgen.NewNumGen()
+
+	// Create a new number generator
+	cardNumberLength, err := strconv.Atoi(c.Get("WALLET_CARD_NUMBER_LENGTH"))
+	pkgerror.CheckError(err, "failed to convert WALLET_CARD_NUMBER_LENGTH to int")
+	cng := numgen.NewNumGen(cardNumberLength)
+	log.Println("Card number generator created with card number length:", cardNumberLength)
 
 	// Create a new tracer
 	t, err := pkgtracer.LoadTracer(
@@ -58,9 +70,15 @@ func main() {
 	oteltracer.SetTracer(t)
 	log.Println("tracer created")
 
+	// Create an ids locker
+	cleanupDuration, err := time.ParseDuration(c.Get("WALLET_LOCKER_CLEANUP_DURATION"))
+	pkgerror.CheckError(err, "failed to convert WALLET_LOCKER_CLEANUP_DURATION to time.Duration")
+	l := locker.NewLocker(appCtx, cleanupDuration)
+
 	// Create use cases
 	uc := application.NewUseCases(
 		application.WithValidator(v),
+		application.WithLocker(l),
 		application.WithUserRepository(ur),
 		application.WithCardRepository(cr),
 		application.WithAccountRepository(ar),
@@ -119,7 +137,7 @@ func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 func loadInterceptor(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 	creds, err := grpctls.LoadClientTLS(
 		c.Get("TOKEN_GRPC_TLS_ENABLE"),
-		c.Get("AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE"),
+		c.Get("WALLET_TOKEN_GRPC_TLS_USER_CERT_FILE"),
 	)
 	if err != nil {
 		return err

@@ -19,39 +19,34 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 }
 
 // CreateAccount creates an account for a user
-func (r *AccountRepository) CreateAccount(ctx context.Context, params core.CreateAccountParams) (int64, error) {
+func (r *AccountRepository) CreateAccount(ctx context.Context, params core.CreateAccountParams) error {
 	ctx, span := oteltracer.Tracer().Start(ctx, "AccountRepository.CreateAccount")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return 0, errorTxNotStarted(err)
+		return errorTxNotStarted(err)
 	}
 	defer deferTx(tx, &err)
 	q := sqlc.New()
 	// Get currency id
 	currencyID, err := q.GetCurrencyByName(ctx, tx, params.Currency.String())
 	if err != nil {
-		return 0, errs.B(err).Code(errs.NotFound).Msg("failed to get currency id").Err()
+		return errs.B(err).Code(errs.NotFound).Msg("failed to get currency id").Err()
 	}
 	// Create account
-	res, err := q.CreateAccount(ctx, tx, sqlc.CreateAccountParams{
+	err = q.CreateAccount(ctx, tx, sqlc.CreateAccountParams{
 		UserID:     params.UserID,
 		Name:       params.Name,
 		CurrencyID: currencyID,
 	})
 	if err != nil {
 		if IsUniqueViolationError(err) {
-			return 0, errorUniqueViolation(err, "account with this uuid already exists")
+			return errorUniqueViolation(err, "account with this uuid already exists")
 		} else {
-			return 0, errorQuery(err, "failed to create account")
+			return errorQuery(err, "failed to create account")
 		}
 	}
-	// Get account id from result
-	accountID, err := res.LastInsertId()
-	if err != nil {
-		return 0, errorQuery(err, "failed to get account id from result")
-	}
-	return accountID, nil
+	return nil
 }
 
 // GetAccount returns account for given account id
@@ -95,7 +90,7 @@ func (r *AccountRepository) GetAccounts(ctx context.Context, userID int64) ([]co
 	}
 	res := make([]core.Account, len(accounts))
 	for i, account := range accounts {
-		res[i] = fromDBAccountToAccount(account)
+		res[i] = fromDBAccountsToAccount(account)
 	}
 	return res, nil
 }
@@ -122,28 +117,22 @@ func (r *AccountRepository) DeleteAccount(ctx context.Context, accountID int64) 
 }
 
 // fromDBAccountToAccount converts sqlc.Account to core.Account
-func fromDBAccountToAccount(dbAccount sqlc.Account) core.Account {
+func fromDBAccountToAccount(account sqlc.GetAccountRow) core.Account {
 	return core.Account{
-		ID:       dbAccount.ID,
-		Name:     dbAccount.Name,
-		Currency: convertCurrencyByID(dbAccount.CurrencyID),
-		Balance:  dbAccount.Balance,
+		ID:       account.ID,
+		OwnerID:  account.UserID,
+		Name:     account.Name,
+		Currency: core.Currency(account.CurrencyName),
+		Balance:  account.Balance,
 	}
 }
 
-// convertCurrencyByID converts currency id to core.Currency
-// TODO: make a sql query to get currency name by given id
-func convertCurrencyByID(id int16) core.Currency {
-	switch id {
-	case 1:
-		return core.CurrencyUSD
-	case 2:
-		return core.CurrencyEGP
-	case 3:
-		return core.CurrencyEUR
-	case 4:
-		return core.CurrencyGBP
-	default:
-		return core.CurrencyRUB
+func fromDBAccountsToAccount(account sqlc.GetAccountsRow) core.Account {
+	return core.Account{
+		ID:       account.ID,
+		OwnerID:  account.UserID,
+		Name:     account.Name,
+		Currency: core.Currency(account.CurrencyName),
+		Balance:  account.Balance,
 	}
 }

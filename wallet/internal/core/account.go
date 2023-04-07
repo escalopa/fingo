@@ -1,9 +1,5 @@
 package core
 
-import (
-	"errors"
-)
-
 type Currency string
 
 const (
@@ -18,24 +14,20 @@ func (c Currency) String() string {
 	return string(c)
 }
 
-var (
-	ErrInvalidCurrency = errors.New("invalid currency")
-)
-
-func ParseCurrency(currency string) (Currency, error) {
+func ParseCurrency(currency string) Currency {
 	switch currency {
 	case "USD":
-		return CurrencyUSD, nil
+		return CurrencyUSD
 	case "EUR":
-		return CurrencyEUR, nil
+		return CurrencyEUR
 	case "GBP":
-		return CurrencyGBP, nil
+		return CurrencyGBP
 	case "RUB":
-		return CurrencyRUB, nil
+		return CurrencyRUB
 	case "EGP":
-		return CurrencyEGP, nil
+		return CurrencyEGP
 	default:
-		return "", ErrInvalidCurrency
+		return ""
 	}
 }
 
@@ -47,6 +39,7 @@ type CreateAccountParams struct {
 
 type Account struct {
 	ID       int64    `json:"id"`
+	OwnerID  int64    `json:"user_id"`
 	Name     string   `json:"name"`
 	Balance  float64  `json:"balance"`
 	Currency Currency `json:"currency"`

@@ -18,7 +18,8 @@ func NewTransactionRepository(db *sql.DB) *TransactionRepository {
 	return &TransactionRepository{db: db}
 }
 
-func (r *TransactionRepository) CreateTransaction(ctx context.Context, params core.CreateTransactionParams) error {
+// Transfer transfers money from one account to another
+func (r *TransactionRepository) Transfer(ctx context.Context, params core.CreateTransactionParams) error {
 	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.CreateTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -27,42 +28,109 @@ func (r *TransactionRepository) CreateTransaction(ctx context.Context, params co
 	}
 	defer deferTx(tx, &err)
 	q := sqlc.New()
-	// If it's not a withdrawal, add money to destination account
-	if params.Type != core.TransactionTypeWithdrawal {
-		// Add money to destination account
-		err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
-			ID:      params.ToAccountID,
-			Balance: params.Amount,
-		})
-		if err != nil {
-			if IsNotFoundError(err) {
-				return errorNotFound(err, "destination account not found")
-			} else {
-				return errorQuery(err, "failed to add money to destination account")
-			}
+	// Add money to destination account
+	err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
+		ID:      params.ToAccountID,
+		Balance: params.Amount,
+	})
+	if err != nil {
+		if IsNotFoundError(err) {
+			return errorNotFound(err, "destination account not found")
+		} else {
+			return errorQuery(err, "failed to add money to destination account")
 		}
 	}
-	// If it's not a deposit, subtract money from source account
-	if params.Type != core.TransactionTypeDeposit {
-		// Subtract money from source account
-		err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
-			ID:      params.FromAccountID,
-			Balance: params.Amount,
-		})
-		if err != nil {
-			if IsNotFoundError(err) {
-				return errorNotFound(err, "source account not found")
-			} else {
-				return errorQuery(err, "failed to subtract money from source account")
-			}
+	// Subtract money from source account
+	err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
+		ID:      params.FromAccountID,
+		Balance: params.Amount,
+	})
+	if err != nil {
+		if IsNotFoundError(err) {
+			return errorNotFound(err, "source account not found")
+		} else {
+			return errorQuery(err, "failed to subtract money from source account")
 		}
 	}
 	// Create transaction
-	err = q.CreateTransaction(ctx, tx, sqlc.CreateTransactionParams{
+	err = q.CreateTransferTransaction(ctx, tx, sqlc.CreateTransferTransactionParams{
 		SourceAccountID:      sql.NullInt64{Int64: params.FromAccountID, Valid: true},
 		DestinationAccountID: sql.NullInt64{Int64: params.ToAccountID, Valid: true},
 		Amount:               params.Amount,
-		Type:                 fromTransactionTypeToDBTransactionType(params.Type),
+	})
+	if err != nil {
+		if IsUniqueViolationError(err) {
+			return errorUniqueViolation(err, "transaction id already exists")
+		} else {
+			return errorQuery(err, "failed to create transaction")
+		}
+	}
+	return nil
+}
+
+// Deposit adds money to an account and creates a transaction
+func (r *TransactionRepository) Deposit(ctx context.Context, params core.CreateTransactionParams) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.Deposit")
+	defer span.End()
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return errorTxNotStarted(err)
+	}
+	defer deferTx(tx, &err)
+	q := sqlc.New()
+	// Add money to source account
+	err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
+		ID:      params.ToAccountID,
+		Balance: params.Amount,
+	})
+	if err != nil {
+		if IsNotFoundError(err) {
+			return errorNotFound(err, "source account not found")
+		} else {
+			return errorQuery(err, "failed to subtract money from source account")
+		}
+	}
+	// Create transaction
+	err = q.CreateDepositTransaction(ctx, tx, sqlc.CreateDepositTransactionParams{
+		DestinationAccountID: sql.NullInt64{Int64: params.ToAccountID, Valid: true},
+		Amount:               params.Amount,
+	})
+	if err != nil {
+		if IsUniqueViolationError(err) {
+			return errorUniqueViolation(err, "transaction id already exists")
+		} else {
+			return errorQuery(err, "failed to create transaction")
+		}
+	}
+	return nil
+}
+
+// Withdraw subtracts money from an account and creates a transaction
+func (r *TransactionRepository) Withdraw(ctx context.Context, params core.CreateTransactionParams) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.Withdraw")
+	defer span.End()
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return errorTxNotStarted(err)
+	}
+	defer deferTx(tx, &err)
+	q := sqlc.New()
+	// Subtract money from source account
+	err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
+		ID:      params.FromAccountID,
+		Balance: params.Amount,
+	})
+	if err != nil {
+		if IsNotFoundError(err) {
+			return errorNotFound(err, "source account not found")
+		} else {
+			return errorQuery(err, "failed to subtract money from source account")
+		}
+	}
+	// Create transaction
+	err = q.CreateWithdrawTransaction(ctx, tx, sqlc.CreateWithdrawTransactionParams{
+		SourceAccountID: sql.NullInt64{Int64: params.FromAccountID, Valid: true},
+		Amount:          params.Amount,
 	})
 	if err != nil {
 		if IsUniqueViolationError(err) {
@@ -92,7 +160,7 @@ func (r *TransactionRepository) GetTransaction(ctx context.Context, transactionI
 			return core.Transaction{}, errorQuery(err, "failed to get transaction")
 		}
 	}
-	coreTx, _, _ := fromDBTransactionRowToTransaction(transaction)
+	coreTx := fromDBTransactionRowToTransaction(transaction)
 	return coreTx, nil
 }
 
@@ -106,28 +174,20 @@ func (r *TransactionRepository) GetTransactions(ctx context.Context, params core
 	}
 	defer deferTx(tx, &err)
 	q := sqlc.New()
-	// Convert params to db params
-	dbParam := sqlc.GetTransactionsParams{AccountID: params.AccountID, Limit: params.Limit, Offset: params.Offset}
-	if params.IsRolledBack {
-		dbParam.IsRolledBack = sql.NullBool{Bool: true, Valid: true}
-	}
-	if !params.FromDate.IsZero() {
-		dbParam.FromDate = sql.NullTime{Time: params.FromDate, Valid: true}
-	}
-	if !params.ToDate.IsZero() {
-		dbParam.ToDate = sql.NullTime{Time: params.ToDate, Valid: true}
-	}
-	if params.TransactionType != core.TransactionTypeUnknown {
-		dbParam.TransactionType = sqlc.NullTransactionType{TransactionType: fromTransactionTypeToDBTransactionType(params.TransactionType), Valid: true}
-	}
-	if params.FromAmount > 0 {
-		dbParam.FromAmount = sql.NullFloat64{Float64: params.FromAmount, Valid: true}
-	}
-	if params.ToAmount > 0 {
-		dbParam.ToAmount = sql.NullFloat64{Float64: params.ToAmount, Valid: true}
-	}
 	// Get transactions
-	transactions, err := q.GetTransactions(ctx, tx, dbParam)
+	//var t sqlc.NullTransactionType
+	//err = t.Scan(params.Type.String())
+	//if err != nil {
+	//	return nil, errorQuery(err, "failed to convert transaction type")
+	//}
+	transactions, err := q.GetTransactions(ctx, tx, sqlc.GetTransactionsParams{
+		AccountID: params.AccountID,
+		Limit:     params.Limit,
+		Offset:    params.Offset,
+		MinAmount: sql.NullFloat64{Float64: params.MinAmount, Valid: params.MinAmount > 0},
+		MaxAmount: sql.NullFloat64{Float64: params.MaxAmount, Valid: params.MaxAmount > 0},
+		//TransactionType: t,
+	})
 	if err != nil {
 		return nil, errorQuery(err, "failed to get transactions")
 	}
@@ -158,8 +218,8 @@ func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transac
 			return errorQuery(err, "failed to get transaction")
 		}
 	}
-	if transaction.Type == sqlc.TransactionTypeDeposit || transaction.Type == sqlc.TransactionTypeWithdrawal {
-		return errorRollabckUnsupported
+	if transaction.Type != sqlc.TransactionTypeTransfer {
+		return errorRollbackUnsupported
 	}
 	// Set transaction as rolled back
 	err = q.SetTransactionRolledBack(ctx, tx, transactionID)
@@ -168,7 +228,7 @@ func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transac
 	}
 	// Add money to source account
 	err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
-		ID:      transaction.FromAccountID,
+		ID:      transaction.FromAccountID.Int64,
 		Balance: transaction.Amount,
 	})
 	if err != nil {
@@ -176,7 +236,7 @@ func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transac
 	}
 	// Subtract money from destination account
 	err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
-		ID:      transaction.ToAccountID,
+		ID:      transaction.ToAccountID.Int64,
 		Balance: transaction.Amount,
 	})
 	if err != nil {
@@ -186,50 +246,30 @@ func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transac
 }
 
 // fromDBTransactionRowToTransaction converts a sqlc.GetTransactionRow to a core.Transaction
-func fromDBTransactionRowToTransaction(t sqlc.GetTransactionRow) (core.Transaction, int64, int64) {
-	tx := fromDBTransactionsRowToTransaction(sqlc.GetTransactionsRow{
+func fromDBTransactionRowToTransaction(t sqlc.GetTransactionRow) core.Transaction {
+	return core.Transaction{
 		ID:              t.ID,
 		Amount:          t.Amount,
-		Type:            t.Type,
-		FromAccountName: t.FromAccountName,
-		ToAccountName:   t.ToAccountName,
+		Type:            fromDBTransactionTypeToTransactionType(t.Type),
+		ToAccountID:     t.ToAccountID.Int64,
+		FromAccountName: convertATM(t.FromAccountName),
+		ToAccountName:   convertATM(t.ToAccountName),
 		CreatedAt:       t.CreatedAt,
-	})
-	return tx, t.FromAccountID, t.ToAccountID
+		IsRolledBack:    t.IsRolledBack,
+	}
 }
 
 // fromDBTransactionsRowToTransaction converts a sqlc.GetTransactionsRow to a core.Transaction
 func fromDBTransactionsRowToTransaction(t sqlc.GetTransactionsRow) core.Transaction {
-	tx := core.Transaction{
-		ID:        t.ID,
-		Amount:    t.Amount,
-		Type:      fromDBTransactionTypeToTransactionType(t.Type),
-		CreatedAt: t.CreatedAt,
+	return core.Transaction{
+		ID:              t.ID,
+		Amount:          t.Amount,
+		Type:            fromDBTransactionTypeToTransactionType(t.Type),
+		FromAccountName: convertATM(t.FromAccountName),
+		ToAccountName:   convertATM(t.ToAccountName),
+		CreatedAt:       t.CreatedAt,
+		IsRolledBack:    t.IsRolledBack,
 	}
-	if t.FromAccountName != "" {
-		tx.FromAccount = t.FromAccountName
-	} else { // Deposit
-		tx.FromAccount = "ATM"
-	}
-	if t.ToAccountName != "" {
-		tx.ToAccount = t.ToAccountName
-	} else { // Withdrawal
-		tx.ToAccount = "ATM"
-	}
-	return tx
-}
-
-// fromTransactionTypeToDBTransactionType converts a core.TransactionType to a sqlc.TransactionType
-func fromTransactionTypeToDBTransactionType(t core.TransactionType) sqlc.TransactionType {
-	switch t {
-	case core.TransactionTypeDeposit:
-		return sqlc.TransactionTypeDeposit
-	case core.TransactionTypeWithdrawal:
-		return sqlc.TransactionTypeWithdrawal
-	case core.TransactionTypeTransfer:
-		return sqlc.TransactionTypeTransfer
-	}
-	return ""
 }
 
 // fromDBTransactionTypeToTransactionType converts a sqlc.TransactionType to a core.TransactionType
@@ -241,6 +281,15 @@ func fromDBTransactionTypeToTransactionType(t sqlc.TransactionType) core.Transac
 		return core.TransactionTypeWithdrawal
 	case sqlc.TransactionTypeTransfer:
 		return core.TransactionTypeTransfer
+	default:
+		return ""
 	}
-	return ""
+}
+
+// convertATM converts a sql.NullString to a string. If the string is null, it returns "ATM"
+func convertATM(s sql.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return "ATM"
 }

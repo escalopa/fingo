@@ -13,53 +13,78 @@ import (
 	"github.com/google/uuid"
 )
 
-const createTransaction = `-- name: CreateTransaction :exec
-INSERT INTO transactions (type, amount, source_account_id, destination_account_id)
-VALUES ($1, $2, $3, $4)
-RETURNING id
+const createDepositTransaction = `-- name: CreateDepositTransaction :exec
+INSERT INTO transactions(type, amount, destination_account_id)
+VALUES ('deposit', $1, $2)
 `
 
-type CreateTransactionParams struct {
-	Type                 TransactionType `db:"type" json:"type"`
-	Amount               float64         `db:"amount" json:"amount"`
-	SourceAccountID      sql.NullInt64   `db:"source_account_id" json:"source_account_id"`
-	DestinationAccountID sql.NullInt64   `db:"destination_account_id" json:"destination_account_id"`
+type CreateDepositTransactionParams struct {
+	Amount               float64       `db:"amount" json:"amount"`
+	DestinationAccountID sql.NullInt64 `db:"destination_account_id" json:"destination_account_id"`
 }
 
-func (q *Queries) CreateTransaction(ctx context.Context, db DBTX, arg CreateTransactionParams) error {
-	_, err := db.ExecContext(ctx, createTransaction,
-		arg.Type,
-		arg.Amount,
-		arg.SourceAccountID,
-		arg.DestinationAccountID,
-	)
+func (q *Queries) CreateDepositTransaction(ctx context.Context, db DBTX, arg CreateDepositTransactionParams) error {
+	_, err := db.ExecContext(ctx, createDepositTransaction, arg.Amount, arg.DestinationAccountID)
+	return err
+}
+
+const createTransferTransaction = `-- name: CreateTransferTransaction :exec
+INSERT INTO transactions (type, amount, source_account_id, destination_account_id)
+VALUES ('transfer', $1, $2, $3)
+`
+
+type CreateTransferTransactionParams struct {
+	Amount               float64       `db:"amount" json:"amount"`
+	SourceAccountID      sql.NullInt64 `db:"source_account_id" json:"source_account_id"`
+	DestinationAccountID sql.NullInt64 `db:"destination_account_id" json:"destination_account_id"`
+}
+
+func (q *Queries) CreateTransferTransaction(ctx context.Context, db DBTX, arg CreateTransferTransactionParams) error {
+	_, err := db.ExecContext(ctx, createTransferTransaction, arg.Amount, arg.SourceAccountID, arg.DestinationAccountID)
+	return err
+}
+
+const createWithdrawTransaction = `-- name: CreateWithdrawTransaction :exec
+INSERT INTO transactions(type, amount, source_account_id)
+VALUES ('withdrawal', $1, $2)
+`
+
+type CreateWithdrawTransactionParams struct {
+	Amount          float64       `db:"amount" json:"amount"`
+	SourceAccountID sql.NullInt64 `db:"source_account_id" json:"source_account_id"`
+}
+
+func (q *Queries) CreateWithdrawTransaction(ctx context.Context, db DBTX, arg CreateWithdrawTransactionParams) error {
+	_, err := db.ExecContext(ctx, createWithdrawTransaction, arg.Amount, arg.SourceAccountID)
 	return err
 }
 
 const getTransaction = `-- name: GetTransaction :one
-SELECT transactions.id,
-       type,
-       amount,
+SELECT t.id,
+       t.type,
+       t.amount,
        source.id        as from_account_id,
        source.name      as from_account_name,
        destination.id   as to_account_id,
        destination.name as to_account_name,
-       created_at
-FROM transactions
-       JOIN accounts destination on destination.id = transactions.destination_account_id
-       JOIN accounts source on destination.id = transactions.source_account_id
-WHERE transactions.id = $1
+       t.created_at,
+       t.is_rolled_back
+FROM transactions t
+       LEFT JOIN accounts destination on destination.id = t.destination_account_id
+       LEFT JOIN accounts source on source.id = t.source_account_id
+WHERE t.id = $1
 `
 
 type GetTransactionRow struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
 	Type            TransactionType `db:"type" json:"type"`
 	Amount          float64         `db:"amount" json:"amount"`
-	FromAccountID   int64           `db:"from_account_id" json:"from_account_id"`
-	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
-	ToAccountID     int64           `db:"to_account_id" json:"to_account_id"`
-	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
+	FromAccountID   sql.NullInt64   `db:"from_account_id" json:"from_account_id"`
+	FromAccountName sql.NullString  `db:"from_account_name" json:"from_account_name"`
+	ToAccountID     sql.NullInt64   `db:"to_account_id" json:"to_account_id"`
+	ToAccountName   sql.NullString  `db:"to_account_name" json:"to_account_name"`
 	CreatedAt       time.Time       `db:"created_at" json:"created_at"`
+	IsRolledBack    bool            `db:"is_rolled_back" json:"is_rolled_back"`
 }
 
 func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (GetTransactionRow, error) {
@@ -74,62 +99,54 @@ func (q *Queries) GetTransaction(ctx context.Context, db DBTX, id uuid.UUID) (Ge
 		&i.ToAccountID,
 		&i.ToAccountName,
 		&i.CreatedAt,
+		&i.IsRolledBack,
 	)
 	return i, err
 }
 
 const getTransactions = `-- name: GetTransactions :many
-SELECT transactions.id,
-       transactions.amount,
-       type,
+SELECT t.id,
+       t.amount,
+       t.type,
        source.name      as from_account_name,
        destination.name as to_account_name,
-       created_at
-FROM transactions
-       JOIN accounts destination on destination.id = transactions.destination_account_id
-       JOIN accounts source on destination.id = transactions.source_account_id
-WHERE source.id = $1
-   OR destination.id = $1
-  AND coalesce($2, type) = type
-  AND coalesce($3, created_at) = created_at
-  AND coalesce($4, created_at) = created_at
-  AND coalesce($5, transactions.amount) <= transactions.amount
-  AND coalesce($6, transactions.amount) >= transactions.amount
-  AND coalesce($7, transactions.is_rolled_back) = transactions.is_rolled_back
+       t.created_at,
+       t.is_rolled_back
+FROM transactions t
+       LEFT JOIN accounts destination on destination.id = t.destination_account_id
+       LEFT JOIN accounts source on source.id = t.source_account_id
+WHERE (source.id = $1
+  OR destination.id = $1)
+  AND coalesce($2, t.amount) <= t.amount
+  AND coalesce($3, t.amount) >= t.amount
 ORDER BY created_at DESC
-LIMIT $9 OFFSET $8
+LIMIT $5 OFFSET $4
 `
 
 type GetTransactionsParams struct {
-	AccountID       int64               `db:"account_id" json:"account_id"`
-	TransactionType NullTransactionType `db:"transaction_type" json:"transaction_type"`
-	FromDate        sql.NullTime        `db:"from_date" json:"from_date"`
-	ToDate          sql.NullTime        `db:"to_date" json:"to_date"`
-	FromAmount      sql.NullFloat64     `db:"from_amount" json:"from_amount"`
-	ToAmount        sql.NullFloat64     `db:"to_amount" json:"to_amount"`
-	IsRolledBack    sql.NullBool        `db:"is_rolled_back" json:"is_rolled_back"`
-	Offset          int32               `db:"offset" json:"offset"`
-	Limit           int32               `db:"limit" json:"limit"`
+	AccountID int64           `db:"account_id" json:"account_id"`
+	MinAmount sql.NullFloat64 `db:"min_amount" json:"min_amount"`
+	MaxAmount sql.NullFloat64 `db:"max_amount" json:"max_amount"`
+	Offset    int32           `db:"offset" json:"offset"`
+	Limit     int32           `db:"limit" json:"limit"`
 }
 
 type GetTransactionsRow struct {
 	ID              uuid.UUID       `db:"id" json:"id"`
 	Amount          float64         `db:"amount" json:"amount"`
 	Type            TransactionType `db:"type" json:"type"`
-	FromAccountName string          `db:"from_account_name" json:"from_account_name"`
-	ToAccountName   string          `db:"to_account_name" json:"to_account_name"`
+	FromAccountName sql.NullString  `db:"from_account_name" json:"from_account_name"`
+	ToAccountName   sql.NullString  `db:"to_account_name" json:"to_account_name"`
 	CreatedAt       time.Time       `db:"created_at" json:"created_at"`
+	IsRolledBack    bool            `db:"is_rolled_back" json:"is_rolled_back"`
 }
 
+// AND coalesce(sqlc.narg('transaction_type') IS NULL, t.type) = t.type
 func (q *Queries) GetTransactions(ctx context.Context, db DBTX, arg GetTransactionsParams) ([]GetTransactionsRow, error) {
 	rows, err := db.QueryContext(ctx, getTransactions,
 		arg.AccountID,
-		arg.TransactionType,
-		arg.FromDate,
-		arg.ToDate,
-		arg.FromAmount,
-		arg.ToAmount,
-		arg.IsRolledBack,
+		arg.MinAmount,
+		arg.MaxAmount,
 		arg.Offset,
 		arg.Limit,
 	)
@@ -147,6 +164,7 @@ func (q *Queries) GetTransactions(ctx context.Context, db DBTX, arg GetTransacti
 			&i.FromAccountName,
 			&i.ToAccountName,
 			&i.CreatedAt,
+			&i.IsRolledBack,
 		); err != nil {
 			return nil, err
 		}
