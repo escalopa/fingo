@@ -11,7 +11,7 @@ message Session {
     string client_ip = 1;
     string user_agent = 2;
   }
-  string id = 1;
+  string id = 1; // session_id (uuid)
   UserDevice user_device = 2;
   google.protobuf.Timestamp updated_at = 3;
   google.protobuf.Timestamp expires_at = 4;
@@ -26,7 +26,7 @@ message SignupRequest {
   string password = 5;
 }
 message SignupResponse {
-  string message = 1;
+  bool success = 1;
 }
 
 // Signin
@@ -44,13 +44,12 @@ message LogoutRequest {
   string session_id = 1;
 }
 message LogoutResponse {
-  string message = 1;
+  bool success = 1;
 }
 
 // RenewAccessToken
 message RenewAccessTokenRequest {
-  string user_id = 1;
-  string refresh_token = 2;
+  string refresh_token = 1;
 }
 message RenewAccessTokenResponse {
   string access_token = 1;
@@ -58,7 +57,7 @@ message RenewAccessTokenResponse {
 }
 
 // GetUserDevices
-message GetUserDevicesRequest {}
+message GetUserDevicesRequest {} // user_id is taken from token service
 message GetUserDevicesResponse {
   repeated Session devices_sessions = 1;
 }

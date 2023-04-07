@@ -1,10 +1,12 @@
 package mypostgres
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"testing"
 
+	pkgdb "github.com/escalopa/fingo/pkg/db"
 	"github.com/escalopa/fingo/utils/testcontainer"
 )
 
@@ -13,8 +15,9 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	ctx := context.Background()
 	// Create a new connection with postgres test container
-	conn, terminate, err := testcontainer.NewPostgresContainer()
+	conn, terminate, err := testcontainer.NewPostgresContainer(ctx)
 	if err != nil {
 		log.Fatal("failed to init postgres container")
 	}
@@ -28,7 +31,7 @@ func TestMain(m *testing.M) {
 		}
 	}()
 	// Migrate database
-	err = Migrate(conn, "file://./migrations")
+	err = pkgdb.Migrate(conn, "file://./migrations")
 	if err != nil {
 		log.Fatalf("failed to migrate database for tests: %s", err)
 	}

@@ -31,15 +31,15 @@ type TokenRepository interface {
 
 // PasswordHasher is an interface for hashing and comparing passwords
 type PasswordHasher interface {
-	Hash(password string) (hashedPassword string, err error)
-	Compare(password, hash string) (isSamePassword bool)
+	Hash(ctx context.Context, password string) (hashedPassword string, err error)
+	Compare(ctx context.Context, password, hash string) (isSamePassword bool)
 }
 
 // TokenGenerator is an interface for generating and verifying tokens
 type TokenGenerator interface {
-	GenerateAccessToken(params core.GenerateTokenParam) (token string, err error)
-	GenerateRefreshToken(params core.GenerateTokenParam) (token string, err error)
-	DecryptToken(token string) (params core.TokenPayload, err error)
+	GenerateAccessToken(ctx context.Context, params core.GenerateTokenParam) (token string, err error)
+	GenerateRefreshToken(ctx context.Context, params core.GenerateTokenParam) (token string, err error)
+	DecryptToken(ctx context.Context, token string) (params core.TokenPayload, err error)
 }
 
 // MessageProducer is an interface for sending messages to a queue
@@ -49,5 +49,5 @@ type MessageProducer interface {
 
 // Validator is an interface for validating structs using tags
 type Validator interface {
-	Validate(s interface{}) (err error)
+	Validate(ctx context.Context, s interface{}) (err error)
 }

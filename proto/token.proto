@@ -9,7 +9,7 @@ message ValidateTokenRequest {
   string access_token = 1;
 }
 message ValidateTokenResponse {
-  string user_id = 1;
+  string user_id = 1; // user-id (uuid)
 }
 
 service TokenService {

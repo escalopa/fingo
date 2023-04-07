@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
+
 	"github.com/escalopa/fingo/token/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/lordvidex/errs"
@@ -23,6 +25,8 @@ func NewTokenRepositoryV1(client *redis.Client) (*TokeRepositoryImplV1, error) {
 
 // GetTokenPayload gets the token payload from cache
 func (tr *TokeRepositoryImplV1) GetTokenPayload(ctx context.Context, accessToken string) (*core.TokenPayload, error) {
+	ctx, span := oteltracer.Tracer().Start(ctx, "GetTokenPayload")
+	defer span.End()
 	// Get token payload from cache
 	bytes, err := tr.c.Get(ctx, accessToken).Result()
 	if err != nil {

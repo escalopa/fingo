@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	oteltracer "github.com/escalopa/fingo/contact/internal/adapters/tracer"
+
 	"github.com/escalopa/fingo/contact/internal/core"
 
 	"github.com/lordvidex/errs"
@@ -72,6 +74,8 @@ func (r *Consumer) HandleSendVerificationsCode(handler func(ctx context.Context,
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
+			_, span := oteltracer.Tracer().Start(context.Background(), "rabbitmq.HandleSendVerificationsCode")
+			defer span.End()
 			var m core.SendVerificationCodeMessage
 			r.handleMessage(d, &m, func(ctx context.Context) error {
 				return handler(ctx, m)
@@ -88,6 +92,8 @@ func (r *Consumer) HandleSendResetPasswordToken(handler func(ctx context.Context
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
+			_, span := oteltracer.Tracer().Start(context.Background(), "rabbitmq.HandleSendResetPasswordToken")
+			defer span.End()
 			var m core.SendResetPasswordTokenMessage
 			r.handleMessage(d, &m, func(ctx context.Context) error {
 				return handler(ctx, m)
@@ -104,6 +110,8 @@ func (r *Consumer) HandleSendNewSignInSession(handler func(ctx context.Context, 
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
+			_, span := oteltracer.Tracer().Start(context.Background(), "rabbitmq.HandleSendNewSignInSession")
+			defer span.End()
 			var m core.SendNewSignInSessionMessage
 			r.handleMessage(d, &m, func(ctx context.Context) error {
 				return handler(ctx, m)
@@ -115,14 +123,10 @@ func (r *Consumer) HandleSendNewSignInSession(handler func(ctx context.Context, 
 
 func (r *Consumer) handleMessage(msg amqp.Delivery, body interface{}, handle func(context.Context) error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer func() {
-		if err := msg.Ack(false); err != nil {
-			log.Println("failed to ack message: ", err, msg.MessageId)
-		}
-		cancel()
-	}()
+	var err error
+	defer cancel()
 	// Read message from queue
-	err := json.Unmarshal(msg.Body, &body)
+	err = json.Unmarshal(msg.Body, &body)
 	if err != nil {
 		log.Println("failed to unmarshal message: ", err)
 		if err = msg.Nack(false, true); err != nil {

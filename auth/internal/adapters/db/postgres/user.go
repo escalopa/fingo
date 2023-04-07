@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 
+	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+	"github.com/lib/pq"
+
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
@@ -22,6 +25,8 @@ func NewUserRepository(conn *sql.DB) (*UserRepository, error) {
 }
 
 func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserParams) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.CreateUser")
+	defer span.End()
 	err := ur.q.CreateUser(ctx, db.CreateUserParams{
 		ID:             arg.ID,
 		FirstName:      arg.FirstName,
@@ -31,7 +36,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserPar
 		HashedPassword: arg.HashedPassword,
 	})
 	if err != nil {
-		if isUniqueViolationError(err) {
+		if IsUniqueViolationError(err) {
 			return errs.B(err).Code(errs.AlreadyExists).Msg("user already exists").Err()
 		}
 		return errs.B(err).Code(errs.Internal).Msg("failed to create user").Err()
@@ -40,6 +45,8 @@ func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserPar
 }
 
 func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (core.User, error) {
+	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.GetUserByID")
+	defer span.End()
 	user, err := ur.q.GetUserByID(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -51,6 +58,8 @@ func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (core.U
 }
 
 func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (core.User, error) {
+	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.GetUserByEmail")
+	defer span.End()
 	user, err := ur.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -62,6 +71,8 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (cor
 }
 
 func (ur *UserRepository) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
+	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.DeleteUserByID")
+	defer span.End()
 	rows, err := ur.q.DeleteUserByID(ctx, id)
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msgf("failed to delete user with id: %s", id).Err()
@@ -83,4 +94,10 @@ func fromDbUserToCore(user db.User) (core.User, error) {
 		IsEmailVerified: user.IsVerifiedEmail,
 		CreatedAt:       user.CreatedAt,
 	}, nil
+}
+
+// IsUniqueViolationError checks if an error is a unique violation error
+func IsUniqueViolationError(err error) bool {
+	er, ok := err.(*pq.Error)
+	return ok && er.Code == "23505"
 }

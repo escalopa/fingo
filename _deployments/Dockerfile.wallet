@@ -1,0 +1,22 @@
+FROM golang:1.19 AS development
+WORKDIR /go/src/github.com/escalopa/fingo
+COPY ./wallet ./wallet
+COPY ./pkg ./pkg
+COPY ./certs ./certs
+COPY ./pb ./pb
+COPY go.mod go.sum ./
+RUN go mod download
+RUN go install github.com/cespare/reflex@latest
+CMD reflex -sr '\.go$' go run ./wallet/cmd/main.go
+
+FROM golang:alpine AS builder
+WORKDIR /go/src/github.com/escalopa/fingo
+COPY ./wallet ./wallet
+COPY ./pb ./pb
+COPY go.mod go.sum ./
+RUN go build -o /go/bin/wallet ./wallet/cmd/main.go
+
+FROM alpine:latest AS production
+RUN apk add --no-cache tzdata
+COPY --from=builder /go/bin/wallet /go/bin/wallet
+ENTRYPOINT ["/go/bin/wallet"]

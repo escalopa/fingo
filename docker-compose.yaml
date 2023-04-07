@@ -10,24 +10,30 @@ services:
       - ./pkg:/go/src/github.com/escalopa/fingo/pkg
       - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
+      # Server
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
-
+      # Tracing
+      - AUTH_TRACING_ENABLE=${AUTH_TRACING_ENABLE}
+      - AUTH_TRACING_JAEGER_ENABLE=${AUTH_TRACING_JAEGER_ENABLE}
+      - AUTH_TRACING_JAEGER_AGENT_URL=${AUTH_TRACING_JAEGER_AGENT_URL}
+      - AUTH_TRACING_JAEGER_SERVICE_NAME=${AUTH_TRACING_JAEGER_SERVICE_NAME}
+      - AUTH_TRACING_JAEGER_ENVIRONMENT=${AUTH_TRACING_JAEGER_ENVIRONMENT}
+      # Tls
       - AUTH_GRPC_TLS_ENABLE=${AUTH_GRPC_TLS_ENABLE}
       - AUTH_GRPC_TLS_KEY_FILE=${AUTH_GRPC_TLS_KEY_FILE}
       - AUTH_GRPC_TLS_CERT_FILE=${AUTH_GRPC_TLS_CERT_FILE}
-      - AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
-
+      # Token service
       - TOKEN_GRPC_URL=${TOKEN_GRPC_URL}
       - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
-      - TOKEN_GRPC_TLS_CERT_FILE=${TOKEN_GRPC_TLS_CERT_FILE}
-
+      - AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
+      # Database
       - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
       - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
-
+      # RabbitMQ
       - AUTH_RABBITMQ_URL=${AUTH_RABBITMQ_URL}
       - AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=${AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
-
+      # Tokens and sessions durations
       - AUTH_TOKEN_SECRET=${AUTH_TOKEN_SECRET}
       - AUTH_ACCESS_TOKEN_DURATION=${AUTH_ACCESS_TOKEN_DURATION}
       - AUTH_REFRESH_TOKEN_DURATION=${AUTH_REFRESH_TOKEN_DURATION}
@@ -47,6 +53,52 @@ services:
         condition: service_healthy
       token:
         condition: service_started
+      jaeger:
+        condition: service_started
+
+  wallet:
+    container_name: "wallet"
+    restart: unless-stopped
+    volumes:
+      - ./wallet:/go/src/github.com/escalopa/fingo/wallet
+      - ./pb:/go/src/github.com/escalopa/fingo/pb
+      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
+      - ./certs:/go/src/github.com/escalopa/fingo/certs
+    environment:
+      # Server
+      - WALLET_GRPC_PORT=${WALLET_GRPC_PORT}
+      # Tracing
+      - WALLET_TRACING_ENABLE=${WALLET_TRACING_ENABLE}
+      - WALLET_TRACING_JAEGER_ENABLE=${WALLET_TRACING_JAEGER_ENABLE}
+      - WALLET_TRACING_JAEGER_AGENT_URL=${WALLET_TRACING_JAEGER_AGENT_URL}
+      - WALLET_TRACING_JAEGER_SERVICE_NAME=${WALLET_TRACING_JAEGER_SERVICE_NAME}
+      - WALLET_TRACING_JAEGER_ENVIRONMENT=${WALLET_TRACING_JAEGER_ENVIRONMENT}
+      # Tls
+      - WALLET_GRPC_TLS_ENABLE=${WALLET_GRPC_TLS_ENABLE}
+      - WALLET_GRPC_TLS_KEY_FILE=${WALLET_GRPC_TLS_KEY_FILE}
+      - WALLET_GRPC_TLS_CERT_FILE=${WALLET_GRPC_TLS_CERT_FILE}
+      # Token service
+      - TOKEN_GRPC_URL=${TOKEN_GRPC_URL}
+      - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
+      - WALLET_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
+      # Database (cockroachdb or postgres)
+      - WALLET_DATABASE_URL=${WALLET_DATABASE_URL}
+      - WALLET_DATABASE_MIGRATION_PATH=${WALLET_DATABASE_MIGRATION_PATH}
+      # Card number
+      - WALLET_CARD_NUMBER_LENGTH=${WALLET_CARD_NUMBER_LENGTH}
+      # Locker
+      - WALLET_LOCKER_CLEANUP_DURATION=${WALLET_LOCKER_CLEANUP_DURATION}
+    ports:
+      - "${WALLET_GRPC_PORT}:${WALLET_GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: ./_deployments/Dockerfile.wallet
+      target: development
+    depends_on:
+      token:
+        condition: service_started
+      crdb:
+        condition: service_healthy
 
   token:
     container_name: "token"
@@ -57,23 +109,31 @@ services:
       - ./pkg:/go/src/github.com/escalopa/fingo/pkg
       - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
-    - TOKEN_GRPC_PORT=${TOKEN_GRPC_PORT}
-
-    - TOKEN_REDIS_URL=${TOKEN_REDIS_URL}
-
-    - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
-    - TOKEN_GRPC_TLS_CERT_FILE=${TOKEN_GRPC_TLS_CERT_FILE}
-    - TOKEN_GRPC_TLS_KEY_FILE=${TOKEN_GRPC_TLS_KEY_FILE}
+      # Server
+      - TOKEN_GRPC_PORT=${TOKEN_GRPC_PORT}
+      # Tracing
+      - TOKEN_TRACING_ENABLE=${TOKEN_TRACING_ENABLE}
+      - TOKEN_TRACING_JAEGER_ENABLE=${TOKEN_TRACING_JAEGER_ENABLE}
+      - TOKEN_TRACING_JAEGER_AGENT_URL=${TOKEN_TRACING_JAEGER_AGENT_URL}
+      - TOKEN_TRACING_JAEGER_SERVICE_NAME=${TOKEN_TRACING_JAEGER_SERVICE_NAME}
+      - TOKEN_TRACING_JAEGER_ENVIRONMENT=${TOKEN_TRACING_JAEGER_ENVIRONMENT}
+      # Database
+      - TOKEN_REDIS_URL=${TOKEN_REDIS_URL}
+      # Tls
+      - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
+      - TOKEN_GRPC_TLS_CERT_FILE=${TOKEN_GRPC_TLS_CERT_FILE}
+      - TOKEN_GRPC_TLS_KEY_FILE=${TOKEN_GRPC_TLS_KEY_FILE}
     build:
-        context: .
-        dockerfile: ./_deployments/Dockerfile.token
-        target: development
+      context: .
+      dockerfile: ./_deployments/Dockerfile.token
+      target: development
     ports:
-        - "${TOKEN_GRPC_PORT}:${TOKEN_GRPC_PORT}"
+      - "${TOKEN_GRPC_PORT}:${TOKEN_GRPC_PORT}"
     depends_on:
-        cache:
-            condition: service_healthy
-
+      cache:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
 
   contact:
     container_name: "contact"
@@ -82,15 +142,22 @@ services:
       - ./contact:/go/src/github.com/escalopa/fingo/contact
       - ./pkg:/go/src/github.com/escalopa/fingo/pkg
     environment:
+      # Server
       - CONTACT_CODES_EXPIRATION=${CONTACT_CODES_EXPIRATION}
       - CONTACT_SEND_CODE_MIN_INTERVAL=${CONTACT_SEND_CODE_MIN_INTERVAL}
       - CONTACT_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL=${CONTACT_SEND_RESET_PASSWORD_TOKEN_MIN_INTERVAL}
-
+      # Tracing
+      - CONTACT_TRACING_ENABLE=${CONTACT_TRACING_ENABLE}
+      - CONTACT_TRACING_JAEGER_ENABLE=${CONTACT_TRACING_JAEGER_ENABLE}
+      - CONTACT_TRACING_JAEGER_AGENT_URL=${CONTACT_TRACING_JAEGER_AGENT_URL}
+      - CONTACT_TRACING_JAEGER_SERVICE_NAME=${CONTACT_TRACING_JAEGER_SERVICE_NAME}
+      - CONTACT_TRACING_JAEGER_ENVIRONMENT=${CONTACT_TRACING_JAEGER_ENVIRONMENT}
+      # RabbitMQ
       - CONTACT_RABBITMQ_URL=${CONTACT_RABBITMQ_URL}
       - CONTACT_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME=${CONTACT_RABBITMQ_VERIFICATION_CODE_QUEUE_NAME}
       - CONTACT_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME=${CONTACT_RABBITMQ_RESET_PASSWORD_TOKEN_QUEUE_NAME}
       - CONTACT_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=${CONTACT_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME}
-
+      # Courier provider
       - CONTACT_COURIER_TOKEN=${CONTACT_COURIER_TOKEN}
       - CONTACT_COURIER_VERIFICATION_TEMPLATE_ID=${CONTACT_COURIER_VERIFICATION_TEMPLATE_ID}
       - CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID=${CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID}
@@ -102,6 +169,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+      jaeger:
+        condition: service_started
 
   cache:
     image: redis:alpine
@@ -112,27 +181,49 @@ services:
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
 
   db:
-      image: postgres:12
-      container_name: "db"
-      env_file:
-        - ./.db.env
-      ports:
-        - "5432:5432"
-      volumes:
-        - db:/var/lib/postgresql/data
-        - ./scripts/multiple-database.sh:/docker-entrypoint-initdb.d/multiple-database.sh
-      healthcheck:
-        test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-        interval: 5s
-        timeout: 5s
-        retries: 5
+    image: postgres:12
+    container_name: "db"
+    env_file:
+      - ./.db.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./scripts/multiple-database.sh:/docker-entrypoint-initdb.d/multiple-database.sh
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  crdb: # Master node
+    image: cockroachdb/cockroach:latest
+    container_name: "crdb"
+    volumes:
+      - crdb:/cockroach/cockroach-data
+      - ./scripts/cockroach-inti.sh:/docker-entrypoint-initdb.d/cockroach-inti.sh
+    command: [ "start", "--insecure", "--join=crdb1", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb1" ]
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "cockroach", "node", "status", "--insecure" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3.10.19-management
     container_name: "rabbitmq"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq/mnesia/'
+
     restart: unless-stopped
     ports:
       - "5672:5672"
@@ -140,11 +231,23 @@ services:
     env_file:
       - ./.rabbitmq.env
     healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
+      test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 3s
       timeout: 5s
       retries: 5
 
+  jaeger:
+    container_name: "jaeger"
+    restart: unless-stopped
+    image: jaegertracing/all-in-one:1.6
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "4318:4318"
+      - "6831:6831/udp"
+
 volumes:
+  crdb:
+  rabbitmq:
   cache:
   db:

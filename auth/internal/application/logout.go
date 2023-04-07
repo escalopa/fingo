@@ -4,8 +4,10 @@ import (
 	"context"
 	"time"
 
+	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+
 	"github.com/escalopa/fingo/auth/internal/core"
-	"github.com/escalopa/fingo/pkg/pkgCore"
+	"github.com/escalopa/fingo/pkg/contextutils"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -25,12 +27,14 @@ type LogoutCommandImpl struct {
 }
 
 func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) error {
-	return executeWithContextTimeout(ctx, 5*time.Second, func() error {
-		if err := c.v.Validate(params); err != nil {
+	return contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
+		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		defer span.End()
+		if err := c.v.Validate(ctx, params); err != nil {
 			return err
 		}
 		// Read user id from context
-		callerID, err := pkgCore.GetUserIDFromContext(ctx)
+		callerID, err := contextutils.GetUserID(ctx)
 		if err != nil {
 			return err
 		}

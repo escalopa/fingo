@@ -4,6 +4,10 @@ import (
 	"context"
 	"time"
 
+	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+
+	"github.com/escalopa/fingo/pkg/contextutils"
+
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
 )
@@ -35,11 +39,21 @@ type RenewTokenCommandImpl struct {
 // Execute executes the RenewTokenCommand with the given params
 func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error) {
 	var response RenewTokenResponse
-	err := executeWithContextTimeout(ctx, 5*time.Second, func() error {
+	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
+		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		defer span.End()
 		// Decrypt token to get sessionID
-		payload, err := c.tg.DecryptToken(params.RefreshToken)
+		payload, err := c.tg.DecryptToken(ctx, params.RefreshToken)
 		if err != nil {
 			return err
+		}
+		// Get caller ID from context
+		callerID, err := contextutils.GetUserID(ctx)
+		if err != nil {
+			return err
+		}
+		if callerID != payload.UserID {
+			return errs.B().Code(errs.Unauthenticated).Msg("not token owner").Err()
 		}
 		// Check if session has expired
 		if time.Now().After(payload.ExpiresAt) {
@@ -52,10 +66,10 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		}
 		// Validate refresh token
 		if session.RefreshToken != params.RefreshToken {
-			return errs.B().Msg("refresh token doesn't match the one stored in session database").Err()
+			return errs.B().Code(errs.NotFound).Msg("refresh token doesn't match the one stored in session database").Err()
 		}
 		// Generate a new access & refresh tokens
-		accessToken, err := c.tg.GenerateAccessToken(core.GenerateTokenParam{
+		accessToken, err := c.tg.GenerateAccessToken(ctx, core.GenerateTokenParam{
 			UserID:    payload.UserID,
 			SessionID: payload.SessionID,
 			ClientIP:  payload.ClientIP,
@@ -64,7 +78,7 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		if err != nil {
 			return errs.B(err).Code(errs.Internal).Msg("failed to create access token").Err()
 		}
-		refreshToken, err := c.tg.GenerateRefreshToken(core.GenerateTokenParam{
+		refreshToken, err := c.tg.GenerateRefreshToken(ctx, core.GenerateTokenParam{
 			UserID:    payload.UserID,
 			SessionID: payload.SessionID,
 			ClientIP:  payload.ClientIP,
@@ -83,7 +97,7 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 			return err
 		}
 		// Get token payload after encryption to save the new values
-		payload, err = c.tg.DecryptToken(accessToken)
+		payload, err = c.tg.DecryptToken(ctx, accessToken)
 		if err != nil {
 			return err
 		}

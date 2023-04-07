@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/escalopa/fingo/pb";
+
+package pb;
+
+enum TransactionType {
+  UNKNOWN = 0;
+  DEPOSIT = 1;
+  WITHDRAWAL = 2;
+  TRANSFER = 3;
+}
+
+enum Currency {
+  UNDEFINED = 0;
+  EGP = 1;
+  USD = 2;
+  EUR = 3;
+  RUB = 4;
+  GBP = 5;
+}
+
+// CreateWallet
+// Wallet is a user's account in the system that can have multiple accounts
+message CreateWalletRequest {} // user id is taken from the context
+message CreateWalletResponse {
+  bool success = 1;
+}
+
+// CreateAccount
+message CreateAccountRequest {
+  Currency currency = 1;
+  string name = 2;
+}
+message CreateAccountResponse {
+  bool success = 1;
+}
+
+// GetAccounts
+message GetAccountsRequest {} // user id is taken from the context
+message GetAccountsResponse {
+  message Account {
+    int64 id = 1;
+    string name = 2;
+    double balance = 3;
+    Currency currency = 4;
+  }
+  repeated Account accounts = 1;
+}
+
+// DeleteAccount
+message DeleteAccountRequest {
+  int64 account_id = 1;
+}
+message DeleteAccountResponse {
+  bool success = 1;
+}
+
+// CreateCard
+message CreateCardRequest {
+  int64 account_id = 1;
+}
+message CreateCardResponse {
+  bool success = 1;
+}
+
+// GetCards
+message GetCardsRequest {
+  int64 account_id = 1;
+}
+message GetCardsResponse {
+  message Card {
+    string number = 1; // 16 digits number
+  }
+  repeated Card cards = 1;
+}
+
+// DeleteCard
+message DeleteCardRequest {
+  string card_number = 1;
+}
+message DeleteCardResponse {
+  bool success = 1;
+}
+
+// CreateTransaction
+message CreateTransactionRequest {
+  TransactionType type = 1;
+  double amount = 2;
+  string card_number = 3;
+  optional string recipient_card_number = 4; // required ONLY on `TransferType.TRANSFER`
+}
+message CreateTransactionResponse {
+  bool success = 1;
+}
+
+// TransferRollback
+message TransferRollbackRequest {
+  string transaction_id = 1;
+}
+message TransferRollbackResponse {
+  bool success = 1; // balance after rollback
+}
+
+// GetWallets
+message GetWalletsRequest {} // user id is taken from the context
+message GetWalletsResponse {
+  message Wallet {
+    int32 id = 1;
+    string name = 2;
+    double balance = 3;
+    Currency currency = 4;
+  }
+  repeated Wallet wallets = 1;
+}
+
+// GetTransactionHistory
+message GetTransactionHistoryRequest {
+  int64 account_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+  optional double min_amount = 4;
+  optional double max_amount = 5;
+  optional TransactionType transaction_type = 6;
+}
+message GetTransactionHistoryResponse {
+  message Transaction {
+    string id = 1; // uuid
+    double amount = 2;
+    TransactionType type = 3;
+    string sender_name = 4; // On withdraw "ATM", on deposit ""
+    string recipient_name = 5;  // On withdraw "", on deposit "ATM"
+    google.protobuf.Timestamp created_at = 6;
+    bool is_rolled_back = 7;
+  }
+  repeated Transaction transactions = 1;
+}
+
+service WalletService {
+  // User
+  rpc CreateWallet(CreateWalletRequest) returns (CreateWalletResponse);
+  // Account
+  rpc CreateAccount(CreateAccountRequest) returns (CreateAccountResponse);
+  rpc GetAccounts(GetAccountsRequest) returns (GetAccountsResponse);
+  rpc DeleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  // Card
+  rpc CreateCard(CreateCardRequest) returns (CreateCardResponse);
+  rpc GetCards(GetCardsRequest) returns (GetCardsResponse);
+  rpc DeleteCard(DeleteCardRequest) returns (DeleteCardResponse);
+  // Transfer
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
+  rpc TransferRollback(TransferRollbackRequest) returns (TransferRollbackResponse);
+  // History
+  rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (GetTransactionHistoryResponse);
+}

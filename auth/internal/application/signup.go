@@ -2,9 +2,12 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/auth/internal/core"
-	"github.com/google/uuid"
 	"time"
+
+	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/google/uuid"
 )
 
 // ---------------------- Signup ---------------------- //
@@ -28,12 +31,14 @@ type SignupCommandImpl struct {
 }
 
 func (c *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
-	return executeWithContextTimeout(ctx, 10*time.Second, func() error {
-		if err := c.v.Validate(params); err != nil {
+	return contextutils.ExecuteWithContextTimeout(ctx, 10*time.Second, func() error {
+		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		defer span.End()
+		if err := c.v.Validate(ctx, params); err != nil {
 			return err
 		}
 		// Hash password
-		hashedPassword, err := c.h.Hash(params.Password)
+		hashedPassword, err := c.h.Hash(ctx, params.Password)
 		if err != nil {
 			return err
 		}
