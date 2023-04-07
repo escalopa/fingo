@@ -6,10 +6,10 @@ option go_package = "github.com/escalopa/fingo/pb";
 
 package pb;
 
-enum TransferType {
+enum TransactionType {
   UNKNOWN = 0;
   DEPOSIT = 1;
-  WITHDRAW = 2;
+  WITHDRAWAL = 2;
   TRANSFER = 3;
 }
 
@@ -35,14 +35,14 @@ message CreateAccountRequest {
   string name = 2;
 }
 message CreateAccountResponse {
-  uint32 account_id = 1;
+  bool success = 1;
 }
 
 // GetAccounts
 message GetAccountsRequest {} // user id is taken from the context
 message GetAccountsResponse {
   message Account {
-    uint32 id = 1;
+    int64 id = 1;
     string name = 2;
     double balance = 3;
     Currency currency = 4;
@@ -52,7 +52,7 @@ message GetAccountsResponse {
 
 // DeleteAccount
 message DeleteAccountRequest {
-  uint32 account_id = 1;
+  int64 account_id = 1;
 }
 message DeleteAccountResponse {
   bool success = 1;
@@ -60,15 +60,15 @@ message DeleteAccountResponse {
 
 // CreateCard
 message CreateCardRequest {
-  uint32 account_id = 1;
+  int64 account_id = 1;
 }
 message CreateCardResponse {
-  uint32 card_id = 1;
+  bool success = 1;
 }
 
 // GetCards
 message GetCardsRequest {
-  uint32 account_id = 1;
+  int64 account_id = 1;
 }
 message GetCardsResponse {
   message Card {
@@ -79,36 +79,36 @@ message GetCardsResponse {
 
 // DeleteCard
 message DeleteCardRequest {
-  uint32 card_id = 1;
+  string card_number = 1;
 }
 message DeleteCardResponse {
   bool success = 1;
 }
 
-// Transfer
-message TransferRequest {
-  TransferType type = 1;
+// CreateTransaction
+message CreateTransactionRequest {
+  TransactionType type = 1;
   double amount = 2;
-  string card_number = 3; // 16 digits number
-  optional string recipient_card_number = 4; // 16 digits number, required on `TransferType.TRANSFER`
+  string card_number = 3;
+  optional string recipient_card_number = 4; // required ONLY on `TransferType.TRANSFER`
 }
-message TransferResponse {
-  double balance = 1;
+message CreateTransactionResponse {
+  bool success = 1;
 }
 
 // TransferRollback
 message TransferRollbackRequest {
-  uint32 transaction_id = 1;
+  string transaction_id = 1;
 }
 message TransferRollbackResponse {
-  double balance = 1; // balance after rollback
+  bool success = 1; // balance after rollback
 }
 
 // GetWallets
 message GetWalletsRequest {} // user id is taken from the context
 message GetWalletsResponse {
   message Wallet {
-    uint32 id = 1;
+    int32 id = 1;
     string name = 2;
     double balance = 3;
     Currency currency = 4;
@@ -118,21 +118,22 @@ message GetWalletsResponse {
 
 // GetTransactionHistory
 message GetTransactionHistoryRequest {
-  int32 account_id = 1;
-  uint32 limit = 2;
-  uint32 offset = 3;
-  optional TransferType type = 4;
-  optional google.protobuf.Timestamp from = 5;
-  optional google.protobuf.Timestamp to = 6;
+  int64 account_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+  optional double min_amount = 4;
+  optional double max_amount = 5;
+  optional TransactionType transaction_type = 6;
 }
 message GetTransactionHistoryResponse {
   message Transaction {
     string id = 1; // uuid
     double amount = 2;
-    TransferType type = 3;
-    optional int32 recipient = 4; // On withdraw 0, on deposit account_id
-    optional string recipient_name = 5;  // On withdraw "", on deposit "ATM"
+    TransactionType type = 3;
+    string sender_name = 4; // On withdraw "ATM", on deposit ""
+    string recipient_name = 5;  // On withdraw "", on deposit "ATM"
     google.protobuf.Timestamp created_at = 6;
+    bool is_rolled_back = 7;
   }
   repeated Transaction transactions = 1;
 }
@@ -149,8 +150,8 @@ service WalletService {
   rpc GetCards(GetCardsRequest) returns (GetCardsResponse);
   rpc DeleteCard(DeleteCardRequest) returns (DeleteCardResponse);
   // Transfer
-  rpc Transfer(TransferRequest) returns (TransferResponse);
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
   rpc TransferRollback(TransferRollbackRequest) returns (TransferRollbackResponse);
   // History
-  rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (stream GetTransactionHistoryResponse);
+  rpc GetTransactionHistory(GetTransactionHistoryRequest) returns (GetTransactionHistoryResponse);
 }
