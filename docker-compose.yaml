@@ -80,10 +80,14 @@ services:
       # Token service
       - TOKEN_GRPC_URL=${TOKEN_GRPC_URL}
       - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
-      - AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
+      - WALLET_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
       # Database (cockroachdb or postgres)
       - WALLET_DATABASE_URL=${WALLET_DATABASE_URL}
       - WALLET_DATABASE_MIGRATION_PATH=${WALLET_DATABASE_MIGRATION_PATH}
+      # Card number
+      - WALLET_CARD_NUMBER_LENGTH=${WALLET_CARD_NUMBER_LENGTH}
+      # Locker
+      - WALLET_LOCKER_CLEANUP_DURATION=${WALLET_LOCKER_CLEANUP_DURATION}
     ports:
       - "${WALLET_GRPC_PORT}:${WALLET_GRPC_PORT}"
     build:
@@ -93,9 +97,7 @@ services:
     depends_on:
       token:
         condition: service_started
-      cockroachdb_node_1:
-        condition: service_healthy
-      cockroachdb_node_2:
+      crdb:
         condition: service_healthy
 
   token:
@@ -200,13 +202,13 @@ services:
       timeout: 2s
       retries: 5
 
-  cockroachdb_node_1: # Master node
+  crdb: # Master node
     image: cockroachdb/cockroach:latest
-    container_name: crdb1
+    container_name: "crdb"
     volumes:
-      - crdb1:/cockroach/cockroach-data
+      - crdb:/cockroach/cockroach-data
       - ./scripts/cockroach-inti.sh:/docker-entrypoint-initdb.d/cockroach-inti.sh
-    command: [ "start", "--insecure", "--join=crdb1,crdb2", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb1" ]
+    command: [ "start", "--insecure", "--join=crdb1", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb1" ]
     ports:
       - "26257:26257"
       - "8080:8080"
@@ -216,21 +218,12 @@ services:
       timeout: 2s
       retries: 5
 
-  cockroachdb_node_2:
-    image: cockroachdb/cockroach:latest
-    container_name: crdb2
-    volumes:
-      - crdb2:/cockroach/cockroach-data
-    command: [ "start", "--insecure", "--join=crdb1,crdb2", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb2" ]
-    healthcheck:
-      test: [ "CMD", "cockroach", "node", "status", "--insecure" ]
-      interval: 2s
-      timeout: 2s
-      retries: 5
-
   rabbitmq:
     image: rabbitmq:3.10.19-management
     container_name: "rabbitmq"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq/mnesia/'
+
     restart: unless-stopped
     ports:
       - "5672:5672"
@@ -254,7 +247,7 @@ services:
       - "6831:6831/udp"
 
 volumes:
-  crdb1:
-  crdb2:
+  crdb:
+  rabbitmq:
   cache:
   db:
