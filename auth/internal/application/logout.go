@@ -27,7 +27,7 @@ type LogoutCommandImpl struct {
 }
 
 func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) error {
-	return executeWithContextTimeout(ctx, 5*time.Second, func() error {
+	return contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
 		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
 		defer span.End()
 		if err := c.v.Validate(ctx, params); err != nil {

@@ -39,7 +39,7 @@ type RenewTokenCommandImpl struct {
 // Execute executes the RenewTokenCommand with the given params
 func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error) {
 	var response RenewTokenResponse
-	err := executeWithContextTimeout(ctx, 5*time.Second, func() error {
+	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
 		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
 		defer span.End()
 		// Decrypt token to get sessionID

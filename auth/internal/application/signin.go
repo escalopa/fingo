@@ -6,6 +6,7 @@ import (
 	"time"
 
 	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/contextutils"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
@@ -45,7 +46,7 @@ type SigninCommandImpl struct {
 // Execute executes the SigninCommand with the given parameters
 func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (SigninResponse, error) {
 	var response SigninResponse
-	err := executeWithContextTimeout(ctx, 5*time.Second, func() error {
+	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
 		ctx, span := oteltracer.Tracer().Start(ctx, "SigninCommand.Execute")
 		defer span.End()
 		if err := c.v.Validate(ctx, params); err != nil {
