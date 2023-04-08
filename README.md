@@ -1,13 +1,16 @@
 # fingo 🏦💸
 
+![Build Status](https://github.com/escalopa/fingo/actions/workflows/push.yml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/escalopa/fingo)](https://goreportcard.com/report/github.com/escalopa/fingo)
 [![wakatime](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21.svg)](https://wakatime.com/badge/user/965e81db-2a88-4564-b236-537c4a901130/project/429a1182-b0c0-4de2-9ef9-67246e1b4d21)
-[![codecov](https://codecov.io/github/escalopa/fingo/branch/main/graph/badge.svg?token=1D11YHAJN8)](https://codecov.io/github/escalopa/fingo)
-[![Build Status](https://travis-ci.com/escalopa/fingo.svg?branch=master)](https://travis-ci.com/escalopa/fingo)
+
+<!-- [![codecov](https://codecov.io/github/escalopa/fingo/branch/main/graph/badge.svg?token=1D11YHAJN8)](https://codecov.io/github/escalopa/fingo) -->
 
 [![GitHub issues](https://img.shields.io/github/issues/escalopa/fingo.svg)](https://github.com/escalopa/fingo/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/escalopa/fingo.svg)](https://github.com/escalopa/fingo/pulls)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/lively-sunset-417832/workspace/public/collection/64306c0fe41234ba40c9dcec)
 
 fingo is a scalable, robust payment system that allows users to send money to each other. fingo users can issue accounts with more than one currency and many payments cards.
 
@@ -69,7 +72,7 @@ First clone the project
 git clone github.com/escalopa/fingo && cd fingo
 ```
 
-### NOTICE
+### NOTICE❗
 
 For a quick run it is recommended to run the application using stack, since the images are smaller than the one created by compose.
 
