@@ -26,7 +26,7 @@ services:
       - AUTH_USER_SESSION_DURATION=24h
       ## DATABASE
       - AUTH_CACHE_URL=redis://cache:6379/0
-      - AUTH_DATABASE_MIGRATION_PATH=file://auth/internal/adapters/db/postgres/migrations
+      - AUTH_DATABASE_MIGRATION_PATH=file:///migrations
       - AUTH_DATABASE_URL=postgresql://postgres:postgres@db:5432/fingo_auth?sslmode=disable
       ## RABBITMQ
       - AUTH_RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
@@ -58,7 +58,7 @@ services:
       - WALLET_TOKEN_GRPC_TLS_USER_CERT_FILE=/certs/ca-cert.pem
       ## DATABASE
       - WALLET_DATABASE_URL=postgresql://root@crdb:26257/fingo_wallet?sslmode=disable
-      - WALLET_DATABASE_MIGRATION_PATH=file://wallet/internal/adapters/db/sql/migrations
+      - WALLET_DATABASE_MIGRATION_PATH=file:///migrations
       ## CARD NUMBER GENERATOR
       - WALLET_CARD_NUMBER_LENGTH=16
       ## LOCKER

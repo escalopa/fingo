@@ -20,5 +20,6 @@ RUN go build -o /go/bin/auth ./auth/cmd/main.go
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
 COPY --from=builder /go/bin/auth /go/bin/auth
+COPY ./auth/internal/adapters/db/migrations /migrations
 COPY ./certs /certs
 ENTRYPOINT ["/go/bin/auth"]
