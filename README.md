@@ -85,7 +85,7 @@ cp .db.env.example .db.env
 Run the project
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 NOTICE: The contact service might not work as expected since it is missing crucial tokens which cannot be shared for public usage i.e. on the repo.
