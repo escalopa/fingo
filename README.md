@@ -9,11 +9,9 @@
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/escalopa/fingo.svg)](https://github.com/escalopa/fingo/pulls)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-fingo is a scalable, robust payment system that allows users to send money to each other. fingo users can issue wallet with more than one currency.
+fingo is a scalable, robust payment system that allows users to send money to each other. fingo users can issue accounts with more than one currency and many payments cards.
 
 Currently, fingo supports 5 currencies: USD, EUR, GBP, EGP, RUB.
-
-Besides that we also support chat feature between its users to communicate with each other.
 
 ## Table of Contents 📑
 
@@ -26,10 +24,10 @@ Besides that we also support chat feature between its users to communicate with 
 fingo is built using scalable, reliable, robust and secure technologies which are listed below. 🔥
 
 - Language: [Go](https://golang.org/)
-- Communication: [gRPC](https://grpc.io/), [REST(gin)](https://github.com/gin-gonic/gin), [RabbitMQ](https://www.rabbitmq.com/)
-- Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/), [Memcached](https://memcached.org/)
+- Communication: [gRPC](https://grpc.io/), [RabbitMQ](https://www.rabbitmq.com/)
+- Database: [PostgreSQL](https://www.postgresql.org/), [Redis](https://redis.io/) [CockroachDB](https://www.cockroachlabs.com/)
 - Deployment: [Docker](https://www.docker.com/), [Docker Compose](https://docs.docker.com/compose/), [Docker Swarm](https://docs.docker.com/engine/swarm/)
-- Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Jaeger](https://www.jaegertracing.io/) [Prometheus](https://prometheus.io/)
+- Monitoring: [OpenTelemetry](https://opentelemetry.io/), [Jaeger](https://www.jaegertracing.io/)
 - Security: [Paseto](https://paseto.io/), [SSL/TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security)
 - External API: [Courier](https://www.courier.com/)
 
@@ -37,17 +35,15 @@ fingo is built using scalable, reliable, robust and secure technologies which ar
 ## Architecture 🏗
 
 Communication between all the microservices is done using `grpc` or `message brokers` to
-ensure that the system is scalable and reliable.
+ensure that the system is scalable reliable and fault tolerant.
 
 In fingo we have the following services, Where each one is responsible for a specific set of tasks,
 Click on each service to see its documentation and how it works.
 
-1. [**API**](./api) ==> Exposing the fingo API
-2. [**Auth**](./auth) ==> Signing up, Signing in, Signing out
-3. [**Token**](./token) ==> Validating access tokens
-4. [**User**](./user) ==> Managing users data changes
-5. [**Wallet**](./wallet) ==> Managing wallets CRUD with different currencies
-6. [**Contact**](./contact) ==> Sending emails & SMS
+1. [**Auth**](./auth) (SignUp, SignIn, SignOut, Renewing tokens)
+2. [**Token**](./token) (Validating access tokens)
+3. [**Wallet**](./wallet) (Create wallets, accounts, cards  and manage payments)
+4. [**Contact**](./contact) (Sending emails)
 
 Each service is built using the [Hexagonal Architecture](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
 This allows us to have a clean separation between the business logic and the infrastructure. This way we can easily swap the infrastructure without affecting the business logic.
@@ -55,7 +51,7 @@ This allows us to have a clean separation between the business logic and the inf
 All services trace their requests using [OpenTelemetry](https://opentelemetry.io/) and send them to [Jaeger](https://www.jaegertracing.io/) for monitoring and debugging besides Jaeger UI for visualization.
 
 ### Components
-![Diagram](./fingo.png)
+![Diagram](./docs/fingo.png)
 
 ## How to run ⚙️
 
@@ -76,10 +72,12 @@ git clone github.com/escalopa/fingo && cd fingo
 Copy
 
 - `.env.example` file to `.env` and fill in the empty fields.
-- `.db.env.example` file to `.db.env` and fill in the empty fields.
+- `.rabbitmq.env.example` file to `.rabbitmq.env`
+- `.db.env.example` file to `.db.env`
 
 ```bash
 cp .env.example .env
+cp .rabbitmq.env.example .rabbitmq.env
 cp .db.env.example .db.env
 ```
 

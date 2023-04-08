@@ -2,12 +2,18 @@
 
 This service is responsible for creating users & user’s session CRUD(authentication).
 
+## Database 🗄
+
+![Diagram](./../docs/fingo_auth_db.png)
+
 ## Features 🚀
 
-- Sign-up
-- Sign-in
-- Logout
-- Renew auth token by refresh token
+### Auth
+- [x] SignUp
+- [x] SignIn
+- [x] Logout(For any session)
+- [x] Renew auth token by refresh token
+- [x] Get current open sessions
 
 ## Flow 🌊
 
@@ -54,6 +60,7 @@ sequenceDiagram
 ```
 
 * **Logout**
+  - User id is taken from context
   - User signs out from the application.
   - Revokes the user's auth token.
   - Deletes the user's session from the database.
@@ -66,27 +73,13 @@ sequenceDiagram
     Database-->>-Auth Service: User's session
     Auth Service->>+Database: Delete user's session
     Database-->>-Auth Service: Session deleted
+    Auth Service->>Token Cache: Delete cached token
+    Token Cache-->>Auth Service: Delete token from cache
     Auth Service-->>-API: User logged out successfully
 ```
 
-* **Validate Auth Token**
-  - Check the token's lifetime has not expired.
-  - Check the user's session in the database.
-  - Check the user's session is not revoked, expired, or deleted.
-  - Return the user's info(ID,Name,Email,Phone...).
-
-```mermaid
-sequenceDiagram
-    autonumber
-    API->>+Auth Service: Send the auth token to validate
-    Auth Service->>Auth Service: Validate access token
-    Auth Service->>+Database: Get user's session
-    Database-->>-Auth Service: User's session
-    Auth Service->>Auth Service: Validate user's session
-    Auth Service-->>-API: User's info
-```
-
 * **Renew Auth Token(Access, Refresh)**
+  - User id is taken from context
   - Check the refresh token's lifetime has not expired.
   - Check the user's session in the database.
   - Check the user's session is not revoked, expired, or deleted.
@@ -107,7 +100,16 @@ sequenceDiagram
     Database-->>-Auth Service: Session updated
     Auth Service-->>-API: New auth token & refresh token
 ```
+* **Get Current Sessions**
+  - Return the current user sessions
+  - User id is taken from context
 
-## Database 🗄
+```mermaid
+sequenceDiagram
+    autonumber
+    API->>+Auth Service: Get avaliable sesisons
+    Auth Service->>+Database: Get live sessions
+    Database-->>-Auth Service: Live sessions
+    Auth Service-->>-API: Return live stored sessions
 
-![Database](./docs/database.png)
+```

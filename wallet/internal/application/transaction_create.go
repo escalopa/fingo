@@ -13,8 +13,8 @@ import (
 type CreateTransactionParams struct {
 	Amount   float64              `validate:"required,min=10"`
 	Type     core.TransactionType `validate:"required"`
-	FromCard string               `validate:"required,len=16,number"`
-	ToCard   string               `validate:"omitempty,len=16,number"`
+	FromCard string               `validate:"required,number"`
+	ToCard   string               `validate:"omitempty,number"`
 }
 
 var (

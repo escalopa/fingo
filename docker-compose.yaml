@@ -207,8 +207,9 @@ services:
     container_name: "crdb"
     volumes:
       - crdb:/cockroach/cockroach-data
-      - ./scripts/cockroach-inti.sh:/docker-entrypoint-initdb.d/cockroach-inti.sh
-    command: [ "start", "--insecure", "--join=crdb1", "--listen-addr=0.0.0.0:26257", "--advertise-addr=crdb1" ]
+      - ./scripts/cockroach-inti.sh:/cockroach-inti.sh
+    entrypoint: ["/bin/bash"]
+    command: ["/cockroach-inti.sh"]
     ports:
       - "26257:26257"
       - "8080:8080"

@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"log"
 	"time"
 
 	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
@@ -109,6 +110,11 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		}
 		if err != nil {
 			return err
+		}
+		// Disable old access token in cache repository
+		err = c.tr.Delete(ctx, session.AccessToken)
+		if err != nil {
+			log.Printf("failed to remove old access token, :%s", err)
 		}
 		return nil
 	})

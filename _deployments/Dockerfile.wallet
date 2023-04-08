@@ -18,5 +18,6 @@ RUN go build -o /go/bin/wallet ./wallet/cmd/main.go
 
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
-COPY --from=builder /go/bin/wallet /go/bin/wallet
+COPY --from=builder /go/bin/wallet /go/bin/walle
+COPY ./certs /certs
 ENTRYPOINT ["/go/bin/wallet"]

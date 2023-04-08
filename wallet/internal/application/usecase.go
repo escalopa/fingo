@@ -56,6 +56,12 @@ func WithLocker(l Locker) UseCasesOption {
 	}
 }
 
+func WithSmsSender(ss SmsSender) UseCasesOption {
+	return func(uc *UseCases) {
+		uc.ss = ss
+	}
+}
+
 func WithUserRepository(ur UserRepository) UseCasesOption {
 	return func(uc *UseCases) {
 		uc.ur = ur
