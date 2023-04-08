@@ -72,10 +72,12 @@ git clone github.com/escalopa/fingo && cd fingo
 Copy
 
 - `.env.example` file to `.env` and fill in the empty fields.
-- `.db.env.example` file to `.db.env` and fill in the empty fields.
+- `.rabbitmq.env.example` file to `.rabbitmq.env`
+- `.db.env.example` file to `.db.env`
 
 ```bash
 cp .env.example .env
+cp .rabbitmq.env.example .rabbitmq.env
 cp .db.env.example .db.env
 ```
 
