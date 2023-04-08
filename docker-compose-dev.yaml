@@ -2,9 +2,10 @@ version: "3.8"
 
 services:
   auth:
-    image: dekuyo/fingo_auth:latest
     container_name: "auth"
     restart: unless-stopped
+    volumes:
+      - ./auth:/go/src/github.com/escalopa/fingo/auth
     environment:
       # Server
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
@@ -24,7 +25,7 @@ services:
       - AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
       # Database
       - AUTH_DATABASE_URL=${AUTH_DATABASE_URL}
-      - AUTH_DATABASE_MIGRATION_PATH=file:///migrations
+      - AUTH_DATABASE_MIGRATION_PATH=${AUTH_DATABASE_MIGRATION_PATH}
       - AUTH_CACHE_URL=${AUTH_CACHE_URL}
       # RabbitMQ
       - AUTH_RABBITMQ_URL=${AUTH_RABBITMQ_URL}
@@ -36,6 +37,10 @@ services:
       - AUTH_USER_SESSION_DURATION=${AUTH_USER_SESSION_DURATION}
     ports:
       - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: ./_deployments/Dockerfile.auth
+      target: development
     depends_on:
       cache:
         condition: service_healthy
@@ -49,9 +54,10 @@ services:
         condition: service_started
 
   wallet:
-    image: dekuyo/fingo_wallet:latest
     container_name: "wallet"
     restart: unless-stopped
+    volumes:
+      - ./wallet:/go/src/github.com/escalopa/fingo/wallet
     environment:
       # Server
       - WALLET_GRPC_PORT=${WALLET_GRPC_PORT}
@@ -71,13 +77,17 @@ services:
       - WALLET_TOKEN_GRPC_TLS_USER_CERT_FILE=${AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE}
       # Database (cockroachdb or postgres)
       - WALLET_DATABASE_URL=${WALLET_DATABASE_URL}
-      - WALLET_DATABASE_MIGRATION_PATH=file:///migrations
+      - WALLET_DATABASE_MIGRATION_PATH=${WALLET_DATABASE_MIGRATION_PATH}
       # Card number
       - WALLET_CARD_NUMBER_LENGTH=${WALLET_CARD_NUMBER_LENGTH}
       # Locker
       - WALLET_LOCKER_CLEANUP_DURATION=${WALLET_LOCKER_CLEANUP_DURATION}
     ports:
       - "${WALLET_GRPC_PORT}:${WALLET_GRPC_PORT}"
+    build:
+      context: .
+      dockerfile: ./_deployments/Dockerfile.wallet
+      target: development
     depends_on:
       token:
         condition: service_started
@@ -85,9 +95,10 @@ services:
         condition: service_healthy
 
   token:
-    image: dekuyo/fingo_token:latest
     container_name: "token"
     restart: unless-stopped
+    volumes:
+      - ./token:/go/src/github.com/escalopa/fingo/token
     environment:
       # Server
       - TOKEN_GRPC_PORT=${TOKEN_GRPC_PORT}
@@ -103,6 +114,10 @@ services:
       - TOKEN_GRPC_TLS_ENABLE=${TOKEN_GRPC_TLS_ENABLE}
       - TOKEN_GRPC_TLS_CERT_FILE=${TOKEN_GRPC_TLS_CERT_FILE}
       - TOKEN_GRPC_TLS_KEY_FILE=${TOKEN_GRPC_TLS_KEY_FILE}
+    build:
+      context: .
+      dockerfile: ./_deployments/Dockerfile.token
+      target: development
     ports:
       - "${TOKEN_GRPC_PORT}:${TOKEN_GRPC_PORT}"
     depends_on:
@@ -112,9 +127,10 @@ services:
         condition: service_started
 
   contact:
-    image: dekuyo/fingo_contact:latest
     container_name: "contact"
     restart: unless-stopped
+    volumes:
+      - ./contact:/go/src/github.com/escalopa/fingo/contact
     environment:
       # Server
       - CONTACT_CODES_EXPIRATION=${CONTACT_CODES_EXPIRATION}
@@ -136,6 +152,10 @@ services:
       - CONTACT_COURIER_VERIFICATION_TEMPLATE_ID=${CONTACT_COURIER_VERIFICATION_TEMPLATE_ID}
       - CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID=${CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID}
       - CONTACT_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID=${CONTACT_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID}
+    build:
+      context: .
+      dockerfile: _deployments/Dockerfile.contact
+      target: development
     depends_on:
       rabbitmq:
         condition: service_healthy

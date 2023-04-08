@@ -2,7 +2,7 @@
 
 function init() {
   sleep 3
-  cockroach init --insecure >>/dev/null
+  cockroach init --insecure 2>>/dev/null
   cockroach sql --insecure --execute "CREATE DATABASE IF NOT EXISTS fingo_wallet;" >>/dev/null
 }
 

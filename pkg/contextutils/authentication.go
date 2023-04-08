@@ -21,7 +21,11 @@ func GetAccessToken(ctx context.Context) (string, error) {
 		}
 		token := tokens[0]
 		if strings.HasPrefix(token, authorizationType) {
-			return strings.TrimPrefix(token, authorizationType+" "), nil
+			token = strings.TrimPrefix(token, authorizationType+" ")
+			if len(token) < 1 {
+				return "", errs.B().Code(errs.Unauthenticated).Msg("passed empty token").Err()
+			}
+			return token, nil
 		} else {
 			return "", errs.B().Code(errs.Unauthenticated).Msg("invalid authorization header").Err()
 		}

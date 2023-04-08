@@ -15,10 +15,7 @@ import (
 
 var (
 	// List of requests that do not require authentication
-	unauthorizedRequests = []string{
-		"/pb.AuthService/Signup",
-		"/pb.AuthService/Signin",
-	}
+	unauthorizedRequests = []string{}
 )
 
 type AuthInterceptor struct {
