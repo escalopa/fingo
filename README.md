@@ -88,4 +88,6 @@ Run the project
 docker compose up
 ```
 
-NOTICE: The contact service might not work as expected since it is missing crucial tokens which cannot be shared for public usage i.e. on the repo.
+NOTICE: For contact service to work you have to add your COURIER_API_TOKEN and create messages, For more about the messages and what attributes they have [see](./contact/internal/adapters/email/mycourier/courier.go).
+
+After you create your courier templates make sure to add the token and templates ids to .env & uncomment the contact service in [docker-compose.yaml](./docker-compose.yaml)

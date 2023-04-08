@@ -98,6 +98,8 @@ sequenceDiagram
     Auth Service->>Auth Service: Generate auth token & refresh token
     Auth Service->>+Database: Update user's session
     Database-->>-Auth Service: Session updated
+    Auth Service->>+Token Cache: Remove old access token
+    Token Cache-->>-Auth Service: Old access token removed
     Auth Service-->>-API: New auth token & refresh token
 ```
 * **Get Current Sessions**
