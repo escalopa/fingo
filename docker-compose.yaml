@@ -6,9 +6,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./auth:/go/src/github.com/escalopa/fingo/auth
-      - ./pb:/go/src/github.com/escalopa/fingo/pb
-      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
-      - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
       # Server
       - AUTH_GRPC_PORT=${AUTH_GRPC_PORT}
@@ -61,9 +58,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./wallet:/go/src/github.com/escalopa/fingo/wallet
-      - ./pb:/go/src/github.com/escalopa/fingo/pb
-      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
-      - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
       # Server
       - WALLET_GRPC_PORT=${WALLET_GRPC_PORT}
@@ -105,9 +99,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./token:/go/src/github.com/escalopa/fingo/token
-      - ./pb:/go/src/github.com/escalopa/fingo/pb
-      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
-      - ./certs:/go/src/github.com/escalopa/fingo/certs
     environment:
       # Server
       - TOKEN_GRPC_PORT=${TOKEN_GRPC_PORT}
@@ -140,7 +131,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./contact:/go/src/github.com/escalopa/fingo/contact
-      - ./pkg:/go/src/github.com/escalopa/fingo/pkg
     environment:
       # Server
       - CONTACT_CODES_EXPIRATION=${CONTACT_CODES_EXPIRATION}

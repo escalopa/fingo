@@ -32,18 +32,13 @@ services:
       - AUTH_RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME=new_signin_session
     ports:
-      - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
+      - "9002:9002"
     depends_on:
-      cache:
-        condition: service_healthy
-      db:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      token:
-        condition: service_started
-      jaeger:
-        condition: service_started
+      - cache
+      - db
+      - rabbitmq
+      - token
+      - jaeger
 
   wallet:
     image: dekuyo/fingo_wallet:latest
@@ -69,12 +64,10 @@ services:
       ## LOCKER
       - WALLET_LOCKER_CLEANUP_DURATION=1m
     ports:
-      - "${WALLET_GRPC_PORT}:${WALLET_GRPC_PORT}"
+      - "9003:9003"
     depends_on:
-      token:
-        condition: service_started
-      crdb:
-        condition: service_healthy
+      - token
+      - crdb
 
   token:
     image: dekuyo/fingo_token:latest
@@ -93,12 +86,10 @@ services:
       - TOKEN_GRPC_TLS_CERT_FILE=/certs/server-cert.pem
       - TOKEN_GRPC_TLS_KEY_FILE=/certs/server-key.pem
     ports:
-      - "${TOKEN_GRPC_PORT}:${TOKEN_GRPC_PORT}"
+      - "9001:9001"
     depends_on:
-      cache:
-        condition: service_healthy
-      jaeger:
-        condition: service_started
+      - cache
+      - jaeger
 
   contact:
     image: dekuyo/fingo_contact:latest
@@ -123,10 +114,8 @@ services:
       - CONTACT_COURIER_RESET_PASSWORD_TEMPLATE_ID=VZA6RF7BJHMQJBGY0Q9VZR9RY5PS
       - CONTACT_COURIER_NEW_SIGNIN_SESSION_TEMPLATE_ID=NYT43T6ABS4XXDP5J9EH57J1V3BD
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      jaeger:
-        condition: service_started
+      - rabbitmq
+      - jaeger
 
   cache:
     image: redis:alpine
