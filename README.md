@@ -69,11 +69,23 @@ First clone the project
 git clone github.com/escalopa/fingo && cd fingo
 ```
 
-Copy
+### NOTICE
 
-- `.env.example` file to `.env` and fill in the empty fields.
-- `.rabbitmq.env.example` file to `.rabbitmq.env`
-- `.db.env.example` file to `.db.env`
+For a quick run it is recommended to run the application using stack, since the images are smaller than the one created by compose.
+
+The docker compose is more optimized for developments therefore the image size is bigger
+
+### Docker Stack(Recommended)
+
+To start the application using `docker stack` run the following command
+
+```bash
+docker stack deploy -f ./stack.yaml fingo
+```
+
+### Docker Compose(Development)
+
+Copy env vars, Env vars are used by docker to start the application
 
 ```bash
 cp .env.example .env
