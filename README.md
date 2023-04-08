@@ -19,8 +19,8 @@ Currently, fingo supports 5 currencies: USD, EUR, GBP, EGP, RUB.
 ## Table of Contents 📑
 
   - [Tech Stack](#tech-stack-) 🛠
-  - [Project Architecture 🏘](#architecture-)
-  - [How to run 🏃‍♂️](#how-to-run-)
+  - [Architecture](#architecture-) 🏘
+  - [How to run](#how-to-run-) 🏃‍♂️
 
 ## Tech Stack 🛠
 
