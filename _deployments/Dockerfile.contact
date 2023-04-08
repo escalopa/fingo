@@ -16,4 +16,5 @@ RUN go build -o /go/bin/contact ./contact/cmd/main.go
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
 COPY --from=builder /go/bin/contact /go/bin/contact
+COPY ./certs /certs
 ENTRYPOINT ["/go/bin/contact"]
