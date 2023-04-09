@@ -88,6 +88,14 @@ Run the project
 docker compose up
 ```
 
+After the project is up and running you can access the following interfaces for monitoring and debugging
+
+- [JAEGER](http://localhost:16686)
+- [COCKROACHDB](http://localhost:8080)
+- [RABBITMQ](http://localhost:15672)
+
+To interact with the services you can use the [Postman Collection](https://www.postman.com/lively-sunset-417832/workspace/public/collection/64306c0fe41234ba40c9dcec)
+
 NOTICE: For contact service to work you have to add your COURIER_API_TOKEN and create messages, For more about the messages and what attributes they have [see](./contact/internal/adapters/email/mycourier/courier.go).
 
 After you create your courier templates make sure to add the token and templates ids to .env & uncomment the contact service in [docker-compose.yaml](./docker-compose.yaml)
