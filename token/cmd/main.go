@@ -36,8 +36,7 @@ func main() {
 	log.Println("redis client created")
 
 	// Create token repository
-	tr, err := cache.NewTokenRepositoryV1(rc)
-	pkgerror.CheckError(err, "failed to create token repository")
+	tr := cache.NewTokenRepositoryV1(rc)
 	log.Println("token repository created")
 
 	// Create use cases

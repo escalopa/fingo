@@ -11,20 +11,17 @@ import (
 	"github.com/lordvidex/errs"
 )
 
-type TokeRepositoryImplV1 struct {
+type TokenRepository struct {
 	c *redis.Client
 }
 
 // NewTokenRepositoryV1 creates a new token repository
-func NewTokenRepositoryV1(client *redis.Client) (*TokeRepositoryImplV1, error) {
-	if client == nil {
-		return nil, errs.B().Code(errs.InvalidArgument).Msg("nil client").Err()
-	}
-	return &TokeRepositoryImplV1{c: client}, nil
+func NewTokenRepositoryV1(client *redis.Client) *TokenRepository {
+	return &TokenRepository{c: client}
 }
 
 // GetTokenPayload gets the token payload from cache
-func (tr *TokeRepositoryImplV1) GetTokenPayload(ctx context.Context, accessToken string) (*core.TokenPayload, error) {
+func (tr *TokenRepository) GetTokenPayload(ctx context.Context, accessToken string) (*core.TokenPayload, error) {
 	ctx, span := oteltracer.Tracer().Start(ctx, "GetTokenPayload")
 	defer span.End()
 	// Get token payload from cache
