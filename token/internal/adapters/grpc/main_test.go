@@ -10,6 +10,7 @@ import (
 	"github.com/escalopa/fingo/token/internal/application"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 )
 
@@ -33,7 +34,8 @@ func setup(t *testing.T, v application.Validator, tr application.TokenRepository
 		}
 	}()
 
-	conn, err := grpc.DialContext(context.Background(), "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
+	conn, err := grpc.DialContext(context.Background(), "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// credentials.With(insecure.NewCredentials()))
 	require.NoError(t, err)
 	return conn
 }
