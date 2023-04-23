@@ -7,6 +7,7 @@ require (
 	github.com/escalopa/goconfig v0.0.0-20230116193509-b087d386fa9f
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.10.7
 	github.com/lordvidex/errs v1.1.0
