@@ -13,6 +13,10 @@ tasks:
     cmds:
       - ./gen.sh
 
+  test:
+    cmds:
+      - go test $(go list ./... | grep -v "github.com/escalopa/fingo/pb") -coverprofile=coverage.out
+
   # Auth Command
   auth-sqlc:
     cmds:
