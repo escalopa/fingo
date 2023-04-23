@@ -95,6 +95,17 @@ func SetForwardMetadata(ctx context.Context, clientIP, userAgent string) context
 	return ctx
 }
 
+// ConvertContext converts the context from incoming to outgoing or vice versa
+func ConvertContext(ctx context.Context) context.Context {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		return metadata.NewOutgoingContext(ctx, md)
+	}
+	if md, ok := metadata.FromOutgoingContext(ctx); ok {
+		return metadata.NewIncomingContext(ctx, md)
+	}
+	return ctx
+}
+
 func formatClientIP(ip string) string {
 	twoDots := strings.Count(ip, ":")
 	if twoDots > 1 && strings.Contains(ip, "[") { // IPV6
