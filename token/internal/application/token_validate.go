@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
@@ -32,6 +33,7 @@ func (c *TokenValidateCommandImpl) Execute(ctx context.Context, params TokenVali
 	err := contextutils.ExecuteWithContextTimeout(ctx, 10*time.Second, func() error {
 		ctx, span := oteltracer.Tracer().Start(ctx, "TokenValidateCommandImpl.Execute")
 		defer span.End()
+		fmt.Println("Executing TokenValidateCommandImpl.Execute", params)
 		if err := c.v.Validate(ctx, params); err != nil {
 			return err
 		}
