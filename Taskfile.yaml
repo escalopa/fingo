@@ -15,7 +15,14 @@ tasks:
 
   test:
     cmds:
-      - go test $(go list ./... | grep -v "github.com/escalopa/fingo/pb") -coverprofile=coverage.out
+      - go test $(go list ./... | grep -Ewv "(mock$|pb$)") -coverprofile=coverage.out
+
+  mock:
+    cmds:
+      - task: auth-mock
+      - task: wallet-mock
+      - task: contact-mock
+      - task: token-mock
 
   # Auth Command
   auth-sqlc:
@@ -47,10 +54,14 @@ tasks:
 
   auth-mock:
     cmds:
-      - task: mock-gen
+      - task: mock-gen # logic
         vars:
           SOURCE_FILE_PATH: ./auth/internal/application/ports.go
           DESTINATION_MOCK_PATH: ./auth/internal/mock/mock.go
+      - task: mock-gen # db
+        vars:
+          SOURCE_FILE_PATH: ./auth/internal/adapters/db/postgres/sqlc/querier.go
+          DESTINATION_MOCK_PATH: ./auth/internal/mock/db.go
 
   # Wallet Command
   wallet-sqlc:
@@ -82,15 +93,19 @@ tasks:
 
   wallet-mock:
     cmds:
-      - task: mock-gen
+      - task: mock-gen # logic
         vars:
           SOURCE_FILE_PATH: ./wallet/internal/application/ports.go
           DESTINATION_MOCK_PATH: ./wallet/internal/mock/mock.go
+      - task: mock-gen # db
+        vars:
+          SOURCE_FILE_PATH: wallet/internal/adapters/db/sql/sqlc/querier.go
+          DESTINATION_MOCK_PATH: ./wallet/internal/mock/db.go
 
   # Token Command
   token-mock:
     cmds:
-      - task: mock-gen
+      - task: mock-gen # logic
         vars:
           SOURCE_FILE_PATH: ./token/internal/application/ports.go
           DESTINATION_MOCK_PATH: ./token/internal/mock/mock.go
@@ -98,7 +113,7 @@ tasks:
   # Contact
   contact-mock:
     cmds:
-      - task: mock-gen
+      - task: mock-gen # logic
         vars:
           SOURCE_FILE_PATH: ./contact/internal/application/ports.go
           DESTINATION_MOCK_PATH: ./contact/internal/mock/mock.go

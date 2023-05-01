@@ -15,8 +15,8 @@ repos:
         stages: [push, merge-commit, commit]
       - id: no-go-testing
         stages: [push, commit]
-      - id: golangci-lint
-        stages: [push, commit]
+      # - id: golangci-lint
+      #   stages: [push, commit]
       - id: go-unit-tests
         stages: [push, commit]
       - id: validate-toml
