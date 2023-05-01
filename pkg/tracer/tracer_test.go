@@ -1,4 +1,4 @@
-package oteltracer
+package tracer
 
 import (
 	"testing"

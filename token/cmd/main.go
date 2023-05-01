@@ -5,13 +5,12 @@ import (
 	"log"
 	"net"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	pkgvalidator "github.com/escalopa/fingo/pkg/validator"
 
 	pkgerror "github.com/escalopa/fingo/pkg/error"
 	grpctls "github.com/escalopa/fingo/pkg/tls"
 	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
-
-	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
 
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/token/internal/adapters/cache"
@@ -54,7 +53,7 @@ func main() {
 		c.Get("TOKEN_TRACING_JAEGER_ENVIRONMENT"),
 	)
 	pkgerror.CheckError(err, "failed to load tracer")
-	oteltracer.SetTracer(t)
+	tracer.SetTracer(t)
 	log.Println("tracer created")
 
 	// Load TLS certificates

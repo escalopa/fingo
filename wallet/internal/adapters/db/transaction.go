@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/escalopa/fingo/wallet/internal/core"
 	"github.com/google/uuid"
 )
@@ -20,7 +20,7 @@ func NewTransactionRepository(db *sql.DB) *TransactionRepository {
 
 // Transfer transfers money from one account to another
 func (r *TransactionRepository) Transfer(ctx context.Context, params core.CreateTransactionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.CreateTransaction")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.CreateTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -70,7 +70,7 @@ func (r *TransactionRepository) Transfer(ctx context.Context, params core.Create
 
 // Deposit adds money to an account and creates a transaction
 func (r *TransactionRepository) Deposit(ctx context.Context, params core.CreateTransactionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.Deposit")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.Deposit")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -107,7 +107,7 @@ func (r *TransactionRepository) Deposit(ctx context.Context, params core.CreateT
 
 // Withdraw subtracts money from an account and creates a transaction
 func (r *TransactionRepository) Withdraw(ctx context.Context, params core.CreateTransactionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.Withdraw")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.Withdraw")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -144,7 +144,7 @@ func (r *TransactionRepository) Withdraw(ctx context.Context, params core.Create
 
 // GetTransaction returns a transaction by its ID
 func (r *TransactionRepository) GetTransaction(ctx context.Context, transactionID uuid.UUID) (core.Transaction, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.GetTransaction")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.GetTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -166,7 +166,7 @@ func (r *TransactionRepository) GetTransaction(ctx context.Context, transactionI
 
 // GetTransactions returns a list of transactions for a given account with filters(pagination, date range, etc)
 func (r *TransactionRepository) GetTransactions(ctx context.Context, params core.GetTransactionsParams) ([]core.Transaction, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.GetTransactions")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.GetTransactions")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -201,7 +201,7 @@ func (r *TransactionRepository) GetTransactions(ctx context.Context, params core
 
 // RollbackTransaction deletes a transaction and restores the balance of the involved accounts
 func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transactionID uuid.UUID) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.RollbackTransaction")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.RollbackTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

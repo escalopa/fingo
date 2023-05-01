@@ -4,11 +4,11 @@ import (
 	"context"
 	"database/sql"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
 	"github.com/lib/pq"
 
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -25,7 +25,7 @@ func NewUserRepository(conn *sql.DB) (*UserRepository, error) {
 }
 
 func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.CreateUser")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepository.CreateUser")
 	defer span.End()
 	err := ur.q.CreateUser(ctx, db.CreateUserParams{
 		ID:             arg.ID,
@@ -45,7 +45,7 @@ func (ur *UserRepository) CreateUser(ctx context.Context, arg core.CreateUserPar
 }
 
 func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (core.User, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.GetUserByID")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepository.GetUserByID")
 	defer span.End()
 	user, err := ur.q.GetUserByID(ctx, id)
 	if err != nil {
@@ -58,7 +58,7 @@ func (ur *UserRepository) GetUserByID(ctx context.Context, id uuid.UUID) (core.U
 }
 
 func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (core.User, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.GetUserByEmail")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepository.GetUserByEmail")
 	defer span.End()
 	user, err := ur.q.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -71,7 +71,7 @@ func (ur *UserRepository) GetUserByEmail(ctx context.Context, email string) (cor
 }
 
 func (ur *UserRepository) DeleteUserByID(ctx context.Context, id uuid.UUID) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepository.DeleteUserByID")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepository.DeleteUserByID")
 	defer span.End()
 	rows, err := ur.q.DeleteUserByID(ctx, id)
 	if err != nil {

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
 	"github.com/lordvidex/errs"
 
 	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/go-redis/redis/v9"
 )
 
@@ -35,7 +35,7 @@ func WithTokenDuration(td time.Duration) func(*TokenRepository) {
 
 // Store stores a token mapped to a session id
 func (tr *TokenRepository) Store(ctx context.Context, token string, params core.TokenPayload) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TokenRepository.Store")
+	ctx, span := tracer.Tracer().Start(ctx, "TokenRepository.Store")
 	defer span.End()
 	if token == "" {
 		return errs.B(nil).Code(errs.InvalidArgument).Msg("token cannot be empty").Err()
@@ -49,7 +49,7 @@ func (tr *TokenRepository) Store(ctx context.Context, token string, params core.
 
 // Delete deletes a token from the cache
 func (tr *TokenRepository) Delete(ctx context.Context, token string) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TokenRepository.Delete")
+	ctx, span := tracer.Tracer().Start(ctx, "TokenRepository.Delete")
 	defer span.End()
 	if token == "" {
 		return errs.B(nil).Code(errs.InvalidArgument).Msg("token cannot be empty").Err()

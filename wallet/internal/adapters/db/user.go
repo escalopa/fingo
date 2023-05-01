@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/google/uuid"
 )
 
@@ -19,7 +19,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 // CreateUser creates a new user in the database with the given uuid
 func (r *UserRepository) CreateUser(ctx context.Context, uuid uuid.UUID) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepo.CreateUser")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepo.CreateUser")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -41,7 +41,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, uuid uuid.UUID) error {
 
 // GetUser returns the user id for the given uuid, Where uuid is the global user id between services
 func (r *UserRepository) GetUser(ctx context.Context, uuid uuid.UUID) (int64, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepo.GetUser")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepo.GetUser")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

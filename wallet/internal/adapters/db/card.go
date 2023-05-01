@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	db "github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/escalopa/fingo/wallet/internal/core"
 )
 
@@ -19,7 +19,7 @@ func NewCardRepository(db *sql.DB) *CardRepository {
 
 // CreateCard creates a new card in the database
 func (r *CardRepository) CreateCard(ctx context.Context, params core.CreateCardParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.CreateCard")
+	ctx, span := tracer.Tracer().Start(ctx, "CardRepository.CreateCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -44,7 +44,7 @@ func (r *CardRepository) CreateCard(ctx context.Context, params core.CreateCardP
 
 // GetCard returns a card for a given number
 func (r *CardRepository) GetCard(ctx context.Context, cardNumber string) (core.Card, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.GetCard")
+	ctx, span := tracer.Tracer().Start(ctx, "CardRepository.GetCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -65,7 +65,7 @@ func (r *CardRepository) GetCard(ctx context.Context, cardNumber string) (core.C
 }
 
 func (r *CardRepository) GetCardAccount(ctx context.Context, cardNumber string) (core.Account, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.GetCard")
+	ctx, span := tracer.Tracer().Start(ctx, "CardRepository.GetCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -93,7 +93,7 @@ func (r *CardRepository) GetCardAccount(ctx context.Context, cardNumber string) 
 
 // GetCards returns all cards for a given account
 func (r *CardRepository) GetCards(ctx context.Context, accountID int64) ([]core.Card, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.GetCards")
+	ctx, span := tracer.Tracer().Start(ctx, "CardRepository.GetCards")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -120,7 +120,7 @@ func (r *CardRepository) GetCards(ctx context.Context, accountID int64) ([]core.
 
 // DeleteCard deletes a card for a given number
 func (r *CardRepository) DeleteCard(ctx context.Context, cardNumber string) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "CardRepository.DeleteCard")
+	ctx, span := tracer.Tracer().Start(ctx, "CardRepository.DeleteCard")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

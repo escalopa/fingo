@@ -5,9 +5,8 @@ import (
 	"log"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
@@ -41,7 +40,7 @@ type RenewTokenCommandImpl struct {
 func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error) {
 	var response RenewTokenResponse
 	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "SignupCommand.Execute")
 		defer span.End()
 		// Decrypt token to get sessionID
 		payload, err := c.tg.DecryptToken(ctx, params.RefreshToken)

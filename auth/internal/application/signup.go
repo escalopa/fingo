@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/google/uuid"
 )
 
@@ -32,7 +32,7 @@ type SignupCommandImpl struct {
 
 func (c *SignupCommandImpl) Execute(ctx context.Context, params SignupParams) error {
 	return contextutils.ExecuteWithContextTimeout(ctx, 10*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "SignupCommand.Execute")
 		defer span.End()
 		if err := c.v.Validate(ctx, params); err != nil {
 			return err

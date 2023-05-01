@@ -3,7 +3,7 @@ package validator
 import (
 	"context"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/go-playground/validator/v10"
 	"github.com/lordvidex/errs"
 )
@@ -25,7 +25,7 @@ func NewValidator() *Validator {
 }
 
 func (va *Validator) Validate(ctx context.Context, s any) error {
-	_, span := oteltracer.Tracer().Start(ctx, "Validator.Validate")
+	_, span := tracer.Tracer().Start(ctx, "Validator.Validate")
 	defer span.End()
 	err := va.v.Struct(s)
 	if err != nil {

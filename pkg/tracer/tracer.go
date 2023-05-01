@@ -1,4 +1,4 @@
-package pkgtracer
+package tracer
 
 import (
 	"log"
@@ -13,6 +13,22 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+var (
+	tr trace.Tracer
+)
+
+func init() {
+	tr = newNoopTracer()
+}
+
+func SetTracer(t trace.Tracer) {
+	tr = t
+}
+
+func Tracer() trace.Tracer {
+	return tr
+}
+
 func newTracer(name string) trace.Tracer {
 	// Create a new tracer provider
 	tp := otel.Tracer(name)
@@ -20,7 +36,7 @@ func newTracer(name string) trace.Tracer {
 }
 
 func newNoopTracer() trace.Tracer {
-	return trace.NewNoopTracerProvider().Tracer("")
+	return trace.NewNoopTracerProvider().Tracer("fingo")
 }
 
 func newJaegerExporter(url, service, env string) (*tracesdk.TracerProvider, error) {

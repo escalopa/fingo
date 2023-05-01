@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/escalopa/fingo/wallet/internal/core"
 	"github.com/lordvidex/errs"
 )
@@ -20,7 +20,7 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 
 // CreateAccount creates an account for a user
 func (r *AccountRepository) CreateAccount(ctx context.Context, params core.CreateAccountParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AccountRepository.CreateAccount")
+	ctx, span := tracer.Tracer().Start(ctx, "AccountRepository.CreateAccount")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -51,7 +51,7 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, params core.Creat
 
 // GetAccount returns account for given account id
 func (r *AccountRepository) GetAccount(ctx context.Context, accountID int64) (core.Account, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AccountRepository.GetAccount")
+	ctx, span := tracer.Tracer().Start(ctx, "AccountRepository.GetAccount")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -72,7 +72,7 @@ func (r *AccountRepository) GetAccount(ctx context.Context, accountID int64) (co
 
 // GetAccounts returns all accounts for given user
 func (r *AccountRepository) GetAccounts(ctx context.Context, userID int64) ([]core.Account, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AccountRepository.GetAccounts")
+	ctx, span := tracer.Tracer().Start(ctx, "AccountRepository.GetAccounts")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -97,7 +97,7 @@ func (r *AccountRepository) GetAccounts(ctx context.Context, userID int64) ([]co
 
 // DeleteAccount deletes account by given id
 func (r *AccountRepository) DeleteAccount(ctx context.Context, accountID int64) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AccountRepository.DeleteAccount")
+	ctx, span := tracer.Tracer().Start(ctx, "AccountRepository.DeleteAccount")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {

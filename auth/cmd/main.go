@@ -6,10 +6,10 @@ import (
 	"net"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
 	pkgdb "github.com/escalopa/fingo/pkg/db"
 	pkgerror "github.com/escalopa/fingo/pkg/error"
 	grpctls "github.com/escalopa/fingo/pkg/tls"
+	"github.com/escalopa/fingo/pkg/tracer"
 	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
 
 	mypostgres "github.com/escalopa/fingo/auth/internal/adapters/db/postgres"
@@ -111,7 +111,7 @@ func main() {
 		c.Get("AUTH_TRACING_JAEGER_ENVIRONMENT"),
 	)
 	pkgerror.CheckError(err, "failed to load tracer")
-	oteltracer.SetTracer(t)
+	tracer.SetTracer(t)
 
 	// Start the server
 	pkgerror.CheckError(start(c, uc, opts), "failed to start gRPC server")

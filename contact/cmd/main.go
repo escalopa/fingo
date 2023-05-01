@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/contact/internal/adapters/tracer"
 	pkgerror "github.com/escalopa/fingo/pkg/error"
+	"github.com/escalopa/fingo/pkg/tracer"
 	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
 
 	"github.com/escalopa/fingo/contact/internal/adapters/server"
@@ -82,7 +82,7 @@ func main() {
 		c.Get("CONTACT_TRACING_JAEGER_ENVIRONMENT"),
 	)
 	pkgerror.CheckError(err, "failed to load tracer")
-	oteltracer.SetTracer(t)
+	tracer.SetTracer(t)
 
 	// Create server
 	s := server.NewServer(uc, rbc)

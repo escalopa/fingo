@@ -12,10 +12,10 @@ import (
 
 	"github.com/escalopa/fingo/pb"
 	pkgdb "github.com/escalopa/fingo/pkg/db"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db"
 	mygrpc "github.com/escalopa/fingo/wallet/internal/adapters/grpc"
 	"github.com/escalopa/fingo/wallet/internal/adapters/numgen"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/escalopa/fingo/wallet/internal/application"
 	"github.com/lordvidex/errs"
 
@@ -67,7 +67,7 @@ func main() {
 		c.Get("WALLET_TRACING_JAEGER_ENVIRONMENT"),
 	)
 	pkgerror.CheckError(err, "failed to load tracer")
-	oteltracer.SetTracer(t)
+	tracer.SetTracer(t)
 	log.Println("tracer created")
 
 	// Create an ids locker

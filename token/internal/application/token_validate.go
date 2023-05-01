@@ -2,12 +2,10 @@ package application
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/token/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -31,9 +29,8 @@ type TokenValidateCommandImpl struct {
 func (c *TokenValidateCommandImpl) Execute(ctx context.Context, params TokenValidateParams) (uuid.UUID, error) {
 	var id uuid.UUID
 	err := contextutils.ExecuteWithContextTimeout(ctx, 10*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "TokenValidateCommandImpl.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "TokenValidateCommandImpl.Execute")
 		defer span.End()
-		fmt.Println("Executing TokenValidateCommandImpl.Execute", params)
 		if err := c.v.Validate(ctx, params); err != nil {
 			return err
 		}

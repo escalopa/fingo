@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/lordvidex/errs"
 
 	"github.com/o1egl/paseto"
@@ -41,21 +40,21 @@ func NewPaseto(secretKey string, atd, rtd time.Duration) (*PasetoTokenizer, erro
 
 // GenerateAccessToken Creates a new access token
 func (pt *PasetoTokenizer) GenerateAccessToken(ctx context.Context, params core.GenerateTokenParam) (string, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "PasetoTokenizer.GenerateAccessToken")
+	ctx, span := tracer.Tracer().Start(ctx, "PasetoTokenizer.GenerateAccessToken")
 	defer span.End()
 	return pt.generateToken(ctx, params, pt.atd)
 }
 
 // GenerateRefreshToken Creates a new refresh token
 func (pt *PasetoTokenizer) GenerateRefreshToken(ctx context.Context, params core.GenerateTokenParam) (string, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "PasetoTokenizer.GenerateRefreshToken")
+	ctx, span := tracer.Tracer().Start(ctx, "PasetoTokenizer.GenerateRefreshToken")
 	defer span.End()
 	return pt.generateToken(ctx, params, pt.rtd)
 }
 
 // generateToken Create a new token with user, sessionID, exp(Token life duration)
 func (pt *PasetoTokenizer) generateToken(ctx context.Context, params core.GenerateTokenParam, exp time.Duration) (string, error) {
-	_, span := oteltracer.Tracer().Start(ctx, "PasetoTokenizer.generateToken")
+	_, span := tracer.Tracer().Start(ctx, "PasetoTokenizer.generateToken")
 	defer span.End()
 	// Create userToken struct instance
 	ut := core.TokenPayload{
@@ -76,7 +75,7 @@ func (pt *PasetoTokenizer) generateToken(ctx context.Context, params core.Genera
 
 // DecryptToken decrypts the token to get `TokenPayload` & verifies that token hasn't expired
 func (pt *PasetoTokenizer) DecryptToken(ctx context.Context, token string) (core.TokenPayload, error) {
-	_, span := oteltracer.Tracer().Start(ctx, "PasetoTokenizer.DecryptToken")
+	_, span := tracer.Tracer().Start(ctx, "PasetoTokenizer.DecryptToken")
 	defer span.End()
 	// Decrypt token
 	var payload core.TokenPayload
