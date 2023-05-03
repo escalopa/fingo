@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
@@ -64,7 +63,7 @@ func TestLogout_Execute(t *testing.T) {
 				sr *mock.MockSessionRepository,
 				tr *mock.MockTokenRepository) context.Context {
 
-				v.EXPECT().Validate(gomock.Any(), LogoutParams{SessionID: sessionID}).Return(errs.B().Msg("some error").Err())
+				v.EXPECT().Validate(gomock.Any(), LogoutParams{SessionID: sessionID}).Return(gofakeit.Error())
 				return contextutils.SetUserID(context.Background(), userID)
 			},
 			check: func(t *testing.T, err error) {
@@ -101,7 +100,7 @@ func TestLogout_Execute(t *testing.T) {
 				tr *mock.MockTokenRepository) context.Context {
 
 				v.EXPECT().Validate(gomock.Any(), LogoutParams{SessionID: sessionID}).Return(nil)
-				sr.EXPECT().GetSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(core.Session{}, errs.B().Msg("not found").Err())
+				sr.EXPECT().GetSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(core.Session{}, gofakeit.Error())
 				return contextutils.SetUserID(context.Background(), userID)
 			},
 			check: func(t *testing.T, err error) {
@@ -144,7 +143,7 @@ func TestLogout_Execute(t *testing.T) {
 				sr.EXPECT().GetSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(core.Session{
 					UserID: uuid.MustParse(userID), AccessToken: "access_token",
 				}, nil)
-				tr.EXPECT().Delete(gomock.Any(), "access_token").Return(errs.B().Msg("some error").Err())
+				tr.EXPECT().Delete(gomock.Any(), "access_token").Return(errs.B().Msg("error").Err())
 				return contextutils.SetUserID(context.Background(), userID)
 			},
 			check: func(t *testing.T, err error) {
@@ -166,7 +165,7 @@ func TestLogout_Execute(t *testing.T) {
 				sr.EXPECT().GetSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(core.Session{
 					UserID: uuid.MustParse(userID), AccessToken: "access_token",
 				}, nil)
-				tr.EXPECT().Delete(gomock.Any(), "access_token").Return(fmt.Errorf("some error"))
+				tr.EXPECT().Delete(gomock.Any(), "access_token").Return(gofakeit.Error())
 				return contextutils.SetUserID(context.Background(), userID)
 			},
 			check: func(t *testing.T, err error) {
@@ -187,7 +186,7 @@ func TestLogout_Execute(t *testing.T) {
 				v.EXPECT().Validate(gomock.Any(), LogoutParams{SessionID: sessionID}).Return(nil)
 				sr.EXPECT().GetSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(core.Session{UserID: uuid.MustParse(userID)}, nil)
 				tr.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil)
-				sr.EXPECT().DeleteSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(errs.B().Msg("some error").Err())
+				sr.EXPECT().DeleteSessionByID(gomock.Any(), uuid.MustParse(sessionID)).Return(gofakeit.Error())
 				return contextutils.SetUserID(context.Background(), userID)
 			},
 			check: func(t *testing.T, err error) {
