@@ -37,17 +37,15 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 		if err != nil {
 			return err
 		}
-		// Parse sessionID
-		sessionID, err := uuid.Parse(params.SessionID)
-		if err != nil {
-			return errs.B(err).Code(errs.InvalidArgument).Msg("invalid session id").Err()
-		}
+		// Parse sessionUUID
+		sessionUUID, _ := uuid.Parse(params.SessionID)
 		// Get session form DB
 		var session core.Session
-		session, err = c.sr.GetSessionByID(ctx, sessionID)
+		session, err = c.sr.GetSessionByID(ctx, sessionUUID)
 		if err != nil {
 			return err
 		}
+		// Check session owner is the caller
 		if callerID != session.UserID {
 			return errs.B().Code(errs.Forbidden).Msg("not session owner").Err()
 		}
@@ -64,7 +62,7 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 			}
 		}
 		// Delete Session
-		err = c.sr.DeleteSessionByID(ctx, sessionID)
+		err = c.sr.DeleteSessionByID(ctx, sessionUUID)
 		if err != nil {
 			return err
 		}
