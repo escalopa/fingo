@@ -15,7 +15,7 @@ tasks:
 
   test:
     cmds:
-      - go test $(go list ./... | grep -Ewv "(mock$|pb$)") -coverprofile=coverage.out
+      - go test $(go list ./... | grep -Ewv "(mock$|pb$|sqlc$)") -coverprofile=coverage.out
 
   mock:
     cmds:
