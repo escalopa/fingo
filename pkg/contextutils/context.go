@@ -44,11 +44,10 @@ func GetUserID(ctx context.Context) (uuid.UUID, error) {
 func SetUserID(ctx context.Context, userID string) context.Context {
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		md.Append(contextKeyUserID.String(), userID)
-		ctx = metadata.NewOutgoingContext(ctx, md)
+		return metadata.NewOutgoingContext(ctx, md)
 	} else {
-		ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(contextKeyUserID.String(), userID))
+		return metadata.NewOutgoingContext(ctx, metadata.Pairs(contextKeyUserID.String(), userID))
 	}
-	return ctx
 }
 
 func GetMetadata(ctx context.Context) (clientIP, userAgent string) {

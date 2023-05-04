@@ -9,6 +9,63 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+func TestGetUserID(t *testing.T) {
+	tests := []struct {
+		name   string
+		ctx    func(userID string) context.Context
+		userID string
+		expErr bool
+	}{
+		{
+			name: "success",
+			ctx: func(userID string) context.Context {
+				return metadata.NewOutgoingContext(context.Background(), metadata.Pairs(
+					contextKeyUserID.String(), userID,
+				))
+			},
+			userID: gofakeit.UUID(),
+		},
+		{
+			name: "failed id not found",
+			ctx: func(userID string) context.Context {
+				return metadata.NewOutgoingContext(context.Background(), metadata.Pairs(
+					"not_user_id_header", userID,
+				))
+			},
+			userID: gofakeit.UUID(),
+			expErr: true,
+		},
+		{
+			name: "failed to parse userID",
+			ctx: func(userID string) context.Context {
+				return metadata.NewOutgoingContext(context.Background(), metadata.Pairs(
+					contextKeyUserID.String(), userID[:1], // Wrong uuid
+				))
+			},
+			userID: gofakeit.UUID(),
+			expErr: true,
+		},
+		{
+			name: "missing metadata",
+			ctx: func(userID string) context.Context {
+				return context.Background()
+			},
+			userID: gofakeit.UUID(),
+			expErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			userID, err := GetUserID(tt.ctx(tt.userID))
+			require.Equal(t, err != nil, tt.expErr)
+			if !tt.expErr {
+				require.Equal(t, tt.userID, userID.String())
+			}
+		})
+	}
+}
+
 func TestSetUserID(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -109,6 +166,33 @@ func TestSetForwardMetadata(t *testing.T) {
 			clientIP, userAgent := GetForwardMetadata(ctx)
 			require.Equal(t, tt.clientIP, clientIP)
 			require.Equal(t, tt.userAgent, userAgent)
+		})
+	}
+}
+
+func TestConvertContext(t *testing.T) {
+	tests := []struct {
+		name string
+		ctx  context.Context
+	}{
+		{
+			name: "success context",
+			ctx:  context.Background(),
+		},
+		{
+			name: "success md context incoming context",
+			ctx:  metadata.NewIncomingContext(context.Background(), nil),
+		},
+		{
+			name: "success md context outgoing context",
+			ctx:  metadata.NewOutgoingContext(context.Background(), nil),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := ConvertContext(tt.ctx)
+			require.NotNil(t, ctx)
 		})
 	}
 }

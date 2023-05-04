@@ -37,6 +37,13 @@ func TestGetAccessToken(t *testing.T) {
 			expErr: true,
 		},
 		{
+			name: "missing token",
+			ctx: metadata.NewIncomingContext(context.Background(), metadata.Pairs(
+				authorizationHeader, authorizationType+" ",
+			)),
+			expErr: true,
+		},
+		{
 			name:   "missing metadata",
 			ctx:    context.Background(),
 			expErr: true,
