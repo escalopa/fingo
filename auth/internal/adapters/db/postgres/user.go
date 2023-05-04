@@ -18,9 +18,6 @@ type UserRepository struct {
 }
 
 func NewUserRepository(conn *sql.DB) (*UserRepository, error) {
-	if conn == nil {
-		return nil, errs.B().Msg("passed connection is nil").Err()
-	}
 	return &UserRepository{q: db.New(conn)}, nil
 }
 

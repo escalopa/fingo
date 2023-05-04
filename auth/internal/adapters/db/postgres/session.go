@@ -19,9 +19,6 @@ type SessionRepository struct {
 
 // NewSessionRepository creates a new sessions repository with the given connection
 func NewSessionRepository(conn *sql.DB, opts ...func(*SessionRepository)) (*SessionRepository, error) {
-	if conn == nil {
-		return nil, errs.B().Msg("passed connection is nil").Err()
-	}
 	sr := &SessionRepository{q: db.New(conn)}
 	for _, opt := range opts {
 		opt(sr)
