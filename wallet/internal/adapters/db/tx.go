@@ -29,16 +29,17 @@ var (
 	errorRollbackUnsupported = errs.B().Msg("rollback not supported for deposit & withdrawals transactions").Err()
 )
 
-func deferTx(tx *sql.Tx, err *error) {
-	if *err != nil {
+func deferTx(tx *sql.Tx, err error) error {
+	if err != nil {
 		if err2 := tx.Rollback(); err2 != nil {
-			*err = errorTxNotRolledBack(*err, err2)
+			return errorTxNotRolledBack(err, err2)
 		}
-
+		return err
 	}
 	if err2 := tx.Commit(); err2 != nil {
-		*err = errorTxNotCommitted(*err, err2)
+		return errorTxNotCommitted(err, err2)
 	}
+	return nil
 }
 
 func IsUniqueViolationError(err error) bool {

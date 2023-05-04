@@ -11,11 +11,12 @@ import (
 )
 
 type AccountRepository struct {
+	q  *sqlc.Queries
 	db *sql.DB
 }
 
 func NewAccountRepository(db *sql.DB) *AccountRepository {
-	return &AccountRepository{db: db}
+	return &AccountRepository{db: db, q: sqlc.New()}
 }
 
 // CreateAccount creates an account for a user
@@ -26,15 +27,14 @@ func (r *AccountRepository) CreateAccount(ctx context.Context, params core.Creat
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Get currency id
-	currencyID, err := q.GetCurrencyByName(ctx, tx, params.Currency.String())
+	currencyID, err := r.q.GetCurrencyByName(ctx, tx, params.Currency.String())
 	if err != nil {
 		return errs.B(err).Code(errs.NotFound).Msg("failed to get currency id").Err()
 	}
 	// Create account
-	err = q.CreateAccount(ctx, tx, sqlc.CreateAccountParams{
+	err = r.q.CreateAccount(ctx, tx, sqlc.CreateAccountParams{
 		UserID:     params.UserID,
 		Name:       params.Name,
 		CurrencyID: currencyID,
@@ -57,9 +57,8 @@ func (r *AccountRepository) GetAccount(ctx context.Context, accountID int64) (co
 	if err != nil {
 		return core.Account{}, errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
-	account, err := q.GetAccount(ctx, tx, accountID)
+	defer func() { err = deferTx(tx, err) }()
+	account, err := r.q.GetAccount(ctx, tx, accountID)
 	if err != nil {
 		if IsNotFoundError(err) {
 			return core.Account{}, errorNotFound(err, "account not found")
@@ -78,10 +77,9 @@ func (r *AccountRepository) GetAccounts(ctx context.Context, userID int64) ([]co
 	if err != nil {
 		return nil, errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Get accounts of a user by his id
-	accounts, err := q.GetAccounts(ctx, tx, userID)
+	accounts, err := r.q.GetAccounts(ctx, tx, userID)
 	if err != nil {
 		if IsNotFoundError(err) {
 			return nil, errorNotFound(err, "no accounts found")
@@ -103,10 +101,9 @@ func (r *AccountRepository) DeleteAccount(ctx context.Context, accountID int64) 
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Delete account
-	err = q.DeleteAccount(ctx, tx, accountID)
+	err = r.q.DeleteAccount(ctx, tx, accountID)
 	if err != nil {
 		if IsNotFoundError(err) {
 			return errorNotFound(err, "account not found")

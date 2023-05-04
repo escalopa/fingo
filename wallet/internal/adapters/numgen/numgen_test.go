@@ -23,7 +23,8 @@ func TestNumGen_GenCardNumber(t *testing.T) {
 		{
 			name: "conetxt timeout",
 			args: args{ctx: func() context.Context {
-				ctx, _ := context.WithTimeout(context.Background(), 0)
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
 				return ctx
 			}},
 			check: func(t *testing.T, s string, err error) {
