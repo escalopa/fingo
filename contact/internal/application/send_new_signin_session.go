@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"github.com/escalopa/fingo/contact/internal/core"
 )
 
@@ -29,7 +30,7 @@ func NewSendNewSingInSessionCommand(v Validator, es EmailSender) SendNewSingInSe
 }
 
 func (c *SendNewSingInSessionCommandImpl) Execute(ctx context.Context, params SendNewSingInSessionCommandParam) error {
-	if err := c.v.Validate(params); err != nil {
+	if err := c.v.Validate(ctx, params); err != nil {
 		return err
 	}
 	err := c.es.SendNewSignInSession(ctx, core.SendNewSignInSessionMessage{

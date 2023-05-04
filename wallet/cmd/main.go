@@ -8,22 +8,20 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/escalopa/fingo/wallet/internal/adapters/db"
 	"github.com/escalopa/fingo/wallet/internal/adapters/locker"
 
 	"github.com/escalopa/fingo/pb"
-	pkgdb "github.com/escalopa/fingo/pkg/db"
+	"github.com/escalopa/fingo/pkg/pdb"
+	"github.com/escalopa/fingo/pkg/perror"
+	"github.com/escalopa/fingo/pkg/tls"
 	"github.com/escalopa/fingo/pkg/tracer"
-	"github.com/escalopa/fingo/wallet/internal/adapters/db"
+	"github.com/escalopa/fingo/pkg/validator"
 	mygrpc "github.com/escalopa/fingo/wallet/internal/adapters/grpc"
 	"github.com/escalopa/fingo/wallet/internal/adapters/numgen"
 	"github.com/escalopa/fingo/wallet/internal/application"
 	"github.com/lordvidex/errs"
 
-	pkgerror "github.com/escalopa/fingo/pkg/error"
-	grpctls "github.com/escalopa/fingo/pkg/tls"
-	pkgtracer "github.com/escalopa/fingo/pkg/tracer"
-
-	pkgvalidator "github.com/escalopa/fingo/pkg/validator"
 	"github.com/escalopa/goconfig"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -35,16 +33,16 @@ func main() {
 	defer cancel()
 
 	// Create validator
-	v := pkgvalidator.NewValidator()
+	v := validator.NewValidator()
 	log.Println("validator created")
 
 	// Create database connection
-	conn, err := pkgdb.New(c.Get("WALLET_DATABASE_URL"))
-	pkgerror.CheckError(err, "failed to create database connection")
+	conn, err := pdb.New(c.Get("WALLET_DATABASE_URL"))
+	perror.CheckError(err, "failed to create database connection")
 	log.Print("database connection created")
 
 	// Migrate database
-	pkgerror.CheckError(pkgdb.Migrate(conn, c.Get("WALLET_DATABASE_MIGRATION_PATH")), "failed to migrate database")
+	perror.CheckError(pdb.Migrate(conn, c.Get("WALLET_DATABASE_MIGRATION_PATH")), "failed to migrate database")
 	log.Print("database migrated")
 
 	ur := db.NewUserRepository(conn)
@@ -54,25 +52,25 @@ func main() {
 
 	// Create a new number generator
 	cardNumberLength, err := strconv.Atoi(c.Get("WALLET_CARD_NUMBER_LENGTH"))
-	pkgerror.CheckError(err, "failed to convert WALLET_CARD_NUMBER_LENGTH to int")
+	perror.CheckError(err, "failed to convert WALLET_CARD_NUMBER_LENGTH to int")
 	cng := numgen.NewNumGen(cardNumberLength)
 	log.Println("Card number generator created with card number length:", cardNumberLength)
 
 	// Create a new tracer
-	t, err := pkgtracer.LoadTracer(
+	t, err := tracer.LoadTracer(
 		c.Get("WALLET_TRACING_ENABLE"),
 		c.Get("WALLET_TRACING_JAEGER_ENABLE"),
 		c.Get("WALLET_TRACING_JAEGER_AGENT_URL"),
 		c.Get("WALLET_TRACING_JAEGER_SERVICE_NAME"),
 		c.Get("WALLET_TRACING_JAEGER_ENVIRONMENT"),
 	)
-	pkgerror.CheckError(err, "failed to load tracer")
+	perror.CheckError(err, "failed to load tracer")
 	tracer.SetTracer(t)
 	log.Println("tracer created")
 
 	// Create an ids locker
 	cleanupDuration, err := time.ParseDuration(c.Get("WALLET_LOCKER_CLEANUP_DURATION"))
-	pkgerror.CheckError(err, "failed to convert WALLET_LOCKER_CLEANUP_DURATION to time.Duration")
+	perror.CheckError(err, "failed to convert WALLET_LOCKER_CLEANUP_DURATION to time.Duration")
 	l := locker.NewLocker(appCtx, cleanupDuration)
 
 	// Create use cases
@@ -89,14 +87,14 @@ func main() {
 	var opts []grpc.ServerOption
 	// Load TLS certificates
 	err = loadTls(c, &opts)
-	pkgerror.CheckError(err, "failed to load wallet TLS certificates")
+	perror.CheckError(err, "failed to load wallet TLS certificates")
 
 	// Load auth interceptor
 	err = loadInterceptor(c, &opts)
-	pkgerror.CheckError(err, "failed to load auth interceptor")
+	perror.CheckError(err, "failed to load auth interceptor")
 
 	// Start gRPC server
-	pkgerror.CheckError(start(c, uc, opts), "failed to start gRPC server")
+	perror.CheckError(start(c, uc, opts), "failed to start gRPC server")
 }
 
 func start(c *goconfig.Config, uc *application.UseCases, opts []grpc.ServerOption) error {
@@ -122,7 +120,7 @@ func start(c *goconfig.Config, uc *application.UseCases, opts []grpc.ServerOptio
 
 func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 	// Enable TLS if required
-	creds, err := grpctls.LoadServerTLS(
+	creds, err := tls.LoadServerTLS(
 		c.Get("WALLET_GRPC_TLS_ENABLE"),
 		c.Get("WALLET_GRPC_TLS_CERT_FILE"),
 		c.Get("WALLET_GRPC_TLS_KEY_FILE"),
@@ -135,7 +133,7 @@ func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 }
 
 func loadInterceptor(c *goconfig.Config, opts *[]grpc.ServerOption) error {
-	creds, err := grpctls.LoadClientTLS(
+	creds, err := tls.LoadClientTLS(
 		c.Get("TOKEN_GRPC_TLS_ENABLE"),
 		c.Get("WALLET_TOKEN_GRPC_TLS_USER_CERT_FILE"),
 	)

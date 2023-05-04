@@ -1,4 +1,4 @@
-package pkgdb
+package pdb
 
 import (
 	"database/sql"

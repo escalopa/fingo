@@ -1,4 +1,4 @@
-package grpctls
+package tls
 
 import (
 	"log"

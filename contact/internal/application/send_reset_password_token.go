@@ -33,7 +33,7 @@ func NewSendResetPasswordTokenCommand(v Validator, es EmailSender, spi time.Dura
 
 func (c *SendResetPasswordTokenCommandImpl) Execute(ctx context.Context, params SendResetPasswordTokenCommandParam) error {
 	// TODO: check if the user has requested a password reset token in the last `c.spi` if so, return an error
-	if err := c.v.Validate(params); err != nil {
+	if err := c.v.Validate(ctx, params); err != nil {
 		return err
 	}
 	err := c.es.SendResetPasswordToken(ctx, core.SendResetPasswordTokenMessage{

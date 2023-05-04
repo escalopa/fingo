@@ -1,4 +1,4 @@
-package pkgerror
+package perror
 
 import "log"
 
