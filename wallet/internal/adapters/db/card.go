@@ -6,7 +6,6 @@ import (
 
 	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	db "github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
 	"github.com/escalopa/fingo/wallet/internal/core"
 )
 
@@ -29,7 +28,7 @@ func (r *CardRepository) CreateCard(ctx context.Context, params core.CreateCardP
 	}
 	defer func() { err = deferTx(tx, err) }()
 	// Create card
-	err = r.q.CreateCard(ctx, tx, db.CreateCardParams{
+	err = r.q.CreateCard(ctx, tx, sqlc.CreateCardParams{
 		AccountID: params.AccountID,
 		Number:    params.Number,
 	})
@@ -138,7 +137,7 @@ func (r *CardRepository) DeleteCard(ctx context.Context, cardNumber string) erro
 }
 
 // fromDBCardToCard converts a db.Card to a core.Card
-func fromDBCardToCard(card db.Card) core.Card {
+func fromDBCardToCard(card sqlc.Card) core.Card {
 	return core.Card{
 		AccountID: card.AccountID,
 		Number:    card.Number,

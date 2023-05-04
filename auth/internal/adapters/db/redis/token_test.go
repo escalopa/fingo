@@ -2,13 +2,14 @@ package redis
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/go-redis/redis/v9"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestTokenRepository_Store(t *testing.T) {
@@ -59,7 +60,7 @@ func TestTokenRepository_Store(t *testing.T) {
 		})
 	}
 	// Wait for token to expire
-	time.Sleep(exp)
+	time.Sleep(exp + 1*time.Millisecond) // Wait for token to expire
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := tr.r.Get(ctx, tc.token).Result()
