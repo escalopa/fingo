@@ -20,9 +20,6 @@ func NewRedisContainer(ctx context.Context) (url string, terminate func() error,
 		Started:          true,
 	})
 	if err != nil {
-		return "", nil, err
-	}
-	if err != nil {
 		return "", nil, errs.B(err).Code(errs.Unknown).Msg("failed to start redis container").Err()
 	}
 
