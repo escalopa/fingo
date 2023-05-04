@@ -87,7 +87,7 @@ func start(c *goconfig.Config, uc *application.UseCases, opts []grpc.ServerOptio
 func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 	// Enable TLS if required
 	creds, err := tls.LoadServerTLS(
-		c.Get("TOKEN_GRPC_TLS_ENABLE"),
+		c.Get("TOKEN_GRPC_TLS_ENABLE") == "true",
 		c.Get("TOKEN_GRPC_TLS_CERT_FILE"),
 		c.Get("TOKEN_GRPC_TLS_KEY_FILE"),
 	)

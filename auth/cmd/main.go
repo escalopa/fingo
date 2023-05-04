@@ -140,7 +140,7 @@ func start(c *goconfig.Config, uc *application.UseCases, opts []grpc.ServerOptio
 func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 	// Enable TLS if required
 	creds, err := tls.LoadServerTLS(
-		c.Get("AUTH_GRPC_TLS_ENABLE"),
+		c.Get("AUTH_GRPC_TLS_ENABLE") == "true",
 		c.Get("AUTH_GRPC_TLS_CERT_FILE"),
 		c.Get("AUTH_GRPC_TLS_KEY_FILE"),
 	)
@@ -153,7 +153,7 @@ func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 
 func loadInterceptor(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 	creds, err := tls.LoadClientTLS(
-		c.Get("TOKEN_GRPC_TLS_ENABLE"),
+		c.Get("TOKEN_GRPC_TLS_ENABLE") == "true",
 		c.Get("AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE"),
 	)
 	if err != nil {
