@@ -74,8 +74,8 @@ func main() {
 
 	// Create a new tracer
 	t, err := tracer.LoadTracer(
-		c.Get("CONTACT_TRACING_ENABLE"),
-		c.Get("CONTACT_TRACING_JAEGER_ENABLE"),
+		c.Get("CONTACT_TRACING_ENABLE") == "true",
+		c.Get("CONTACT_TRACING_JAEGER_ENABLE") == "true",
 		c.Get("CONTACT_TRACING_JAEGER_AGENT_URL"),
 		c.Get("CONTACT_TRACING_JAEGER_SERVICE_NAME"),
 		c.Get("CONTACT_TRACING_JAEGER_ENVIRONMENT"),

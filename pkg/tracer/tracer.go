@@ -59,27 +59,25 @@ func newJaegerExporter(url, service, env string) (*tracesdk.TracerProvider, erro
 }
 
 // LoadTracer loads the tracer based on the environment variables
-// tracingEnable: true/false
-// tracingJaegerEnable: true/false
+// tracingEnable: true if tracing is enabled, false otherwise
+// tracingJaegerEnable: true if tracing is enable, false otherwise
 // tracingJaegerAgentUrl: url of the jaeger agent
 // tracingJaegerServiceName: name of the service
 // tracingJaegerEnvironment: environment of the service
 // If tracing is enabled, it will return a tracer otherwise, it will return a noop tracer
 func LoadTracer(
-	tracingEnable string,
-	tracingJaegerEnable string,
+	tracingEnable bool,
+	tracingJaegerEnable bool,
 	tracingJaegerAgentUrl string,
 	tracingJaegerServiceName string,
 	tracingJaegerEnvironment string,
 ) (trace.Tracer, error) {
 	// check if tracing is enabled
-	enableTracing := tracingEnable == "true"
-	log.Println("starting server with tracing:", enableTracing)
-	if enableTracing {
+	log.Println("starting server with tracing:", tracingEnable)
+	if tracingEnable {
 		// check if jaeger tracing is enabled
-		enableJaeger := tracingJaegerEnable == "true"
-		log.Println("starting server with jaeger tracing:", enableJaeger)
-		if enableJaeger {
+		log.Println("starting server with jaeger tracing:", tracingJaegerEnable)
+		if tracingJaegerEnable {
 			tp, err := newJaegerExporter(
 				tracingJaegerAgentUrl,
 				tracingJaegerServiceName,

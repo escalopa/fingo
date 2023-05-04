@@ -103,8 +103,8 @@ func main() {
 
 	// Create a new tracer
 	t, err := tracer.LoadTracer(
-		c.Get("AUTH_TRACING_ENABLE"),
-		c.Get("AUTH_TRACING_JAEGER_ENABLE"),
+		c.Get("AUTH_TRACING_ENABLE") == "true",
+		c.Get("AUTH_TRACING_JAEGER_ENABLE") == "true",
 		c.Get("AUTH_TRACING_JAEGER_AGENT_URL"),
 		c.Get("AUTH_TRACING_JAEGER_SERVICE_NAME"),
 		c.Get("AUTH_TRACING_JAEGER_ENVIRONMENT"),

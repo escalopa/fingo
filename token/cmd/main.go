@@ -44,8 +44,8 @@ func main() {
 
 	// Create a new tracer
 	t, err := tracer.LoadTracer(
-		c.Get("TOKEN_TRACING_ENABLE"),
-		c.Get("TOKEN_TRACING_JAEGER_ENABLE"),
+		c.Get("TOKEN_TRACING_ENABLE") == "true",
+		c.Get("TOKEN_TRACING_JAEGER_ENABLE") == "true",
 		c.Get("TOKEN_TRACING_JAEGER_AGENT_URL"),
 		c.Get("TOKEN_TRACING_JAEGER_SERVICE_NAME"),
 		c.Get("TOKEN_TRACING_JAEGER_ENVIRONMENT"),
