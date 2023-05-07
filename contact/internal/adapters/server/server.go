@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 
 	"github.com/escalopa/fingo/contact/internal/core"
 
@@ -9,28 +10,56 @@ import (
 )
 
 type Server struct {
-	uc      *application.UseCases
-	cons    application.MessageConsumer
-	errChan chan error
+	uc   *application.UseCases
+	cons application.MessageConsumer
+
+	errChan  chan error
+	exitChan chan struct{}
 }
 
 func NewServer(uc *application.UseCases, cons application.MessageConsumer) *Server {
 	return &Server{
 		uc:   uc,
 		cons: cons,
+
+		errChan:  make(chan error, 1),
+		exitChan: make(chan struct{}),
 	}
 }
 
 func (s *Server) Start() error {
-	go func() { s.errChan <- s.handleSendEmailVerificationCode() }()
-	go func() { s.errChan <- s.handleSendResetPasswordToken() }()
-	go func() { s.errChan <- s.handleSendNewSignInSessionCode() }()
-	return <-s.errChan
+	defer close(s.exitChan)
+	defer close(s.errChan)
+
+	// Notify err channel on error when starting handlers
+	go func() {
+		select {
+		case s.errChan <- s.handleSendEmailVerificationCode():
+		case s.errChan <- s.handleSendResetPasswordToken():
+		case s.errChan <- s.handleSendNewSignInSessionCode():
+		}
+	}()
+
+	// Wait for handlers throw error or exit signal
+	select {
+	case err := <-s.errChan:
+		return err
+	case <-s.exitChan:
+		return nil
+	}
 }
 
+// GracefulStop stops the consumer and returns
+func (s *Server) GracefulStop() {
+	err := s.cons.Close()
+	if err != nil {
+		log.Println("failed to stop consumer ", err)
+	}
+}
+
+// Stop sends a signal to the server to stop
 func (s *Server) Stop() {
-	s.errChan <- nil
-	close(s.errChan)
+	s.exitChan <- struct{}{}
 }
 
 func (s *Server) handleSendEmailVerificationCode() error {

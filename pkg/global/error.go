@@ -1,4 +1,4 @@
-package perror
+package global
 
 import "log"
 
