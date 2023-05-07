@@ -4,13 +4,12 @@ import (
 	"context"
 	"log"
 
-	"github.com/escalopa/fingo/wallet/internal/adapters/db"
-	"github.com/escalopa/fingo/wallet/internal/adapters/locker"
-
 	"github.com/escalopa/fingo/pkg/global"
-	"github.com/escalopa/fingo/pkg/pdb"
 	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/pkg/validator"
+
+	"github.com/escalopa/fingo/wallet/internal/adapters/db"
+	"github.com/escalopa/fingo/wallet/internal/adapters/locker"
 	"github.com/escalopa/fingo/wallet/internal/adapters/numgen"
 	"github.com/escalopa/fingo/wallet/internal/application"
 )
@@ -30,12 +29,12 @@ func main() {
 	log.Println("validator created")
 
 	// Create database connection
-	conn, err := pdb.New(cfg.DatabaseUrl)
+	conn, err := db.New(cfg.DatabaseUrl)
 	global.CheckError(err, "failed to create database connection")
 	log.Print("database connection created")
 
 	// Migrate database
-	global.CheckError(pdb.Migrate(conn, cfg.DatabaseMigrationPath), "failed to migrate database")
+	global.CheckError(db.Migrate(conn, cfg.DatabaseMigrationPath), "failed to migrate database")
 	log.Print("database migrated")
 
 	ur := db.NewUserRepository(conn)

@@ -1,4 +1,4 @@
-package pdb
+package mypostgres
 
 import (
 	"database/sql"
@@ -28,6 +28,7 @@ func Migrate(conn *sql.DB, migrationDir string) error {
 	if err != nil {
 		return errs.B(err).Code(errs.Internal).Msg("failed to create driver for migration").Err()
 	}
+
 	// Load migration files
 	m, err := migrate.NewWithDatabaseInstance(
 		migrationDir,

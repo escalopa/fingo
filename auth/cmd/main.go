@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/escalopa/fingo/pkg/global"
-	"github.com/escalopa/fingo/pkg/pdb"
 	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/pkg/validator"
 
@@ -42,12 +41,12 @@ func main() {
 	log.Println("successfully create token generator")
 
 	// Create postgres conn
-	pgConn, err := pdb.New(cfg.DatabaseUrl)
+	pgConn, err := mypostgres.New(cfg.DatabaseUrl)
 	global.CheckError(err, "failed to connect to postgres")
 	log.Println("successfully connected to postgres")
 
 	// Migrate database
-	err = pdb.Migrate(pgConn, cfg.DatabaseMigrationPath)
+	err = mypostgres.Migrate(pgConn, cfg.DatabaseMigrationPath)
 	global.CheckError(err, "failed to migrate postgres db")
 	log.Println("successfully migrated postgres db")
 
