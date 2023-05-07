@@ -5,7 +5,7 @@ COPY ./pkg ./pkg
 COPY go.mod go.sum ./
 RUN go mod download
 RUN go install github.com/cespare/reflex@latest
-CMD reflex -sr '\.go$' go run ./contact/cmd/main.go
+CMD reflex -sr '\.go$' go run ./contact/cmd/.
 
 FROM golang:alpine AS builder
 WORKDIR /go/src/github.com/escalopa/fingo

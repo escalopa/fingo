@@ -12,16 +12,15 @@ import (
 	"github.com/escalopa/fingo/pkg/tls"
 	mygrpc "github.com/escalopa/fingo/token/internal/adapters/grpc"
 	"github.com/escalopa/fingo/token/internal/application"
-	"github.com/escalopa/goconfig"
 	"github.com/lordvidex/errs"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
-func start(appCtx context.Context, c *goconfig.Config, uc *application.UseCases) error {
+func start(appCtx context.Context, uc *application.UseCases) error {
 	// Load TLS certificates
 	var opts []grpc.ServerOption
-	err := loadTls(c, &opts)
+	err := loadTls(&opts)
 	if err != nil {
 		log.Println("failed to load token tls certificates")
 		return err
@@ -34,7 +33,7 @@ func start(appCtx context.Context, c *goconfig.Config, uc *application.UseCases)
 	reflection.Register(server)
 
 	// Start the server
-	port := c.Get("TOKEN_GRPC_PORT")
+	port := cfg.GrpcPort
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return errs.B(err).Msg(fmt.Sprintf("failed to listen on port %s", port)).Err()
@@ -53,12 +52,12 @@ func start(appCtx context.Context, c *goconfig.Config, uc *application.UseCases)
 	return nil
 }
 
-func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
+func loadTls(opts *[]grpc.ServerOption) error {
 	// Enable TLS if required
 	creds, err := tls.LoadServerTLS(
-		c.Get("TOKEN_GRPC_TLS_ENABLE") == "true",
-		c.Get("TOKEN_GRPC_TLS_CERT_FILE"),
-		c.Get("TOKEN_GRPC_TLS_KEY_FILE"),
+		cfg.GrpcTlsEnable,
+		cfg.GrpcTlsCertFile,
+		cfg.GrpcTlsKeyFile,
 	)
 	if err != nil {
 		return err

@@ -16,17 +16,16 @@ import (
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/pkg/global"
 	"github.com/escalopa/fingo/pkg/tls"
-	"github.com/escalopa/goconfig"
 )
 
-func start(appCtx context.Context, c *goconfig.Config, uc *application.UseCases) error {
+func start(appCtx context.Context, uc *application.UseCases) error {
 	var opts []grpc.ServerOption
 	// Load TLS certificates
-	err := loadTls(c, &opts)
+	err := loadTls(&opts)
 	global.CheckError(err, "failed to load auth TLS certificates")
 
 	// Load auth interceptor
-	global.CheckError(loadInterceptor(c, &opts), "failed to load auth interceptor")
+	global.CheckError(loadInterceptor(&opts), "failed to load auth interceptor")
 
 	// Create a new gRPC server
 	handler := mygrpc.NewAuthHandler(uc)
@@ -38,7 +37,7 @@ func start(appCtx context.Context, c *goconfig.Config, uc *application.UseCases)
 	go global.Shutdown(appCtx, 10*time.Second, func() { server.GracefulStop() }, func() { server.Stop() })
 
 	// Start the server
-	port := c.Get("AUTH_GRPC_PORT")
+	port := cfg.GrpcPort
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return errs.B(err).Msg(fmt.Sprintf("failed to listen on port %s", port)).Err()
@@ -53,12 +52,12 @@ func start(appCtx context.Context, c *goconfig.Config, uc *application.UseCases)
 	return nil
 }
 
-func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
+func loadTls(opts *[]grpc.ServerOption) error {
 	// Enable TLS if required
 	creds, err := tls.LoadServerTLS(
-		c.Get("AUTH_GRPC_TLS_ENABLE") == "true",
-		c.Get("AUTH_GRPC_TLS_CERT_FILE"),
-		c.Get("AUTH_GRPC_TLS_KEY_FILE"),
+		cfg.GrpcTlsEnable,
+		cfg.GrpcTlsCertFile,
+		cfg.GrpcTlsKeyFile,
 	)
 	if err != nil {
 		return err
@@ -67,15 +66,15 @@ func loadTls(c *goconfig.Config, opts *[]grpc.ServerOption) error {
 	return nil
 }
 
-func loadInterceptor(c *goconfig.Config, opts *[]grpc.ServerOption) error {
+func loadInterceptor(opts *[]grpc.ServerOption) error {
 	creds, err := tls.LoadClientTLS(
-		c.Get("TOKEN_GRPC_TLS_ENABLE") == "true",
-		c.Get("AUTH_TOKEN_GRPC_TLS_USER_CERT_FILE"),
+		cfg.TokenGrpcTlsEnable,
+		cfg.TokenGrpcTlsUserCertFile,
 	)
 	if err != nil {
 		return err
 	}
-	interceptor, err := mygrpc.NewAuthInterceptor(c.Get("TOKEN_GRPC_URL"), creds)
+	interceptor, err := mygrpc.NewAuthInterceptor(cfg.TokenGrpcUrl, creds)
 	if err != nil {
 		return errs.B(err).Msg("failed to create token gRPC interceptor").Err()
 	}

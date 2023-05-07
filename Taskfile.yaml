@@ -24,6 +24,13 @@ tasks:
       - task: contact-mock
       - task: token-mock
 
+  env-cp:
+    cmds:
+      - cp ./auth/.env.example ./auth/app.env
+      - cp ./wallet/.env.example ./wallet/app.env
+      - cp ./contact/.env.example ./contact/app.env
+      - cp ./token/.env.example ./token/app.env
+
   # Auth Command
   auth-sqlc:
     cmds:

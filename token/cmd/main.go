@@ -10,7 +10,6 @@ import (
 
 	"github.com/escalopa/fingo/token/internal/adapters/cache"
 	"github.com/escalopa/fingo/token/internal/application"
-	"github.com/escalopa/goconfig"
 )
 
 func main() {
@@ -19,14 +18,16 @@ func main() {
 		<-global.CatchSignal()
 		cancel()
 	}()
-	c := goconfig.New()
+
+	// Load cofigurations
+	global.CheckError(global.LoadConfig(&cfg, "app", "./token", "env"), "failed to load configurations")
 
 	// Create validator
 	v := validator.NewValidator()
 	log.Println("validator created")
 
 	// Create redis client
-	rc, err := cache.NewRedisClient(c.Get("TOKEN_REDIS_URL"))
+	rc, err := cache.NewRedisClient(cfg.RedisUrl)
 	global.CheckError(err, "failed to create redis client")
 	log.Println("redis client created")
 
@@ -42,18 +43,18 @@ func main() {
 
 	// Create a new tracer
 	t, err := tracer.LoadTracer(
-		c.Get("TOKEN_TRACING_ENABLE") == "true",
-		c.Get("TOKEN_TRACING_JAEGER_ENABLE") == "true",
-		c.Get("TOKEN_TRACING_JAEGER_AGENT_URL"),
-		c.Get("TOKEN_TRACING_JAEGER_SERVICE_NAME"),
-		c.Get("TOKEN_TRACING_JAEGER_ENVIRONMENT"),
+		cfg.TracingEnable,
+		cfg.TracingJaegerEnable,
+		cfg.TracingJaegerAgentUrl,
+		cfg.TracingJaegerServiceName,
+		cfg.TracingJaegerEnvironment,
 	)
 	global.CheckError(err, "failed to load tracer")
 	tracer.SetTracer(t)
 	log.Println("tracer created")
 
 	// Start gRPC server
-	err = start(appCtx, c, uc)
+	err = start(appCtx, uc)
 	if err != nil {
 		log.Println("Server start/shutdown failed: ", err)
 	} else {

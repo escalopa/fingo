@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/escalopa/fingo/pkg/global"
 	"github.com/escalopa/fingo/pkg/pdb"
@@ -16,7 +15,6 @@ import (
 	"github.com/escalopa/fingo/auth/internal/adapters/queue/rabbitmq"
 	"github.com/escalopa/fingo/auth/internal/adapters/token"
 	"github.com/escalopa/fingo/auth/internal/application"
-	"github.com/escalopa/goconfig"
 )
 
 func main() {
@@ -25,29 +23,31 @@ func main() {
 		<-global.CatchSignal()
 		cancel()
 	}()
-	c := goconfig.New()
+
+	// Load cofigurations
+	global.CheckError(global.LoadConfig(&cfg, "app", "./auth", "env"), "failed to load configurations")
 
 	ph := hasher.NewBcryptHasher()
 	v := validator.NewValidator()
 
 	// Create a new token generator
-	atd, err := time.ParseDuration(c.Get("AUTH_ACCESS_TOKEN_DURATION"))
-	global.CheckError(err, "invalid access token duration")
-	log.Println("successfully parsed access token duration: ", atd)
-	rtd, err := time.ParseDuration(c.Get("AUTH_REFRESH_TOKEN_DURATION"))
-	global.CheckError(err, "invalid refresh token duration")
-	log.Println("successfully parsed refresh token duration: ", rtd)
-	tg, err := token.NewPaseto(c.Get("AUTH_TOKEN_SECRET"), atd, rtd)
+	tg, err := token.NewPaseto(
+		cfg.TokenSecret,
+		cfg.AccessTokenDuration,
+		cfg.RefreshTokenDuration,
+	)
 	global.CheckError(err, "failed to create token generator")
+	log.Println("successfully parsed access token duration: ", cfg.AccessTokenDuration)
+	log.Println("successfully parsed refresh token duration: ", cfg.RefreshTokenDuration)
 	log.Println("successfully create token generator")
 
 	// Create postgres conn
-	pgConn, err := pdb.New(c.Get("AUTH_DATABASE_URL"))
+	pgConn, err := pdb.New(cfg.DatabaseUrl)
 	global.CheckError(err, "failed to connect to postgres")
 	log.Println("successfully connected to postgres")
 
 	// Migrate database
-	err = pdb.Migrate(pgConn, c.Get("AUTH_DATABASE_MIGRATION_PATH"))
+	err = pdb.Migrate(pgConn, cfg.DatabaseMigrationPath)
 	global.CheckError(err, "failed to migrate postgres db")
 	log.Println("successfully migrated postgres db")
 
@@ -57,25 +57,23 @@ func main() {
 	log.Println("successfully created user repository")
 
 	// Create session repository
-	std, err := time.ParseDuration(c.Get("AUTH_USER_SESSION_DURATION"))
-	global.CheckError(err, "invalid user session duration")
-	log.Println("successfully parsed user session duration: ", std)
-	sr, err := mypostgres.NewSessionRepository(pgConn, mypostgres.WithSessionDuration(std))
+	sr, err := mypostgres.NewSessionRepository(pgConn, mypostgres.WithSessionDuration(cfg.UserSessionDuration))
 	global.CheckError(err, "failed to create session repository")
+	log.Println("successfully parsed user session duration: ", cfg.UserSessionDuration)
 	log.Println("successfully created session repository")
 
 	// Connect to redis cache
-	redisConn, err := redis.New(c.Get("AUTH_CACHE_URL"))
+	redisConn, err := redis.New(cfg.RedisUrl)
 	global.CheckError(err, "failed to connect to redis cache")
 	log.Println("successfully connected to redis cache")
 
 	// Create token repository
-	tr := redis.NewTokenRepository(redisConn, redis.WithTokenDuration(atd))
+	tr := redis.NewTokenRepository(redisConn, redis.WithTokenDuration(cfg.AccessTokenDuration))
 	log.Println("successfully created token repository")
 
 	// Connect to rabbitmq & Create a new message producer
-	rbp, err := rabbitmq.NewProducer(c.Get("AUTH_RABBITMQ_URL"),
-		rabbitmq.WithNewSignInSessionQueue(c.Get("AUTH_RABBITMQ_NEW_SIGNIN_SESSION_QUEUE_NAME")),
+	rbp, err := rabbitmq.NewProducer(cfg.RabbitmqUrl,
+		rabbitmq.WithNewSignInSessionQueue(cfg.RabbitmqNewSigninSessionQueueName),
 	)
 	global.CheckError(err, "failed to connect to rabbitmq")
 	log.Println("successfully connected to rabbitmq")
@@ -93,17 +91,17 @@ func main() {
 
 	// Create a new tracer
 	t, err := tracer.LoadTracer(
-		c.Get("AUTH_TRACING_ENABLE") == "true",
-		c.Get("AUTH_TRACING_JAEGER_ENABLE") == "true",
-		c.Get("AUTH_TRACING_JAEGER_AGENT_URL"),
-		c.Get("AUTH_TRACING_JAEGER_SERVICE_NAME"),
-		c.Get("AUTH_TRACING_JAEGER_ENVIRONMENT"),
+		cfg.TracingEnable,
+		cfg.TracingJaegerEnable,
+		cfg.TracingJaegerAgentUrl,
+		cfg.TracingJaegerServiceName,
+		cfg.TracingJaegerEnvironment,
 	)
 	global.CheckError(err, "failed to load tracer")
 	tracer.SetTracer(t)
 
 	// Start the server
-	err = start(appCtx, c, uc)
+	err = start(appCtx, uc)
 	if err != nil {
 		log.Println("failed to start auth grpc server")
 	}
