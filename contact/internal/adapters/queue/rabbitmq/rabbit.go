@@ -87,7 +87,7 @@ func (r *Consumer) HandleSendVerificationsCode(handler func(ctx context.Context,
 func (r *Consumer) HandleSendResetPasswordToken(handler func(ctx context.Context, params core.SendResetPasswordTokenMessage) error) error {
 	messages, err := r.setupQueue(r.rsq)
 	if err != nil {
-		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on send verification code").Err()
+		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on send reset password token").Err()
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
@@ -105,7 +105,7 @@ func (r *Consumer) HandleSendResetPasswordToken(handler func(ctx context.Context
 func (r *Consumer) HandleSendNewSignInSession(handler func(ctx context.Context, params core.SendNewSignInSessionMessage) error) error {
 	messages, err := r.setupQueue(r.ssq)
 	if err != nil {
-		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on send verification code").Err()
+		return errs.B(err).Code(errs.InvalidArgument).Msg("failed to setup queue on new sign in session").Err()
 	}
 	for d := range messages {
 		go func(d amqp.Delivery) {
@@ -121,7 +121,7 @@ func (r *Consumer) HandleSendNewSignInSession(handler func(ctx context.Context, 
 }
 
 func (r *Consumer) handleMessage(msg amqp.Delivery, body interface{}, handle func(context.Context) error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	var err error
 	defer cancel()
 	// Read message from queue

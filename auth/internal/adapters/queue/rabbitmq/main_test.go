@@ -8,7 +8,7 @@ import (
 	"github.com/escalopa/fingo/utils/testcontainer"
 )
 
-var rabbitmqURL string
+var rabbitmqUrl string
 
 func TestMain(m *testing.M) {
 	// Start the RabbitMQ container
@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err, "failed to create rabbitmq consumer")
 	}
-	rabbitmqURL = url
+	rabbitmqUrl = url
 	// Run the tests
 	m.Run()
 }
