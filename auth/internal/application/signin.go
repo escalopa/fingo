@@ -36,9 +36,9 @@ type SigninCommand interface {
 type SigninCommandImpl struct {
 	v  Validator
 	h  PasswordHasher
+	tr TokenRepository
 	ur UserRepository
 	sr SessionRepository
-	tr TokenRepository
 	tg TokenGenerator
 	mp MessageProducer
 }
