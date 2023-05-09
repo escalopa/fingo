@@ -19,10 +19,10 @@ func CatchSignal() <-chan os.Signal {
 func Shutdown(ctx context.Context, timeout time.Duration, gracefulStop func(), forceStop func()) {
 	<-ctx.Done()
 
-	stopCtx, stop := context.WithTimeout(context.Background(), timeout)
+	stopCtx, stopCancel := context.WithTimeout(context.Background(), timeout)
 	log.Println("Server shutdown initiated, Press Ctrl+C to force")
 	go func() {
-		defer stop()
+		defer stopCancel()
 		gracefulStop()
 	}()
 
