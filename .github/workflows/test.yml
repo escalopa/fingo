@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "tests"]
   pull_request:
     branches: ["main"]
 
@@ -17,8 +17,11 @@ jobs:
         with:
           go-version: 1.19
 
+      - name: Setup Task.dev
+        run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+
       - name: Test
-        run: go test -v  -coverprofile=coverage.txt  -covermode=count ./...
+        run: task test
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
