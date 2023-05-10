@@ -6,7 +6,6 @@ import (
 	"log"
 	"testing"
 
-	pkgdb "github.com/escalopa/fingo/pkg/db"
 	"github.com/escalopa/fingo/utils/testcontainer"
 )
 
@@ -31,7 +30,7 @@ func TestMain(m *testing.M) {
 		}
 	}()
 	// Migrate database
-	err = pkgdb.Migrate(conn, "file://./migrations")
+	err = Migrate(conn, "file://./migrations")
 	if err != nil {
 		log.Fatalf("failed to migrate database for tests: %s", err)
 	}

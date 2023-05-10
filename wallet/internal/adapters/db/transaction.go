@@ -4,32 +4,32 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/escalopa/fingo/wallet/internal/core"
 	"github.com/google/uuid"
 )
 
 type TransactionRepository struct {
+	q  *sqlc.Queries
 	db *sql.DB
 }
 
 func NewTransactionRepository(db *sql.DB) *TransactionRepository {
-	return &TransactionRepository{db: db}
+	return &TransactionRepository{db: db, q: sqlc.New()}
 }
 
 // Transfer transfers money from one account to another
 func (r *TransactionRepository) Transfer(ctx context.Context, params core.CreateTransactionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.CreateTransaction")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.CreateTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Add money to destination account
-	err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
+	err = r.q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
 		ID:      params.ToAccountID,
 		Balance: params.Amount,
 	})
@@ -41,7 +41,7 @@ func (r *TransactionRepository) Transfer(ctx context.Context, params core.Create
 		}
 	}
 	// Subtract money from source account
-	err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
+	err = r.q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
 		ID:      params.FromAccountID,
 		Balance: params.Amount,
 	})
@@ -53,7 +53,7 @@ func (r *TransactionRepository) Transfer(ctx context.Context, params core.Create
 		}
 	}
 	// Create transaction
-	err = q.CreateTransferTransaction(ctx, tx, sqlc.CreateTransferTransactionParams{
+	err = r.q.CreateTransferTransaction(ctx, tx, sqlc.CreateTransferTransactionParams{
 		SourceAccountID:      sql.NullInt64{Int64: params.FromAccountID, Valid: true},
 		DestinationAccountID: sql.NullInt64{Int64: params.ToAccountID, Valid: true},
 		Amount:               params.Amount,
@@ -70,16 +70,15 @@ func (r *TransactionRepository) Transfer(ctx context.Context, params core.Create
 
 // Deposit adds money to an account and creates a transaction
 func (r *TransactionRepository) Deposit(ctx context.Context, params core.CreateTransactionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.Deposit")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.Deposit")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Add money to source account
-	err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
+	err = r.q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
 		ID:      params.ToAccountID,
 		Balance: params.Amount,
 	})
@@ -91,7 +90,7 @@ func (r *TransactionRepository) Deposit(ctx context.Context, params core.CreateT
 		}
 	}
 	// Create transaction
-	err = q.CreateDepositTransaction(ctx, tx, sqlc.CreateDepositTransactionParams{
+	err = r.q.CreateDepositTransaction(ctx, tx, sqlc.CreateDepositTransactionParams{
 		DestinationAccountID: sql.NullInt64{Int64: params.ToAccountID, Valid: true},
 		Amount:               params.Amount,
 	})
@@ -107,16 +106,15 @@ func (r *TransactionRepository) Deposit(ctx context.Context, params core.CreateT
 
 // Withdraw subtracts money from an account and creates a transaction
 func (r *TransactionRepository) Withdraw(ctx context.Context, params core.CreateTransactionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.Withdraw")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.Withdraw")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Subtract money from source account
-	err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
+	err = r.q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
 		ID:      params.FromAccountID,
 		Balance: params.Amount,
 	})
@@ -128,7 +126,7 @@ func (r *TransactionRepository) Withdraw(ctx context.Context, params core.Create
 		}
 	}
 	// Create transaction
-	err = q.CreateWithdrawTransaction(ctx, tx, sqlc.CreateWithdrawTransactionParams{
+	err = r.q.CreateWithdrawTransaction(ctx, tx, sqlc.CreateWithdrawTransactionParams{
 		SourceAccountID: sql.NullInt64{Int64: params.FromAccountID, Valid: true},
 		Amount:          params.Amount,
 	})
@@ -144,15 +142,14 @@ func (r *TransactionRepository) Withdraw(ctx context.Context, params core.Create
 
 // GetTransaction returns a transaction by its ID
 func (r *TransactionRepository) GetTransaction(ctx context.Context, transactionID uuid.UUID) (core.Transaction, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.GetTransaction")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.GetTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return core.Transaction{}, errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
-	transaction, err := q.GetTransaction(ctx, tx, transactionID)
+	defer func() { err = deferTx(tx, err) }()
+	transaction, err := r.q.GetTransaction(ctx, tx, transactionID)
 	if err != nil {
 		if IsNotFoundError(err) {
 			return core.Transaction{}, errorNotFound(err, "transaction not found")
@@ -166,21 +163,20 @@ func (r *TransactionRepository) GetTransaction(ctx context.Context, transactionI
 
 // GetTransactions returns a list of transactions for a given account with filters(pagination, date range, etc)
 func (r *TransactionRepository) GetTransactions(ctx context.Context, params core.GetTransactionsParams) ([]core.Transaction, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.GetTransactions")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.GetTransactions")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Get transactions
 	//var t sqlc.NullTransactionType
 	//err = t.Scan(params.Type.String())
 	//if err != nil {
 	//	return nil, errorQuery(err, "failed to convert transaction type")
 	//}
-	transactions, err := q.GetTransactions(ctx, tx, sqlc.GetTransactionsParams{
+	transactions, err := r.q.GetTransactions(ctx, tx, sqlc.GetTransactionsParams{
 		AccountID: params.AccountID,
 		Limit:     params.Limit,
 		Offset:    params.Offset,
@@ -201,16 +197,15 @@ func (r *TransactionRepository) GetTransactions(ctx context.Context, params core
 
 // RollbackTransaction deletes a transaction and restores the balance of the involved accounts
 func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transactionID uuid.UUID) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "TransactionRepository.RollbackTransaction")
+	ctx, span := tracer.Tracer().Start(ctx, "TransactionRepository.RollbackTransaction")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Get transaction
-	transaction, err := q.GetTransaction(ctx, tx, transactionID)
+	transaction, err := r.q.GetTransaction(ctx, tx, transactionID)
 	if err != nil {
 		if IsNotFoundError(err) {
 			return errorNotFound(err, "transaction not found")
@@ -222,12 +217,12 @@ func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transac
 		return errorRollbackUnsupported
 	}
 	// Set transaction as rolled back
-	err = q.SetTransactionRolledBack(ctx, tx, transactionID)
+	err = r.q.SetTransactionRolledBack(ctx, tx, transactionID)
 	if err != nil {
 		return errorQuery(err, "failed to set transaction as rolled back")
 	}
 	// Add money to source account
-	err = q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
+	err = r.q.AddAccountBalance(ctx, tx, sqlc.AddAccountBalanceParams{
 		ID:      transaction.FromAccountID.Int64,
 		Balance: transaction.Amount,
 	})
@@ -235,7 +230,7 @@ func (r *TransactionRepository) RollbackTransaction(ctx context.Context, transac
 		return errorQuery(err, "failed to add money to source account")
 	}
 	// Subtract money from destination account
-	err = q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
+	err = r.q.SubAccountBalance(ctx, tx, sqlc.SubAccountBalanceParams{
 		ID:      transaction.ToAccountID.Int64,
 		Balance: transaction.Amount,
 	})

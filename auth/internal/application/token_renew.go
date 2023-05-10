@@ -5,9 +5,8 @@ import (
 	"log"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/lordvidex/errs"
@@ -26,7 +25,7 @@ type RenewTokenResponse struct {
 
 // RenewTokenCommand is the interface for the RenewTokenCommand
 type RenewTokenCommand interface {
-	Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error)
+	Execute(ctx context.Context, params RenewTokenParams) (RenewTokenResponse, error)
 }
 
 // RenewTokenCommandImpl is the implementation of the RenewTokenCommand
@@ -38,11 +37,15 @@ type RenewTokenCommandImpl struct {
 }
 
 // Execute executes the RenewTokenCommand with the given params
-func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (*RenewTokenResponse, error) {
+func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenParams) (RenewTokenResponse, error) {
 	var response RenewTokenResponse
 	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "SignupCommand.Execute")
 		defer span.End()
+		// Validate params
+		if err := c.v.Validate(ctx, params); err != nil {
+			return err
+		}
 		// Decrypt token to get sessionID
 		payload, err := c.tg.DecryptToken(ctx, params.RefreshToken)
 		if err != nil {
@@ -104,21 +107,23 @@ func (c *RenewTokenCommandImpl) Execute(ctx context.Context, params RenewTokenPa
 		}
 		// Store access token in cache repository
 		err = c.tr.Store(ctx, accessToken, payload)
+		if err != nil {
+			return err
+		}
 		response = RenewTokenResponse{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}
-		if err != nil {
-			return err
-		}
-		// Disable old access token in cache repository
-		err = c.tr.Delete(ctx, session.AccessToken)
-		if err != nil {
-			log.Printf("failed to remove old access token, :%s", err)
-		}
+		go func() {
+			// Disable old access token in cache repository
+			err = c.tr.Delete(ctx, session.AccessToken)
+			if err != nil {
+				log.Printf("failed to remove old access token, :%s", err)
+			}
+		}()
 		return nil
 	})
-	return &response, err
+	return response, err
 }
 
 // NewRenewTokenCommand creates a new RenewTokenCommand with the passed dependencies

@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 )
@@ -29,7 +28,7 @@ type GetUserDevicesCommandImpl struct {
 func (c *GetUserDevicesCommandImpl) Execute(ctx context.Context, params GetUserDevicesParams) ([]core.Session, error) {
 	var response []core.Session
 	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "GetUserDevicesCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "GetUserDevicesCommand.Execute")
 		defer span.End()
 		// Validate function can be removed since the params are empty
 		// But for design patterns & logic it won't be removed

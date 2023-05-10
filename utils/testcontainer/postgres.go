@@ -42,9 +42,6 @@ func NewPostgresContainer(ctx context.Context) (dbSQL *sql.DB, terminate func() 
 		Started:          true,
 	})
 	if err != nil {
-		return nil, nil, err
-	}
-	if err != nil {
 		return nil, nil, errs.B().Msg("failed to start postgres container").Err()
 
 	}

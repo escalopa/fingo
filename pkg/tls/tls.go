@@ -1,4 +1,4 @@
-package grpctls
+package tls
 
 import (
 	"log"
@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func LoadServerTLS(enabled string, certFile, keyFile string) (credentials.TransportCredentials, error) {
+func LoadServerTLS(enabled bool, certFile, keyFile string) (credentials.TransportCredentials, error) {
 	log.Println("creating grpc server with TLS:", enabled)
-	if enabled == "true" {
+	if enabled {
 		creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 		if err != nil {
 			return insecure.NewCredentials(), errs.B(err).Msg("failed to load TLS certificates").Err()
@@ -22,9 +22,9 @@ func LoadServerTLS(enabled string, certFile, keyFile string) (credentials.Transp
 	}
 }
 
-func LoadClientTLS(enabled string, certFile string) (credentials.TransportCredentials, error) {
+func LoadClientTLS(enabled bool, certFile string) (credentials.TransportCredentials, error) {
 	log.Println("connecting to grpc server with TLS:", enabled)
-	if enabled == "true" {
+	if enabled {
 		creds, err := credentials.NewClientTLSFromFile(certFile, "")
 		if err != nil {
 			return insecure.NewCredentials(), errs.B(err).Msg("failed to load TLS certificates").Err()

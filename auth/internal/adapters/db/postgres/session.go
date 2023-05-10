@@ -5,10 +5,9 @@ import (
 	"database/sql"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	db "github.com/escalopa/fingo/auth/internal/adapters/db/postgres/sqlc"
 	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -20,9 +19,6 @@ type SessionRepository struct {
 
 // NewSessionRepository creates a new sessions repository with the given connection
 func NewSessionRepository(conn *sql.DB, opts ...func(*SessionRepository)) (*SessionRepository, error) {
-	if conn == nil {
-		return nil, errs.B().Msg("passed connection is nil").Err()
-	}
 	sr := &SessionRepository{q: db.New(conn)}
 	for _, opt := range opts {
 		opt(sr)
@@ -42,7 +38,7 @@ func WithSessionDuration(d time.Duration) func(*SessionRepository) {
 
 // CreateSession creates a new sessions for a user
 func (sr *SessionRepository) CreateSession(ctx context.Context, params core.CreateSessionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "SessionRepository.CreateSession")
+	ctx, span := tracer.Tracer().Start(ctx, "SessionRepository.CreateSession")
 	defer span.End()
 	err := sr.q.CreateSession(ctx, db.CreateSessionParams{
 		ID:           params.ID,
@@ -64,7 +60,7 @@ func (sr *SessionRepository) CreateSession(ctx context.Context, params core.Crea
 
 // GetSessionByID returns a sessions by its id
 func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (core.Session, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "SessionRepository.GetSessionByID")
+	ctx, span := tracer.Tracer().Start(ctx, "SessionRepository.GetSessionByID")
 	defer span.End()
 	session, err := sr.q.GetSessionByID(ctx, id)
 	if err != nil {
@@ -78,7 +74,7 @@ func (sr *SessionRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (
 
 // GetUserSessions returns all sessions owned by a single user
 func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UUID) ([]core.Session, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "SessionRepository.GetUserSessions")
+	ctx, span := tracer.Tracer().Start(ctx, "SessionRepository.GetUserSessions")
 	defer span.End()
 	sessions, err := sr.q.GetUserSessions(ctx, userID)
 	if err != nil {
@@ -94,7 +90,7 @@ func (sr *SessionRepository) GetUserSessions(ctx context.Context, userID uuid.UU
 
 // UpdateSessionTokens returns a sessions by its refresh token value
 func (sr *SessionRepository) UpdateSessionTokens(ctx context.Context, params core.UpdateSessionTokenParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "SessionRepository.UpdateSessionTokens")
+	ctx, span := tracer.Tracer().Start(ctx, "SessionRepository.UpdateSessionTokens")
 	defer span.End()
 	rows, err := sr.q.UpdateSessionTokens(ctx, db.UpdateSessionTokensParams{
 		ID:           params.ID,
@@ -113,7 +109,7 @@ func (sr *SessionRepository) UpdateSessionTokens(ctx context.Context, params cor
 
 // DeleteSessionByID deletes a sessions by its id
 func (sr *SessionRepository) DeleteSessionByID(ctx context.Context, sessionID uuid.UUID) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "SessionRepository.DeleteSessionByID")
+	ctx, span := tracer.Tracer().Start(ctx, "SessionRepository.DeleteSessionByID")
 	defer span.End()
 	rows, err := sr.q.DeleteSessionByID(ctx, sessionID)
 	if err != nil {

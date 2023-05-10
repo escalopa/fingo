@@ -1,0 +1,121 @@
+version: "3.8"
+
+services:
+  auth:
+    image: dekuyo/fingo-auth:latest
+    container_name: "auth"
+    restart: unless-stopped
+    environment:
+      - AUTH_DATABASE_MIGRATION_PATH=file:///migrations
+    ports:
+      - "9002:9002"
+    depends_on:
+      cache:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      token:
+        condition: service_started
+      jaeger:
+        condition: service_started
+
+  wallet:
+    image: dekuyo/fingo-wallet:latest
+    container_name: "wallet"
+    environment:
+      - WALLET_DATABASE_MIGRATION_PATH=file:///migrations
+    restart: unless-stopped
+    ports:
+      - "9003:9003"
+    depends_on:
+      token:
+        condition: service_started
+      db:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  token:
+    image: dekuyo/fingo-token:latest
+    container_name: "token"
+    restart: unless-stopped
+    depends_on:
+      cache:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  contact:
+    image: dekuyo/fingo-contact:latest
+    container_name: "contact"
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      jaeger:
+        condition: service_started
+
+  cache:
+    image: redis:alpine
+    container_name: "cache"
+    restart: unless-stopped
+    volumes:
+      - cache:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  db:
+    image: postgres:12
+    container_name: "db"
+    env_file:
+      - ./.db.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./scripts/multiple-database.sh:/docker-entrypoint-initdb.d/multiple-database.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.10.19-management
+    container_name: "rabbitmq"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq/mnesia/'
+
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ./.rabbitmq.env
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+
+  jaeger:
+    container_name: "jaeger"
+    restart: unless-stopped
+    image: jaegertracing/all-in-one:1.6
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+      - "4318:4318"
+      - "6831:6831/udp"
+
+volumes:
+  rabbitmq:
+  cache:
+  db:

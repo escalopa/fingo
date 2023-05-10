@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+
 	"github.com/escalopa/fingo/contact/internal/core"
 )
 
@@ -13,7 +14,7 @@ type EmailSender interface {
 }
 
 type Validator interface {
-	Validate(i interface{}) error
+	Validate(ctx context.Context, i interface{}) error
 }
 
 type MessageConsumer interface {

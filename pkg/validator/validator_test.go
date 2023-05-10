@@ -1,4 +1,4 @@
-package pkgvalidator
+package validator
 
 import (
 	"context"

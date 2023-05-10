@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/auth/internal/core"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/lordvidex/errs"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -62,7 +61,7 @@ func WithNewSignInSessionQueue(name string) func(*Producer) {
 
 // SendNewSignInSessionMessage sends a message to the queue to send a new login session email
 func (r *Producer) SendNewSignInSessionMessage(ctx context.Context, params core.SendNewSignInSessionParams) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "rabbitmq.SendNewSignInSessionMessage")
+	ctx, span := tracer.Tracer().Start(ctx, "rabbitmq.SendNewSignInSessionMessage")
 	defer span.End()
 	// Marshal message
 	b, err := json.Marshal(params)

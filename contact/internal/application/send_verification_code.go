@@ -2,8 +2,9 @@ package application
 
 import (
 	"context"
-	"github.com/escalopa/fingo/contact/internal/core"
 	"time"
+
+	"github.com/escalopa/fingo/contact/internal/core"
 )
 
 type SendVerificationCodeCommandParam struct {
@@ -32,7 +33,7 @@ func NewSendVerificationCodeCommand(v Validator, es EmailSender, sci time.Durati
 
 func (c *SendVerificationCodeCommandImpl) Execute(ctx context.Context, params SendVerificationCodeCommandParam) error {
 	// TODO: check if the user has sent verification code request in the last `c.sci` if so, return an error
-	if err := c.v.Validate(params); err != nil {
+	if err := c.v.Validate(ctx, params); err != nil {
 		return err
 	}
 	err := c.es.SendVerificationCode(ctx, core.SendVerificationCodeMessage{

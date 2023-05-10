@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/google/uuid"
 	"github.com/lordvidex/errs"
 )
@@ -28,7 +27,7 @@ type LogoutCommandImpl struct {
 
 func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) error {
 	return contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "SignupCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "SignupCommand.Execute")
 		defer span.End()
 		if err := c.v.Validate(ctx, params); err != nil {
 			return err
@@ -38,17 +37,15 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 		if err != nil {
 			return err
 		}
-		// Parse sessionID
-		sessionID, err := uuid.Parse(params.SessionID)
-		if err != nil {
-			return errs.B(err).Code(errs.InvalidArgument).Msg("invalid session id").Err()
-		}
+		// Parse sessionUUID
+		sessionUUID, _ := uuid.Parse(params.SessionID)
 		// Get session form DB
 		var session core.Session
-		session, err = c.sr.GetSessionByID(ctx, sessionID)
+		session, err = c.sr.GetSessionByID(ctx, sessionUUID)
 		if err != nil {
 			return err
 		}
+		// Check session owner is the caller
 		if callerID != session.UserID {
 			return errs.B().Code(errs.Forbidden).Msg("not session owner").Err()
 		}
@@ -65,7 +62,7 @@ func (c *LogoutCommandImpl) Execute(ctx context.Context, params LogoutParams) er
 			}
 		}
 		// Delete Session
-		err = c.sr.DeleteSessionByID(ctx, sessionID)
+		err = c.sr.DeleteSessionByID(ctx, sessionUUID)
 		if err != nil {
 			return err
 		}

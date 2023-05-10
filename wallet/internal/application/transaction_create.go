@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/escalopa/fingo/pkg/contextutils"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/core"
 	"github.com/lordvidex/errs"
 )
@@ -36,7 +36,7 @@ type CreateTransactionCommandImpl struct {
 
 func (c *CreateTransactionCommandImpl) Execute(ctx context.Context, params CreateTransactionParams) error {
 	return contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "CreateTransactionCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "CreateTransactionCommand.Execute")
 		defer span.End()
 		// Validate params
 		if err := c.v.Validate(ctx, params); err != nil {

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/escalopa/fingo/pkg/contextutils"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/lordvidex/errs"
 )
 
@@ -25,7 +25,7 @@ type DeleteAccountCommandImpl struct {
 
 func (c *DeleteAccountCommandImpl) Execute(ctx context.Context, params DeleteAccountParams) error {
 	return contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "DeleteAccountCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "DeleteAccountCommand.Execute")
 		defer span.End()
 		// Validate params
 		if err := c.v.Validate(ctx, params); err != nil {

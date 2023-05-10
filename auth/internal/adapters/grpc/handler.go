@@ -3,12 +3,11 @@ package grpc
 import (
 	"context"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
-
 	"github.com/escalopa/fingo/auth/internal/application"
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -22,7 +21,7 @@ func NewAuthHandler(uc *application.UseCases) *AuthHandler {
 }
 
 func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (_ *pb.SignupResponse, err error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AuthHandler.Signup")
+	ctx, span := tracer.Tracer().Start(ctx, "AuthHandler.Signup")
 	defer span.End()
 	defer func() {
 		if err != nil {
@@ -43,7 +42,7 @@ func (h *AuthHandler) Signup(ctx context.Context, req *pb.SignupRequest) (_ *pb.
 }
 
 func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (_ *pb.SigninResponse, err error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AuthHandler.Signin")
+	ctx, span := tracer.Tracer().Start(ctx, "AuthHandler.Signin")
 	defer span.End()
 	defer func() {
 		if err != nil {
@@ -67,7 +66,7 @@ func (h *AuthHandler) Signin(ctx context.Context, req *pb.SigninRequest) (_ *pb.
 }
 
 func (h *AuthHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (_ *pb.LogoutResponse, err error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AuthHandler.Logout")
+	ctx, span := tracer.Tracer().Start(ctx, "AuthHandler.Logout")
 	defer span.End()
 	defer func() {
 		if err != nil {
@@ -82,7 +81,7 @@ func (h *AuthHandler) Logout(ctx context.Context, req *pb.LogoutRequest) (_ *pb.
 }
 
 func (h *AuthHandler) RenewAccessToken(ctx context.Context, req *pb.RenewAccessTokenRequest) (_ *pb.RenewAccessTokenResponse, err error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AuthHandler.RenewAccessToken")
+	ctx, span := tracer.Tracer().Start(ctx, "AuthHandler.RenewAccessToken")
 	defer span.End()
 	defer func() {
 		if err != nil {
@@ -100,7 +99,7 @@ func (h *AuthHandler) RenewAccessToken(ctx context.Context, req *pb.RenewAccessT
 }
 
 func (h *AuthHandler) GetUserDevices(ctx context.Context, _ *pb.GetUserDevicesRequest) (_ *pb.GetUserDevicesResponse, err error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "AuthHandler.GetUserDevices")
+	ctx, span := tracer.Tracer().Start(ctx, "AuthHandler.GetUserDevices")
 	defer span.End()
 	defer func() {
 		if err != nil {

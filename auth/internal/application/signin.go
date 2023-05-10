@@ -2,11 +2,11 @@ package application
 
 import (
 	"context"
-	"log"
 	"time"
 
-	oteltracer "github.com/escalopa/fingo/auth/internal/adapters/tracer"
 	"github.com/escalopa/fingo/pkg/contextutils"
+	"github.com/escalopa/fingo/pkg/tracer"
+	"github.com/sirupsen/logrus"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
@@ -36,9 +36,9 @@ type SigninCommand interface {
 type SigninCommandImpl struct {
 	v  Validator
 	h  PasswordHasher
+	tr TokenRepository
 	ur UserRepository
 	sr SessionRepository
-	tr TokenRepository
 	tg TokenGenerator
 	mp MessageProducer
 }
@@ -47,7 +47,7 @@ type SigninCommandImpl struct {
 func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (SigninResponse, error) {
 	var response SigninResponse
 	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "SigninCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "SigninCommand.Execute")
 		defer span.End()
 		if err := c.v.Validate(ctx, params); err != nil {
 			return err
@@ -117,8 +117,15 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 				UserAgent: params.UserAgent,
 			})
 			if err != nil {
-				log.Printf("failed to send message about new session creation, email: %s, client-ip: %s, user-agent: %s, err: %s",
-					params.Email, params.ClientIP, params.UserAgent, err)
+				l, err2 := contextutils.GetLogger(ctx)
+				if err2 == nil {
+					l.WithFields(logrus.Fields{
+						"Email":     params.Email,
+						"ClienIP":   params.ClientIP,
+						"UserAgent": params.UserAgent,
+						"Error":     err.Error(),
+					}).Error("failed to send message for new session creation")
+				}
 			}
 		}()
 		response = SigninResponse{

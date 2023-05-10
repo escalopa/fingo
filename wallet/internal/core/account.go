@@ -16,15 +16,15 @@ func (c Currency) String() string {
 
 func ParseCurrency(currency string) Currency {
 	switch currency {
-	case "USD":
+	case CurrencyUSD.String():
 		return CurrencyUSD
-	case "EUR":
+	case CurrencyEUR.String():
 		return CurrencyEUR
-	case "GBP":
+	case CurrencyGBP.String():
 		return CurrencyGBP
-	case "RUB":
+	case CurrencyRUB.String():
 		return CurrencyRUB
-	case "EGP":
+	case CurrencyEGP.String():
 		return CurrencyEGP
 	default:
 		return ""

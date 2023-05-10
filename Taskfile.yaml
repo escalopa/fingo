@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   # General Commands
@@ -12,6 +12,24 @@ tasks:
     dir: certs
     cmds:
       - ./gen.sh
+
+  test:
+    cmds:
+      - go test $(go list ./... | grep -Ewv "(mock$|pb$|sqlc$)") -coverprofile=coverage.out
+
+  mock:
+    cmds:
+      - task: auth-mock
+      - task: wallet-mock
+      - task: contact-mock
+      - task: token-mock
+
+  env-cp:
+    cmds:
+      - cp ./auth/.env.example ./auth/app.env
+      - cp ./wallet/.env.example ./wallet/app.env
+      - cp ./contact/.env.example ./contact/app.env
+      - cp ./token/.env.example ./token/app.env
 
   # Auth Command
   auth-sqlc:
@@ -41,6 +59,17 @@ tasks:
           MIGRATION_DIR_PATH: ./auth/internal/adapters/db/postgres/migrations
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/fingo_auth?sslmode=disable
 
+  auth-mock:
+    cmds:
+      - task: mock-gen # logic
+        vars:
+          SOURCE_FILE_PATH: ./auth/internal/application/ports.go
+          DESTINATION_MOCK_PATH: ./auth/internal/mock/mock.go
+      - task: mock-gen # db
+        vars:
+          SOURCE_FILE_PATH: ./auth/internal/adapters/db/postgres/sqlc/querier.go
+          DESTINATION_MOCK_PATH: ./auth/internal/mock/db.go
+
   # Wallet Command
   wallet-sqlc:
     cmds:
@@ -69,12 +98,45 @@ tasks:
           MIGRATION_DIR_PATH: ./wallet/internal/adapters/db/sql/migrations
           DATABASE_URL: cockroach://root@localhost:26257/fingo_wallet?sslmode=disable
 
+  wallet-mock:
+    cmds:
+      - task: mock-gen # logic
+        vars:
+          SOURCE_FILE_PATH: ./wallet/internal/application/ports.go
+          DESTINATION_MOCK_PATH: ./wallet/internal/mock/mock.go
+      - task: mock-gen # db
+        vars:
+          SOURCE_FILE_PATH: wallet/internal/adapters/db/sql/sqlc/querier.go
+          DESTINATION_MOCK_PATH: ./wallet/internal/mock/db.go
+
+  # Token Command
+  token-mock:
+    cmds:
+      - task: mock-gen # logic
+        vars:
+          SOURCE_FILE_PATH: ./token/internal/application/ports.go
+          DESTINATION_MOCK_PATH: ./token/internal/mock/mock.go
+
+  # Contact
+  contact-mock:
+    cmds:
+      - task: mock-gen # logic
+        vars:
+          SOURCE_FILE_PATH: ./contact/internal/application/ports.go
+          DESTINATION_MOCK_PATH: ./contact/internal/mock/mock.go
+
   # Migration Command
   sqlc-gen:
     internal: true
     desc: "generate sqlc code from sqlc.yaml"
     cmds:
       - sqlc generate -f {{.SQLC_CONFIG_PATH}}
+
+  mock-gen:
+    internal: true
+    desc: "generate mock files for testing"
+    cmds:
+      - mockgen -source {{.SOURCE_FILE_PATH}} -destination {{.DESTINATION_MOCK_PATH}} -package mock
 
   mig-new:
     internal: true

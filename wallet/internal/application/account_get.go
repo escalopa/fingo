@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/escalopa/fingo/pkg/contextutils"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/core"
 )
 
@@ -24,7 +24,7 @@ type GetAccountsCommandImpl struct {
 func (c *GetAccountsCommandImpl) Execute(ctx context.Context, params GetAccountsParams) ([]core.Account, error) {
 	var accounts []core.Account
 	err := contextutils.ExecuteWithContextTimeout(ctx, 5*time.Second, func() error {
-		ctx, span := oteltracer.Tracer().Start(ctx, "GetAccountsCommand.Execute")
+		ctx, span := tracer.Tracer().Start(ctx, "GetAccountsCommand.Execute")
 		defer span.End()
 		// Validate params
 		if err := c.v.Validate(ctx, params); err != nil {

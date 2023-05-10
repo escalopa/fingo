@@ -4,31 +4,31 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/adapters/db/sql/sqlc"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
 	"github.com/google/uuid"
 )
 
 type UserRepository struct {
+	q  *sqlc.Queries
 	db *sql.DB
 }
 
 func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+	return &UserRepository{db: db, q: sqlc.New()}
 }
 
 // CreateUser creates a new user in the database with the given uuid
 func (r *UserRepository) CreateUser(ctx context.Context, uuid uuid.UUID) error {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepo.CreateUser")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepo.CreateUser")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Create user
-	err = q.CreateUser(ctx, tx, uuid)
+	err = r.q.CreateUser(ctx, tx, uuid)
 	if err != nil {
 		if IsUniqueViolationError(err) {
 			return errorUniqueViolation(err, "user with this uuid already exists")
@@ -41,16 +41,15 @@ func (r *UserRepository) CreateUser(ctx context.Context, uuid uuid.UUID) error {
 
 // GetUser returns the user id for the given uuid, Where uuid is the global user id between services
 func (r *UserRepository) GetUser(ctx context.Context, uuid uuid.UUID) (int64, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "UserRepo.GetUser")
+	ctx, span := tracer.Tracer().Start(ctx, "UserRepo.GetUser")
 	defer span.End()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, errorTxNotStarted(err)
 	}
-	defer deferTx(tx, &err)
-	q := sqlc.New()
+	defer func() { err = deferTx(tx, err) }()
 	// Get user id
-	userID, err := q.GetUserByExternalID(ctx, tx, uuid)
+	userID, err := r.q.GetUserByExternalID(ctx, tx, uuid)
 	if err != nil {
 		if IsNotFoundError(err) {
 			return 0, errorNotFound(err, "user not found")

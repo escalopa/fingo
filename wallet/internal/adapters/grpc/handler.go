@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/escalopa/fingo/pb"
-	oteltracer "github.com/escalopa/fingo/wallet/internal/adapters/tracer"
+	"github.com/escalopa/fingo/pkg/tracer"
 	"github.com/escalopa/fingo/wallet/internal/application"
 	"github.com/escalopa/fingo/wallet/internal/core"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,7 +20,7 @@ func NewWalletHandler(u *application.UseCases) *WalletHandler {
 }
 
 func (wh *WalletHandler) CreateWallet(ctx context.Context, _ *pb.CreateWalletRequest) (*pb.CreateWalletResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.CreateWallet")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.CreateWallet")
 	defer span.End()
 	err := wh.u.CreateWallet.Execute(ctx, application.CreateWalletParams{})
 	if err != nil {
@@ -30,7 +30,7 @@ func (wh *WalletHandler) CreateWallet(ctx context.Context, _ *pb.CreateWalletReq
 }
 
 func (wh *WalletHandler) CreateAccount(ctx context.Context, req *pb.CreateAccountRequest) (*pb.CreateAccountResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.CreateAccount")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.CreateAccount")
 	defer span.End()
 	err := wh.u.CreateAccount.Execute(ctx, application.CreateAccountParams{
 		Name:     req.Name,
@@ -43,7 +43,7 @@ func (wh *WalletHandler) CreateAccount(ctx context.Context, req *pb.CreateAccoun
 }
 
 func (wh *WalletHandler) GetAccounts(ctx context.Context, req *pb.GetAccountsRequest) (*pb.GetAccountsResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.GetAccounts")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.GetAccounts")
 	defer span.End()
 	accounts, err := wh.u.GetAccounts.Execute(ctx, application.GetAccountsParams{})
 	if err != nil {
@@ -58,7 +58,7 @@ func (wh *WalletHandler) GetAccounts(ctx context.Context, req *pb.GetAccountsReq
 }
 
 func (wh *WalletHandler) DeleteAccount(ctx context.Context, req *pb.DeleteAccountRequest) (*pb.DeleteAccountResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.DeleteAccount")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.DeleteAccount")
 	defer span.End()
 	err := wh.u.DeleteAccount.Execute(ctx, application.DeleteAccountParams{AccountID: req.AccountId})
 	if err != nil {
@@ -68,7 +68,7 @@ func (wh *WalletHandler) DeleteAccount(ctx context.Context, req *pb.DeleteAccoun
 }
 
 func (wh *WalletHandler) CreateCard(ctx context.Context, req *pb.CreateCardRequest) (*pb.CreateCardResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.CreateCard")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.CreateCard")
 	defer span.End()
 	err := wh.u.CreateCard.Execute(ctx, application.CreateCardParams{AccountID: req.AccountId})
 	if err != nil {
@@ -78,7 +78,7 @@ func (wh *WalletHandler) CreateCard(ctx context.Context, req *pb.CreateCardReque
 }
 
 func (wh *WalletHandler) GetCards(ctx context.Context, req *pb.GetCardsRequest) (*pb.GetCardsResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.GetCards")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.GetCards")
 	defer span.End()
 	cards, err := wh.u.GetCards.Execute(ctx, application.GetCardsParams{AccountID: req.AccountId})
 	if err != nil {
@@ -93,7 +93,7 @@ func (wh *WalletHandler) GetCards(ctx context.Context, req *pb.GetCardsRequest) 
 }
 
 func (wh *WalletHandler) DeleteCard(ctx context.Context, req *pb.DeleteCardRequest) (*pb.DeleteCardResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.DeleteCard")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.DeleteCard")
 	defer span.End()
 	err := wh.u.DeleteCard.Execute(ctx, application.DeleteCardParams{CardNumber: req.CardNumber})
 	if err != nil {
@@ -103,7 +103,7 @@ func (wh *WalletHandler) DeleteCard(ctx context.Context, req *pb.DeleteCardReque
 }
 
 func (wh *WalletHandler) CreateTransaction(ctx context.Context, req *pb.CreateTransactionRequest) (*pb.CreateTransactionResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.Transfer")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.Transfer")
 	defer span.End()
 	err := wh.u.CreateTransaction.Execute(ctx, application.CreateTransactionParams{
 		Amount:   req.Amount,
@@ -118,7 +118,7 @@ func (wh *WalletHandler) CreateTransaction(ctx context.Context, req *pb.CreateTr
 }
 
 func (wh *WalletHandler) TransferRollback(ctx context.Context, req *pb.TransferRollbackRequest) (*pb.TransferRollbackResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.TransferRollback")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.TransferRollback")
 	defer span.End()
 	err := wh.u.TransferRollback.Execute(ctx, application.TransferRollbackParams{TransactionID: req.TransactionId})
 	if err != nil {
@@ -128,7 +128,7 @@ func (wh *WalletHandler) TransferRollback(ctx context.Context, req *pb.TransferR
 }
 
 func (wh *WalletHandler) GetTransactionHistory(ctx context.Context, req *pb.GetTransactionHistoryRequest) (*pb.GetTransactionHistoryResponse, error) {
-	ctx, span := oteltracer.Tracer().Start(ctx, "WalletHandler.GetTransactionHistory")
+	ctx, span := tracer.Tracer().Start(ctx, "WalletHandler.GetTransactionHistory")
 	defer span.End()
 	transactions, err := wh.u.GetTransactionHistory.Execute(ctx, application.GetTransactionHistoryParams{
 		AccountID:       req.AccountId,

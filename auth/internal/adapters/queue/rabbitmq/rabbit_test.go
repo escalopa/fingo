@@ -17,11 +17,11 @@ func TestProducer_NewProducer(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, p)
 	// Igonre setting `ssq` name
-	p, err = NewProducer(rabbitmqURL)
+	p, err = NewProducer(rabbitmqUrl)
 	require.Error(t, err)
 	require.Nil(t, p)
 	// Create the producer
-	testProducer, err := NewProducer(rabbitmqURL,
+	testProducer, err := NewProducer(rabbitmqUrl,
 		WithNewSignInSessionQueue("new_sign_in_session_queue"),
 	)
 	require.NoError(t, err)
@@ -92,7 +92,7 @@ func TestProducer_SendNewSignInSessionMessage(t *testing.T) {
 		},
 	}
 	// Create a new producer
-	testProducer, err := NewProducer(rabbitmqURL,
+	testProducer, err := NewProducer(rabbitmqUrl,
 		WithNewSignInSessionQueue("new_sign_in_session_queue"),
 	)
 	defer func() {
@@ -130,14 +130,14 @@ func TestProducer_SendNewSignInSessionMessage(t *testing.T) {
 func TestProducer_Close(t *testing.T) {
 	t.Parallel()
 	// Create the producer
-	testProducer, err := NewProducer(rabbitmqURL,
+	testProducer, err := NewProducer(rabbitmqUrl,
 		WithNewSignInSessionQueue("new_sign_in_session_queue"),
 	)
 	require.NoError(t, err)
 	require.NotNil(t, testProducer)
 	require.NoError(t, testProducer.Close())
 	// Create a producer & close `msgChan` before `close`
-	testProducer, err = NewProducer(rabbitmqURL,
+	testProducer, err = NewProducer(rabbitmqUrl,
 		WithNewSignInSessionQueue("new_sign_in_session_queue"),
 	)
 	require.NoError(t, err)
@@ -145,7 +145,7 @@ func TestProducer_Close(t *testing.T) {
 	require.NoError(t, testProducer.msgChan.Close())
 	require.Error(t, testProducer.Close())
 	// Create a producer & close `connection` before close
-	testProducer, err = NewProducer(rabbitmqURL,
+	testProducer, err = NewProducer(rabbitmqUrl,
 		WithNewSignInSessionQueue("new_sign_in_session_queue"),
 	)
 	require.NoError(t, err)
