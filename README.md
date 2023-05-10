@@ -53,7 +53,7 @@ This allows us to have a clean separation between the business logic and the inf
 
 All services trace their requests using [OpenTelemetry](https://opentelemetry.io/) and send them to [Jaeger](https://www.jaegertracing.io/) for monitoring and debugging besides Jaeger UI for visualization.
 
-To make the system more robust, All microservices have a graceful shutdown function called on termination signal. For more about it [see](./pkg/global/shutdown.go)
+To make the system more robust, All microservices have a graceful shutdown function called on termination signal. For more about it [see](./pkg/global/shutdown.go).
 
 ### Components
 ![Diagram](./docs/fingo.png)
