@@ -9,6 +9,7 @@ import (
 
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/pkg/global"
+	"github.com/escalopa/fingo/pkg/interceptors"
 	"github.com/escalopa/fingo/pkg/tls"
 	mygrpc "github.com/escalopa/fingo/token/internal/adapters/grpc"
 	"github.com/escalopa/fingo/token/internal/application"
@@ -18,8 +19,10 @@ import (
 )
 
 func start(appCtx context.Context, uc *application.UseCases) error {
-	// Load TLS certificates
-	var opts []grpc.ServerOption
+	opts := []grpc.ServerOption{grpc.ChainUnaryInterceptor(
+		interceptors.TracingUnaryInterceptor(),
+		interceptors.LoggingUnaryInterceptor(),
+	)} // Load TLS certificates
 	err := loadTls(&opts)
 	if err != nil {
 		log.Println("failed to load token tls certificates")

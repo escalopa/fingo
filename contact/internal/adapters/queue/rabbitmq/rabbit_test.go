@@ -3,16 +3,21 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
-	"github.com/escalopa/fingo/contact/internal/core"
 	"testing"
 	"time"
+
+	"github.com/escalopa/fingo/contact/internal/core"
 
 	"github.com/brianvoe/gofakeit/v6"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/require"
 )
 
-func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
+var (
+	defaultContentType = "application/json"
+)
+
+func TestConsumerHandleSendVerificationsCode(t *testing.T) {
 	// Start the consumer
 	results := make(chan core.SendVerificationCodeMessage)
 	go func() {
@@ -61,7 +66,7 @@ func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
 				false,
 				false,
 				amqp.Publishing{
-					ContentType: "application/json",
+					ContentType: defaultContentType,
 					Body:        b,
 				},
 			)
@@ -78,7 +83,7 @@ func TestConsumer_HandleSendVerificationsCode(t *testing.T) {
 
 }
 
-func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
+func TestConsumerHandleSendResetPasswordToken(t *testing.T) {
 	// Start the consumer
 	results := make(chan core.SendResetPasswordTokenMessage)
 	go func() {
@@ -128,7 +133,7 @@ func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
 				false,
 				false,
 				amqp.Publishing{
-					ContentType: "application/json",
+					ContentType: defaultContentType,
 					Body:        b,
 				},
 			)
@@ -144,7 +149,7 @@ func TestConsumer_HandleSendResetPasswordToken(t *testing.T) {
 	}
 }
 
-func TestConsumer_HandleSendNewSignInSession(t *testing.T) {
+func TestConsumerHandleSendNewSignInSession(t *testing.T) {
 	// Start the consumer
 	results := make(chan core.SendNewSignInSessionMessage)
 	go func() {
@@ -194,7 +199,7 @@ func TestConsumer_HandleSendNewSignInSession(t *testing.T) {
 				false,
 				false,
 				amqp.Publishing{
-					ContentType: "application/json",
+					ContentType: defaultContentType,
 					Body:        b,
 				},
 			)

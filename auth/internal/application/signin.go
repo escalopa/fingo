@@ -2,11 +2,11 @@ package application
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/escalopa/fingo/pkg/contextutils"
 	"github.com/escalopa/fingo/pkg/tracer"
+	"github.com/sirupsen/logrus"
 
 	"github.com/escalopa/fingo/auth/internal/core"
 	"github.com/google/uuid"
@@ -117,8 +117,15 @@ func (c *SigninCommandImpl) Execute(ctx context.Context, params SigninParams) (S
 				UserAgent: params.UserAgent,
 			})
 			if err != nil {
-				log.Printf("failed to send message about new session creation, email: %s, client-ip: %s, user-agent: %s, err: %s",
-					params.Email, params.ClientIP, params.UserAgent, err)
+				l, err2 := contextutils.GetLogger(ctx)
+				if err2 == nil {
+					l.WithFields(logrus.Fields{
+						"Email":     params.Email,
+						"ClienIP":   params.ClientIP,
+						"UserAgent": params.UserAgent,
+						"Error":     err.Error(),
+					}).Error("failed to send message for new session creation")
+				}
 			}
 		}()
 		response = SigninResponse{

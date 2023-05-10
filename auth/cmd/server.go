@@ -11,6 +11,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/escalopa/fingo/pkg/interceptors"
+
 	mygrpc "github.com/escalopa/fingo/auth/internal/adapters/grpc"
 	"github.com/escalopa/fingo/auth/internal/application"
 	"github.com/escalopa/fingo/pb"
@@ -19,7 +21,11 @@ import (
 )
 
 func start(appCtx context.Context, uc *application.UseCases) error {
-	var opts []grpc.ServerOption
+	opts := []grpc.ServerOption{grpc.ChainUnaryInterceptor(
+		interceptors.TracingUnaryInterceptor(),
+		interceptors.LoggingUnaryInterceptor(),
+	)}
+
 	// Load TLS certificates
 	err := loadTls(&opts)
 	global.CheckError(err, "failed to load auth TLS certificates")

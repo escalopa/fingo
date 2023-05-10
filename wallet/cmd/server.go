@@ -13,14 +13,17 @@ import (
 
 	"github.com/escalopa/fingo/pb"
 	"github.com/escalopa/fingo/pkg/global"
+	"github.com/escalopa/fingo/pkg/interceptors"
 	"github.com/escalopa/fingo/pkg/tls"
 	mygrpc "github.com/escalopa/fingo/wallet/internal/adapters/grpc"
 	"github.com/escalopa/fingo/wallet/internal/application"
 )
 
 func start(appCtx context.Context, uc *application.UseCases) error {
-	var opts []grpc.ServerOption
-	// Load TLS certificates
+	opts := []grpc.ServerOption{grpc.ChainUnaryInterceptor(
+		interceptors.TracingUnaryInterceptor(),
+		interceptors.LoggingUnaryInterceptor(),
+	)} // Load TLS certificates
 	err := loadTls(&opts)
 	global.CheckError(err, "failed to load wallet TLS certificates")
 
