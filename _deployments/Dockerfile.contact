@@ -12,10 +12,11 @@ WORKDIR /go/src/github.com/escalopa/fingo
 COPY ./contact ./contact
 COPY ./pkg ./pkg
 COPY go.mod go.sum ./
-RUN go build -o /go/bin/contact ./contact/cmd/main.go
+RUN go build -o /go/bin/contact ./contact/cmd/.
 
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
-COPY --from=builder /go/bin/contact /go/bin/contact
+COPY --from=builder /go/bin/contact /go/bin/fingo-contact
+COPY ./contact/app.env /contact/app.env
 COPY ./certs /certs
-ENTRYPOINT ["/go/bin/contact"]
+ENTRYPOINT ["/go/bin/fingo-contact"]

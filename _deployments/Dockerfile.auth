@@ -15,11 +15,12 @@ COPY ./auth ./auth
 COPY ./pkg ./pkg
 COPY ./pb ./pb
 COPY go.mod go.sum ./
-RUN go build -o /go/bin/auth ./auth/cmd/main.go
+RUN go build -o /go/bin/auth ./auth/cmd/.
 
 FROM alpine:latest AS production
 RUN apk add --no-cache tzdata
-COPY --from=builder /go/bin/auth /go/bin/auth
+COPY --from=builder /go/bin/auth /go/bin/fingo-auth
 COPY ./auth/internal/adapters/db/postgres/migrations /migrations
+COPY ./auth/app.env /auth/app.env
 COPY ./certs /certs
-ENTRYPOINT ["/go/bin/auth"]
+ENTRYPOINT ["/go/bin/fingo-auth"]

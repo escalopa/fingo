@@ -17,11 +17,8 @@ jobs:
         with:
           go-version: 1.19
 
-      - name: Setup Task.dev
-        run: sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
-
       - name: Test
-        run: task test
+        run: go test $(go list ./... | grep -Ewv "(mock$|pb$|sqlc$)") -coverprofile=coverage.txt
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
