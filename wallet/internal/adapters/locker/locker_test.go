@@ -8,17 +8,16 @@ import (
 )
 
 func TestConcurrentLocker_Lock(t *testing.T) {
-	ctx := context.TODO()
-	l := NewLocker(ctx, time.Second)
+	l := NewLocker(context.TODO(), time.Second)
 	var wg sync.WaitGroup
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
-		go func(x int) {
+		go func() {
 			defer wg.Done()
-			unlock := l.Lock(ctx, "x", "y", "z")
+			unlock := l.Lock(context.TODO(), "x", "y", "z")
 			time.Sleep(time.Second * 2) // let the other goroutines try to lock the same keys
 			defer unlock()
-		}(i)
+		}()
 	}
 
 	time.Sleep(time.Second * 2) // wait for the cleanup to run
@@ -30,10 +29,9 @@ func TestConcurrentLocker_Lock(t *testing.T) {
 	}
 	wg.Wait()
 }
-
 func TestLocker_Lock(t *testing.T) {
-	ctx := context.TODO()
 	type args struct {
+		ctx  context.Context
 		x    any
 		y    []any
 		f    time.Duration
@@ -46,14 +44,16 @@ func TestLocker_Lock(t *testing.T) {
 		{
 			name: "lock",
 			args: args{
-				x: "x",
-				y: []any{"y", "z"},
-				f: time.Minute,
+				ctx: context.Background(),
+				x:   "x",
+				y:   []any{"y", "z"},
+				f:   time.Minute,
 			},
 		},
 		{
 			name: "test cleanup",
 			args: args{
+				ctx:  context.Background(),
 				x:    "x",
 				y:    []any{"y", "z"},
 				f:    time.Second,
@@ -63,8 +63,8 @@ func TestLocker_Lock(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := NewLocker(context.TODO(), tt.args.f)
-			unlock := l.Lock(ctx, tt.args.x, tt.args.y...)
+			l := NewLocker(tt.args.ctx, tt.args.f)
+			unlock := l.Lock(tt.args.ctx, tt.args.x, tt.args.y...)
 			unlock()
 			for _, key := range append([]any{tt.args.x}, tt.args.y...) {
 				_, ok := l.mx.Load(key)
