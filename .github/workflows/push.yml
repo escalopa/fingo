@@ -30,7 +30,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./_deployments/Dockerfile.token
+          file: ./token/Dockerfile.token
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fingo-token:latest
 
@@ -40,7 +40,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./_deployments/Dockerfile.auth
+          file: ./auth/Dockerfile.auth
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fingo-auth:latest
 
@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./_deployments/Dockerfile.wallet
+          file: ./wallet/Dockerfile.wallet
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fingo-wallet:latest
 
@@ -60,6 +60,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./_deployments/Dockerfile.contact
+          file: ./contact/Dockerfile.contact
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/fingo-contact:latest

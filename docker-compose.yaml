@@ -14,7 +14,7 @@ services:
       - "${AUTH_GRPC_PORT}:${AUTH_GRPC_PORT}"
     build:
       context: .
-      dockerfile: ./_deployments/Dockerfile.auth
+      dockerfile: ./auth/Dockerfile
       target: development
     depends_on:
       cache:
@@ -41,7 +41,7 @@ services:
       - "${WALLET_GRPC_PORT}:${WALLET_GRPC_PORT}"
     build:
       context: .
-      dockerfile: ./_deployments/Dockerfile.wallet
+      dockerfile: ./wallet/Dockerfile
       target: development
     depends_on:
       token:
@@ -60,7 +60,7 @@ services:
     env_file: ./token/app.env
     build:
       context: .
-      dockerfile: ./_deployments/Dockerfile.token
+      dockerfile: ./token/Dockerfile
       target: development
     ports:
       - "${TOKEN_GRPC_PORT}:${TOKEN_GRPC_PORT}"
@@ -81,7 +81,7 @@ services:
     env_file: ./contact/app.env
     build:
       context: .
-      dockerfile: _deployments/Dockerfile.contact
+      dockerfile: ./contact/Dockerfile
       target: development
     depends_on:
       rabbitmq:
